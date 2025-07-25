@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,15 +16,16 @@ import { format } from 'date-fns';
 type Article = {
   id: string;
   title: string;
+  imageUrl: string;
   author: string;
   createdAt: Date;
   status: 'published' | 'draft';
 };
 
 const initialArticles: Article[] = [
-  { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', author: 'Dr. Tirta', createdAt: new Date('2023-10-26'), status: 'published' },
-  { id: '2', title: 'Cara Mencegah Stunting pada Balita', author: 'Dr. Rahman', createdAt: new Date('2023-11-05'), status: 'published' },
-  { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', author: 'Puskesmas Ponja', createdAt: new Date('2023-11-15'), status: 'draft' },
+  { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', imageUrl: 'https://placehold.co/100x100.png', author: 'Dr. Tirta', createdAt: new Date('2023-10-26'), status: 'published' },
+  { id: '2', title: 'Cara Mencegah Stunting pada Balita', imageUrl: 'https://placehold.co/100x100.png', author: 'Dr. Rahman', createdAt: new Date('2023-11-05'), status: 'published' },
+  { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', imageUrl: 'https://placehold.co/100x100.png', author: 'Puskesmas Ponja', createdAt: new Date('2023-11-15'), status: 'draft' },
 ];
 
 export default function ArticlesPage() {
@@ -56,6 +58,7 @@ export default function ArticlesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="hidden md:table-cell">Gambar</TableHead>
                   <TableHead>Judul</TableHead>
                   <TableHead className="hidden md:table-cell">Penulis</TableHead>
                   <TableHead className="hidden md:table-cell">Tanggal</TableHead>
@@ -67,6 +70,16 @@ export default function ArticlesPage() {
                 {articles.length > 0 ? (
                   articles.map((article) => (
                     <TableRow key={article.id}>
+                      <TableCell className="hidden md:table-cell">
+                        <Image
+                          alt="Article image"
+                          className="aspect-square rounded-md object-cover"
+                          height="64"
+                          src={article.imageUrl}
+                          width="64"
+                          data-ai-hint="child health"
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{article.title}</TableCell>
                       <TableCell className="hidden md:table-cell">{article.author}</TableCell>
                       <TableCell className="hidden md:table-cell">{format(article.createdAt, 'dd MMMM yyyy')}</TableCell>
@@ -109,7 +122,7 @@ export default function ArticlesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={6} className="text-center h-24">
                       Belum ada artikel.
                     </TableCell>
                   </TableRow>

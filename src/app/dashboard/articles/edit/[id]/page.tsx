@@ -13,19 +13,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
   author: z.string().min(3, { message: 'Nama penulis harus memiliki setidaknya 3 karakter.' }),
   content: z.string().min(10, { message: 'Konten harus memiliki setidaknya 10 karakter.' }),
+  imageUrl: z.string().url({ message: 'URL gambar tidak valid.' }).optional().or(z.literal('')),
 });
 
 // Mock data fetching
 const getArticleById = (id: string) => {
     const articles = [
-      { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', author: 'Dr. Tirta', content: 'Konten artikel tentang gizi...', status: 'published' },
-      { id: '2', title: 'Cara Mencegah Stunting pada Balita', author: 'Dr. Rahman', content: 'Konten artikel tentang stunting...', status: 'published' },
-      { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', author: 'Puskesmas Ponja', content: 'Konten artikel tentang imunisasi...', status: 'draft' },
+      { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', author: 'Dr. Tirta', content: 'Konten artikel tentang gizi...', status: 'published', imageUrl: 'https://placehold.co/600x400.png' },
+      { id: '2', title: 'Cara Mencegah Stunting pada Balita', author: 'Dr. Rahman', content: 'Konten artikel tentang stunting...', status: 'published', imageUrl: 'https://placehold.co/600x400.png' },
+      { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', author: 'Puskesmas Ponja', content: 'Konten artikel tentang imunisasi...', status: 'draft', imageUrl: 'https://placehold.co/600x400.png' },
     ];
     return articles.find(article => article.id === id);
 };
@@ -43,6 +45,7 @@ export default function EditArticlePage() {
       title: '',
       author: '',
       content: '',
+      imageUrl: '',
     },
   });
 
@@ -70,6 +73,8 @@ export default function EditArticlePage() {
     router.push('/dashboard/articles');
   };
 
+  const imageUrl = form.watch('imageUrl');
+
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -86,6 +91,31 @@ export default function EditArticlePage() {
               <CardDescription>Perbarui detail artikel di bawah ini.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+               <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL Gambar</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-4">
+                          <Input placeholder="https://example.com/image.png" {...field} />
+                          {imageUrl && (
+                            <Image
+                              src={imageUrl}
+                              alt="Pratinjau Gambar"
+                              width={80}
+                              height={80}
+                              className="rounded-md object-cover"
+                              data-ai-hint="article preview"
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <FormField
                 control={form.control}
                 name="title"

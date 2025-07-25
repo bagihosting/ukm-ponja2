@@ -12,11 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
   author: z.string().min(3, { message: 'Nama penulis harus memiliki setidaknya 3 karakter.' }),
   content: z.string().min(10, { message: 'Konten harus memiliki setidaknya 10 karakter.' }),
+  imageUrl: z.string().url({ message: 'URL gambar tidak valid.' }).optional().or(z.literal('')),
 });
 
 export default function NewArticlePage() {
@@ -29,6 +31,7 @@ export default function NewArticlePage() {
       title: '',
       author: '',
       content: '',
+      imageUrl: '',
     },
   });
 
@@ -40,6 +43,8 @@ export default function NewArticlePage() {
     });
     router.push('/dashboard/articles');
   };
+
+  const imageUrl = form.watch('imageUrl');
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,6 +62,31 @@ export default function NewArticlePage() {
               <CardDescription>Isi detail di bawah ini untuk membuat artikel baru.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+               <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL Gambar</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-4">
+                          <Input placeholder="https://example.com/image.png" {...field} />
+                          {imageUrl && (
+                            <Image
+                              src={imageUrl}
+                              alt="Pratinjau Gambar"
+                              width={80}
+                              height={80}
+                              className="rounded-md object-cover"
+                              data-ai-hint="article preview"
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <FormField
                 control={form.control}
                 name="title"
