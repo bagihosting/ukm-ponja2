@@ -98,11 +98,15 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
   try {
     const docRef = doc(db, 'articles', id);
     
-    // Create a copy to avoid modifying the original object
     const dataToUpdate: { [key: string]: any } = { ...article };
 
     // Firestore does not allow updating with undefined values.
-    Object.keys(dataToUpdate).forEach(key => dataToUpdate[key] === undefined && delete dataToUpdate[key]);
+    // Also, handle empty imageUrl string to remove it from the document.
+    Object.keys(dataToUpdate).forEach(key => {
+      if (dataToUpdate[key] === undefined || dataToUpdate[key] === '') {
+        delete dataToUpdate[key];
+      }
+    });
     
     if (Object.keys(dataToUpdate).length > 0) {
       await updateDoc(docRef, dataToUpdate);

@@ -103,7 +103,7 @@ export default function EditArticlePage() {
       await updateArticle(id, {
         title: data.title,
         content: data.content,
-        imageUrl: data.imageUrl || undefined,
+        imageUrl: data.imageUrl, // Pass it directly, can be '', undefined, or a valid URL
       });
       toast({
         title: 'Berhasil!',
