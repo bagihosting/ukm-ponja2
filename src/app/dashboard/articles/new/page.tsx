@@ -83,8 +83,8 @@ export default function NewArticlePage() {
       const imageUrl = await generateImage(title);
       form.setValue('imageUrl', imageUrl, { shouldValidate: true });
       toast({
-        title: 'Gambar Dibuat',
-        description: 'Gambar baru telah berhasil dibuat oleh AI.',
+        title: 'Gambar Berhasil Dibuat',
+        description: 'Gambar baru telah dibuat oleh AI dan akan ditambahkan ke artikel.',
       });
     } catch (error) {
       console.error("Error generating image: ", error);
@@ -99,6 +99,7 @@ export default function NewArticlePage() {
   };
 
   const imageUrl = form.watch('imageUrl');
+  const hasImageUrl = !!imageUrl;
 
   return (
     <div className="flex flex-col gap-4">
@@ -134,17 +135,23 @@ export default function NewArticlePage() {
                   name="imageUrl"
                   render={({ field }) => (
                      <FormItem>
-                      <FormLabel>URL Gambar</FormLabel>
+                      <FormLabel>Gambar Artikel</FormLabel>
                        <div className="flex items-center gap-4">
                           <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
                             {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Buat Gambar AI
+                            {hasImageUrl ? 'Buat Gambar Baru' : 'Buat Gambar AI'}
                           </Button>
-                           {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
+                           {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar... (bisa memakan waktu beberapa detik)</span>}
                         </div>
                       <FormControl>
-                        <div className="flex items-center gap-4">
-                          <Input placeholder="URL gambar akan dibuat oleh AI" {...field} />
+                        <div className="flex items-center gap-4 mt-2">
+                           <Input
+                            {...field}
+                            value={hasImageUrl ? 'Gambar berhasil dibuat oleh AI. Simpan untuk melihatnya.' : ''}
+                            placeholder="Klik tombol di atas untuk membuat gambar"
+                            readOnly
+                            className="flex-grow bg-slate-100"
+                           />
                           {imageUrl && (
                             <Image
                               src={imageUrl}
