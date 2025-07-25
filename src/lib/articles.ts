@@ -48,13 +48,12 @@ export interface ArticleUpdateInput {
 export const addArticle = async (article: ArticleInput): Promise<string> => {
   try {
     const dataToAdd: { [key: string]: any } = {
-      title: article.title,
-      content: article.content,
+      ...article,
       createdAt: serverTimestamp(),
     };
-
-    if (article.imageUrl) {
-      dataToAdd.imageUrl = article.imageUrl;
+    
+    if (!article.imageUrl) {
+        delete dataToAdd.imageUrl;
     }
     
     const docRef = await addDoc(articlesCollection, dataToAdd);
@@ -104,14 +103,14 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     const dataToUpdate: { [key: string]: any } = { ...article };
 
     // Firestore does not allow updating with undefined values.
-    // Also, handle empty imageUrl string to remove it from the document.
     Object.keys(dataToUpdate).forEach(key => {
       if (dataToUpdate[key] === undefined) {
         delete dataToUpdate[key];
       }
     });
 
-    if (dataToUpdate.imageUrl === '') {
+    // Handle empty imageUrl string to remove it from the document.
+    if (article.imageUrl === '') {
         dataToUpdate.imageUrl = deleteField();
     }
     
@@ -135,5 +134,3 @@ export const deleteArticle = async (id: string): Promise<void> => {
     throw new Error("Gagal menghapus artikel");
   }
 };
-
-    

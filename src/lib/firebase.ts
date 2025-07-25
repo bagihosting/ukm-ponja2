@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,6 +17,7 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let storage;
 
 // Pastikan kode ini hanya berjalan di lingkungan browser
 if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
@@ -24,6 +26,7 @@ if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
+      storage = getStorage(app);
     } catch (error) {
       console.error("Firebase initialization error:", error);
       app = null;
@@ -34,6 +37,7 @@ if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
     app = getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
   }
 }
 
@@ -42,4 +46,4 @@ if (!app || !auth) {
   console.error("Firebase is not configured correctly. Check your .env file and ensure NEXT_PUBLIC_ variables are set.");
 }
 
-export { app, auth, db };
+export { app, auth, db, storage };
