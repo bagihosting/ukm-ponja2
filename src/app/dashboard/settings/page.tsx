@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { MoreHorizontal } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Admin = { id: string; email: string; role: string };
 
@@ -56,7 +57,7 @@ export default function SettingsPage() {
             <CardDescription>Kelola akun administrator untuk dasbor Anda.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                <Card>
                 <CardHeader>
                   <CardTitle>Tambah Admin Baru</CardTitle>
@@ -71,43 +72,45 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="lg:col-span-1">
+              <Card className="lg:col-span-1 xl:col-span-2">
                  <CardHeader>
                   <CardTitle>Admin yang Ada</CardTitle>
                    <CardDescription>Daftar pengguna dengan akses admin.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="hidden sm:table-cell">Peran</TableHead>
-                        <TableHead className="text-right">Tindakan</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {admins.map((admin) => (
-                        <TableRow key={admin.id}>
-                          <TableCell className="font-medium">{admin.email}</TableCell>
-                          <TableCell className="hidden sm:table-cell">{admin.role}</TableCell>
-                          <TableCell className="text-right">
-                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Buka menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditClick(admin)}>Edit</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(admin.id)}>Hapus</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                  <ScrollArea className="w-full whitespace-nowrap">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Peran</TableHead>
+                          <TableHead className="text-right">Tindakan</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {admins.map((admin) => (
+                          <TableRow key={admin.id}>
+                            <TableCell className="font-medium">{admin.email}</TableCell>
+                            <TableCell>{admin.role}</TableCell>
+                            <TableCell className="text-right">
+                               <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Buka menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditClick(admin)}>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(admin.id)}>Hapus</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             </div>
