@@ -56,10 +56,11 @@ export default function SettingsPage() {
             <CardDescription>Kelola akun administrator untuk dasbor Anda.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
                <Card>
                 <CardHeader>
                   <CardTitle>Tambah Admin Baru</CardTitle>
+                  <CardDescription>Kirim undangan ke alamat email untuk menambahkannya sebagai admin.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -70,16 +71,17 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="lg:col-span-1">
                  <CardHeader>
                   <CardTitle>Admin yang Ada</CardTitle>
+                   <CardDescription>Daftar pengguna dengan akses admin.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Email</TableHead>
-                        <TableHead>Peran</TableHead>
+                        <TableHead className="hidden sm:table-cell">Peran</TableHead>
                         <TableHead className="text-right">Tindakan</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -87,7 +89,7 @@ export default function SettingsPage() {
                       {admins.map((admin) => (
                         <TableRow key={admin.id}>
                           <TableCell className="font-medium">{admin.email}</TableCell>
-                          <TableCell>{admin.role}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{admin.role}</TableCell>
                           <TableCell className="text-right">
                              <DropdownMenu>
                               <DropdownMenuTrigger asChild>
