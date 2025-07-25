@@ -98,3 +98,72 @@ npm run dev
 Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`.
 
 Server pengembangan ini menggunakan *hot-reloading*, yang berarti setiap perubahan pada kode akan secara otomatis memuat ulang aplikasi di peramban Anda.
+
+## 6. Menjalankan Aplikasi di Latar Belakang dengan PM2 (Opsional)
+
+Untuk menjalankan aplikasi secara persisten di latar belakang (misalnya di server produksi), disarankan menggunakan manajer proses seperti `pm2`.
+
+### 6.1. Instalasi PM2
+
+Jalankan perintah berikut untuk menginstal PM2 secara global:
+
+```bash
+sudo npm install pm2 -g
+```
+
+### 6.2. Menjalankan Aplikasi dengan PM2
+
+1.  **Build Aplikasi untuk Produksi**:
+    Sebelum menjalankan dengan PM2, Anda harus membuat build produksi dari aplikasi Next.js Anda.
+
+    ```bash
+    npm run build
+    ```
+
+2.  **Jalankan Aplikasi**:
+    Gunakan PM2 untuk menjalankan skrip `start` dari `package.json`. Perintah ini akan menjalankan aplikasi di latar belakang dan memberinya nama `ukm-ponja-app`.
+
+    ```bash
+    pm2 start npm --name "ukm-ponja-app" -- run start
+    ```
+    Aplikasi Anda sekarang berjalan di port 3002 di latar belakang.
+
+### 6.3. Mengelola Aplikasi dengan PM2
+
+Berikut adalah beberapa perintah dasar untuk mengelola aplikasi Anda dengan PM2:
+
+-   **Melihat status semua aplikasi**:
+    ```bash
+    pm2 list
+    ```
+
+-   **Melihat log aplikasi**:
+    ```bash
+    pm2 logs ukm-ponja-app
+    ```
+
+-   **Menghentikan aplikasi**:
+    ```bash
+    pm2 stop ukm-ponja-app
+    ```
+
+-   **Memulai ulang aplikasi**:
+    ```bash
+    pm2 restart ukm-ponja-app
+    ```
+
+### 6.4. Menjalankan PM2 saat Startup
+
+Agar PM2 secara otomatis memulai ulang aplikasi Anda setelah server reboot, jalankan perintah berikut:
+
+```bash
+pm2 startup
+```
+
+PM2 akan memberikan Anda sebuah perintah untuk dijalankan. Salin dan jalankan perintah tersebut (biasanya memerlukan `sudo`). Setelah itu, simpan daftar proses Anda saat ini:
+
+```bash
+pm2 save
+```
+
+Sekarang, aplikasi Anda akan otomatis berjalan setiap kali server dinyalakan.
