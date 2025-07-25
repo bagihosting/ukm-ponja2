@@ -19,13 +19,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Pastikan `auth` telah diinisialisasi sebelum digunakan.
     if (auth) {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user);
         setLoading(false);
       });
+      // Membersihkan listener saat komponen di-unmount
       return () => unsubscribe();
     } else {
+      // Jika Firebase tidak terkonfigurasi, hentikan loading dan anggap tidak ada pengguna.
       setLoading(false);
     }
   }, []);

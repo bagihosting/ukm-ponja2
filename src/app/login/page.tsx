@@ -67,6 +67,7 @@ export default function LoginPage() {
         case 'auth/too-many-requests':
           errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
           break;
+        case 'auth/configuration-not-found':
         case 'auth/invalid-api-key':
         case 'auth/app-deleted':
         case 'auth/project-not-found':
