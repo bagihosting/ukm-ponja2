@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <nav className="grid gap-2 text-lg font-medium">
                 <Link href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
                   <Store className="h-6 w-6" />
-                  <span className="sr-only">UKM Ibu</span>
+                  <span>UKM Ibu</span>
                 </Link>
                 {navLinks.map(({ href, icon: Icon, label }) => (
                   <Link key={label} href={href} className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
