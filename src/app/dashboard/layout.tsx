@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Bell, Home, LineChart, Menu, Store, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2 } from 'lucide-react';
+import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2 } from 'lucide-react';
 
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -94,6 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
   ];
 
   return (
@@ -102,8 +103,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
-              <Store className="h-6 w-6" />
-              <span>UKM Ibu</span>
+              <HeartPulse className="h-6 w-6" />
+              <span>UKM PONJA</span>
             </Link>
           </div>
           <div className="flex-1">
@@ -134,8 +135,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium">
                 <Link href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
-                  <Store className="h-6 w-6" />
-                  <span>UKM Ibu</span>
+                  <HeartPulse className="h-6 w-6" />
+                  <span>UKM PONJA</span>
                 </Link>
                 {navLinks.map(({ href, icon: Icon, label }) => (
                   <Link key={label} href={href} className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
