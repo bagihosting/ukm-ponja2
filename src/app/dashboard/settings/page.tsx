@@ -57,22 +57,8 @@ export default function SettingsPage() {
             <CardDescription>Kelola akun administrator untuk dasbor Anda.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-               <Card>
-                <CardHeader>
-                  <CardTitle>Tambah Admin Baru</CardTitle>
-                  <CardDescription>Kirim undangan ke alamat email untuk menambahkannya sebagai admin.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-admin-email">Alamat Email</Label>
-                    <Input id="new-admin-email" placeholder="name@example.com" />
-                  </div>
-                  <Button>Kirim Undangan</Button>
-                </CardContent>
-              </Card>
-
-              <Card className="lg:col-span-1 xl:col-span-2">
+            <div className="grid gap-6">
+              <Card>
                  <CardHeader>
                   <CardTitle>Admin yang Ada</CardTitle>
                    <CardDescription>Daftar pengguna dengan akses admin.</CardDescription>
