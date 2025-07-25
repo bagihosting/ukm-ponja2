@@ -92,10 +92,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
-    { href: "#", icon: ShoppingCart, label: "Orders", badge: 6 },
-    { href: "#", icon: Package, label: "Products", badge: 0 },
-    { href: "#", icon: Users, label: "Customers", badge: 0 },
-    { href: "#", icon: LineChart, label: "Analytics", badge: 0 },
   ];
 
   return (
@@ -118,21 +114,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               ))}
             </nav>
-          </div>
-          <div className="mt-auto p-4">
-            <Card>
-              <CardHeader className="p-2 pt-0 md:p-4">
-                <CardTitle>Upgrade to Pro</CardTitle>
-                <CardDescription>
-                  Unlock all features and get unlimited access to our support team.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-                <Button size="sm" className="w-full">
-                  Upgrade
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
