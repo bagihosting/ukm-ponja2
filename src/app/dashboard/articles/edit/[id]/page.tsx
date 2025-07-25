@@ -11,11 +11,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { generateImage } from '@/ai/flows/generate-image-flow';
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
@@ -31,6 +32,7 @@ export default function EditArticlePage() {
   const articleId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const form = useForm<z.infer<typeof articleSchema>>({
     resolver: zodResolver(articleSchema),
@@ -101,6 +103,36 @@ export default function EditArticlePage() {
     }
   };
 
+  const handleGenerateImage = async () => {
+    const title = form.getValues('title');
+    if (!title) {
+      toast({
+        variant: 'destructive',
+        title: 'Judul Diperlukan',
+        description: 'Silakan masukkan judul terlebih dahulu untuk membuat gambar.',
+      });
+      return;
+    }
+    setIsGeneratingImage(true);
+    try {
+      const imageUrl = await generateImage(title);
+      form.setValue('imageUrl', imageUrl, { shouldValidate: true });
+       toast({
+        title: 'Gambar Dibuat',
+        description: 'Gambar baru telah berhasil dibuat oleh AI.',
+      });
+    } catch (error) {
+      console.error("Error generating image: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Gambar',
+        description: 'Terjadi kesalahan saat membuat gambar dengan AI.',
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const imageUrl = form.watch('imageUrl');
 
   if (loading) {
@@ -127,6 +159,29 @@ export default function EditArticlePage() {
               <CardDescription>Perbarui detail artikel di bawah ini.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Judul Artikel</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Contoh: Pentingnya Imunisasi" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                <Label>Gambar Artikel</Label>
+                <div className="flex items-center gap-4">
+                  <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
+                    {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Buat Gambar AI
+                  </Button>
+                   {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
+                </div>
+              </div>
                <FormField
                   control={form.control}
                   name="imageUrl"
@@ -135,7 +190,7 @@ export default function EditArticlePage() {
                       <FormLabel>URL Gambar</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-4">
-                          <Input placeholder="https://example.com/image.png" {...field} />
+                          <Input placeholder="URL gambar akan dibuat oleh AI" {...field} />
                           {imageUrl && (
                             <Image
                               src={imageUrl}
@@ -152,19 +207,6 @@ export default function EditArticlePage() {
                     </FormItem>
                   )}
                 />
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Judul Artikel</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Contoh: Pentingnya Imunisasi" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
                <FormField
                 control={form.control}
                 name="author"

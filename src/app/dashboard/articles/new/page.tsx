@@ -10,11 +10,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { generateImage } from '@/ai/flows/generate-image-flow';
+import { Label } from '@/components/ui/label';
+
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
@@ -27,6 +30,7 @@ export default function NewArticlePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   const form = useForm<z.infer<typeof articleSchema>>({
     resolver: zodResolver(articleSchema),
@@ -34,15 +38,17 @@ export default function NewArticlePage() {
       title: '',
       author: '',
       content: '',
-      imageUrl: 'https://placehold.co/600x400.png',
+      imageUrl: '',
     },
   });
 
   const onSubmit = async (values: z.infer<typeof articleSchema>) => {
     setIsSubmitting(true);
     try {
+      const imageUrl = values.imageUrl || 'https://placehold.co/600x400.png';
       await addDoc(collection(db, 'articles'), {
         ...values,
+        imageUrl,
         status: 'draft',
         createdAt: serverTimestamp(),
       });
@@ -59,6 +65,36 @@ export default function NewArticlePage() {
         title: 'Gagal Membuat Artikel',
         description: 'Terjadi kesalahan saat menyimpan artikel baru.',
       });
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    const title = form.getValues('title');
+    if (!title) {
+      toast({
+        variant: 'destructive',
+        title: 'Judul Diperlukan',
+        description: 'Silakan masukkan judul terlebih dahulu untuk membuat gambar.',
+      });
+      return;
+    }
+    setIsGeneratingImage(true);
+    try {
+      const imageUrl = await generateImage(title);
+      form.setValue('imageUrl', imageUrl, { shouldValidate: true });
+      toast({
+        title: 'Gambar Dibuat',
+        description: 'Gambar baru telah berhasil dibuat oleh AI.',
+      });
+    } catch (error) {
+      console.error("Error generating image: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Gambar',
+        description: 'Terjadi kesalahan saat membuat gambar dengan AI.',
+      });
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -81,6 +117,29 @@ export default function NewArticlePage() {
             </CardHeader>
             <CardContent className="space-y-4">
                <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Judul Artikel</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Contoh: Pentingnya Imunisasi" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                <Label>Gambar Artikel</Label>
+                <div className="flex items-center gap-4">
+                  <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
+                    {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Buat Gambar AI
+                  </Button>
+                   {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
+                </div>
+              </div>
+               <FormField
                   control={form.control}
                   name="imageUrl"
                   render={({ field }) => (
@@ -88,7 +147,7 @@ export default function NewArticlePage() {
                       <FormLabel>URL Gambar</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-4">
-                          <Input placeholder="https://example.com/image.png" {...field} />
+                          <Input placeholder="URL gambar akan dibuat oleh AI" {...field} />
                           {imageUrl && (
                             <Image
                               src={imageUrl}
@@ -105,19 +164,6 @@ export default function NewArticlePage() {
                     </FormItem>
                   )}
                 />
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Judul Artikel</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Contoh: Pentingnya Imunisasi" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
                <FormField
                 control={form.control}
                 name="author"
