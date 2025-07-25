@@ -12,8 +12,11 @@ import {
   updateDoc, 
   deleteDoc, 
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  FieldValue
 } from 'firebase/firestore';
+import { deleteField } from 'firebase/firestore';
+
 
 if (!app) {
   throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
@@ -38,7 +41,7 @@ export interface ArticleInput {
 export interface ArticleUpdateInput {
   title?: string;
   content?: string;
-  imageUrl?: string;
+  imageUrl?: string | FieldValue;
 }
 
 // Create
@@ -103,10 +106,14 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     // Firestore does not allow updating with undefined values.
     // Also, handle empty imageUrl string to remove it from the document.
     Object.keys(dataToUpdate).forEach(key => {
-      if (dataToUpdate[key] === undefined || dataToUpdate[key] === '') {
+      if (dataToUpdate[key] === undefined) {
         delete dataToUpdate[key];
       }
     });
+
+    if (dataToUpdate.imageUrl === '') {
+        dataToUpdate.imageUrl = deleteField();
+    }
     
     if (Object.keys(dataToUpdate).length > 0) {
       await updateDoc(docRef, dataToUpdate);
@@ -128,3 +135,5 @@ export const deleteArticle = async (id: string): Promise<void> => {
     throw new Error("Gagal menghapus artikel");
   }
 };
+
+    
