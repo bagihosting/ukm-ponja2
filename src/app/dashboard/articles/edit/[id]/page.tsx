@@ -28,6 +28,18 @@ const articleSchema = z.object({
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
 
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    if (url.startsWith('data:image')) {
+      return true;
+    }
+    return false;
+  }
+};
+
 export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
@@ -249,7 +261,7 @@ export default function EditArticlePage() {
                   </DialogContent>
                 </Dialog>
 
-                {imageUrl && !errors.imageUrl && (
+                {imageUrl && isValidUrl(imageUrl) && (
                   <div className="aspect-video relative">
                     <Image
                       src={imageUrl}
