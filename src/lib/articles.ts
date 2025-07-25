@@ -59,17 +59,17 @@ const uploadImage = async (imageFile: File): Promise<string> => {
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
   try {
-    let imageUrl: string | undefined = undefined;
-    if (article.imageFile) {
-      imageUrl = await uploadImage(article.imageFile);
-    }
-    
-    const docRef = await addDoc(articlesCollection, {
+    const dataToAdd: { [key: string]: any } = {
       title: article.title,
       content: article.content,
-      imageUrl: imageUrl,
       createdAt: serverTimestamp(),
-    });
+    };
+
+    if (article.imageFile) {
+      dataToAdd.imageUrl = await uploadImage(article.imageFile);
+    }
+    
+    const docRef = await addDoc(articlesCollection, dataToAdd);
     return docRef.id;
   } catch (e) {
     console.error("Error adding document: ", e);
@@ -121,7 +121,9 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
       dataToUpdate.imageUrl = await uploadImage(article.imageFile);
     }
 
-    await updateDoc(docRef, dataToUpdate);
+    if (Object.keys(dataToUpdate).length > 0) {
+      await updateDoc(docRef, dataToUpdate);
+    }
   } catch (e) {
     console.error("Error updating document: ", e);
     throw new Error("Gagal memperbarui artikel");
