@@ -50,14 +50,33 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'An unexpected error occurred. Please try again.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (error.message.includes("Firebase")) {
-        errorMessage = "Firebase configuration error. Please check your credentials.";
+      
+      // Memberikan pesan error yang lebih spesifik berdasarkan kode error dari Firebase
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = 'Email atau kata sandi salah. Silakan coba lagi.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Format email tidak valid.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'Akun pengguna ini telah dinonaktifkan.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
+          break;
+        default:
+           if (error.message.includes("Firebase")) {
+            errorMessage = "Terjadi kesalahan konfigurasi Firebase. Harap periksa kredensial Anda.";
+           }
+           break;
       }
+
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Login Gagal',
         description: errorMessage,
       });
     } finally {
