@@ -20,4 +20,7 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Memuat variabel lingkungan dari .env
+require('dotenv').config({ path: './.env' });
+
 export default nextConfig;
