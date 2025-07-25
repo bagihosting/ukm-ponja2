@@ -67,6 +67,9 @@ export default function LoginPage() {
         case 'auth/too-many-requests':
           errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
           break;
+        case 'auth/invalid-api-key':
+           errorMessage = "Terjadi kesalahan konfigurasi Firebase. Harap periksa kredensial Anda di berkas .env.";
+           break;
         default:
            if (error.message.includes("Firebase")) {
             errorMessage = "Terjadi kesalahan konfigurasi Firebase. Harap periksa kredensial Anda.";
