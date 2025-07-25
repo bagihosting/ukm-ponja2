@@ -1,6 +1,9 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,11 +20,15 @@ let auth: Auth | null = null;
 let db: Firestore | null = null;
 
 if (firebaseConfig.apiKey) {
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
+  try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
 } else {
-  console.log("Firebase config not found. Skipping initialization.");
+  console.error("Firebase config not found. Skipping initialization. Make sure .env file is populated.");
 }
 
 export { app, auth, db };
