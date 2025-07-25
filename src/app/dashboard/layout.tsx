@@ -94,7 +94,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
-    { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", badge: 0 },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
   ];
 
