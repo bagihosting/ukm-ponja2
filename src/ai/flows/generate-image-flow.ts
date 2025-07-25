@@ -29,7 +29,7 @@ const generateImageFlow = ai.defineFlow(
   async (prompt) => {
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `Buat gambar untuk artikel berita dengan judul: "${prompt}". Gambar harus relevan dengan kesehatan anak, imunisasi, atau topik puskesmas.`,
+      prompt: `Generate an image for a news article with the title: "${prompt}". The image should be relevant to child health, immunization, or public health center topics.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },

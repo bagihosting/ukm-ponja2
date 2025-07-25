@@ -16,7 +16,6 @@ import { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { generateImage } from '@/ai/flows/generate-image-flow';
-import { Label } from '@/components/ui/label';
 
 
 const articleSchema = z.object({
@@ -43,6 +42,7 @@ export default function NewArticlePage() {
   });
 
   const onSubmit = async (values: z.infer<typeof articleSchema>) => {
+    if (!db) return;
     setIsSubmitting(true);
     try {
       const imageUrl = values.imageUrl || 'https://placehold.co/600x400.png';
@@ -129,8 +129,8 @@ export default function NewArticlePage() {
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <Label>Gambar Artikel</Label>
+              <FormItem>
+                <FormLabel>Gambar Artikel</FormLabel>
                 <div className="flex items-center gap-4">
                   <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
                     {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
@@ -138,7 +138,7 @@ export default function NewArticlePage() {
                   </Button>
                    {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
                 </div>
-              </div>
+              </FormItem>
                <FormField
                   control={form.control}
                   name="imageUrl"
@@ -201,7 +201,7 @@ export default function NewArticlePage() {
             <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !db}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan Draf
             </Button>

@@ -48,6 +48,10 @@ export default function EditArticlePage() {
     if (articleId) {
       const fetchArticle = async () => {
         try {
+          if (!db) {
+            setLoading(false);
+            return;
+          }
           const articleDocRef = doc(db, 'articles', articleId);
           const articleDocSnap = await getDoc(articleDocRef);
 
@@ -83,6 +87,7 @@ export default function EditArticlePage() {
   }, [articleId, form, router, toast]);
 
   const onSubmit = async (values: z.infer<typeof articleSchema>) => {
+    if (!db) return;
     setIsSubmitting(true);
     try {
       const articleDocRef = doc(db, 'articles', articleId);
@@ -172,8 +177,8 @@ export default function EditArticlePage() {
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <Label>Gambar Artikel</Label>
+              <FormItem>
+                <FormLabel>Gambar Artikel</FormLabel>
                 <div className="flex items-center gap-4">
                   <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
                     {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
@@ -181,7 +186,7 @@ export default function EditArticlePage() {
                   </Button>
                    {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
                 </div>
-              </div>
+              </FormItem>
                <FormField
                   control={form.control}
                   name="imageUrl"
@@ -244,7 +249,7 @@ export default function EditArticlePage() {
             <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !db}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan Perubahan
             </Button>
