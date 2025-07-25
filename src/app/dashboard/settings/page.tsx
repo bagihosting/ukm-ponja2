@@ -11,7 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal } from 'lucide-react';
 
 // Mock data for admin accounts
-const initialAdmins: { id: string; email: string; role: string }[] = [];
+const initialAdmins: { id: string; email: string; role: string }[] = [
+  { id: '1', email: 'rahmantirta99@gmail.com', role: 'Admin' }
+];
 
 export default function SettingsPage() {
   const [admins, setAdmins] = useState(initialAdmins);
