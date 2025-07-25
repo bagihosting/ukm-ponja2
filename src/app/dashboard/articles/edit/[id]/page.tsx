@@ -177,22 +177,19 @@ export default function EditArticlePage() {
                   </FormItem>
                 )}
               />
-              <FormItem>
-                <FormLabel>Gambar Artikel</FormLabel>
-                <div className="flex items-center gap-4">
-                  <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
-                    {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Buat Gambar AI
-                  </Button>
-                   {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
-                </div>
-              </FormItem>
                <FormField
                   control={form.control}
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>URL Gambar</FormLabel>
+                       <div className="flex items-center gap-4">
+                          <Button type="button" variant="outline" onClick={handleGenerateImage} disabled={isGeneratingImage}>
+                            {isGeneratingImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Buat Gambar AI
+                          </Button>
+                           {isGeneratingImage && <span className="text-sm text-muted-foreground">Membuat gambar...</span>}
+                        </div>
                       <FormControl>
                         <div className="flex items-center gap-4">
                           <Input placeholder="URL gambar akan dibuat oleh AI" {...field} />
