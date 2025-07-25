@@ -40,6 +40,4 @@ export async function uploadImageFromDataUri(dataUri: string): Promise<string> {
     return downloadURL;
   } catch (error) {
     console.error('Error uploading to Firebase Storage:', error);
-    throw new Error('Gagal mengunggah gambar ke Firebase Storage.');
-  }
-}
+    throw new Error('Gagal mengunggah gambar

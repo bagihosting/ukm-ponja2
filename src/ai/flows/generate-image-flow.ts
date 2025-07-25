@@ -56,7 +56,7 @@ const generateImageFlow = ai.defineFlow(
       return { imageUrl };
     } catch (error) {
       console.error('Error uploading image to Firebase Storage:', error);
-      throw new Error('Gagal mengunggah gambar yang dibuat ke penyimpanan.');
+      throw new Error('Gagal mengunggah gambar ke Firebase Storage.');
     }
   }
 );

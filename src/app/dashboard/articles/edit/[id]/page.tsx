@@ -30,10 +30,9 @@ type ArticleFormValues = z.infer<typeof articleSchema>;
 
 const isValidUrl = (url: string): boolean => {
   if (!url) return false;
-  if (url.startsWith('data:image')) return true;
   try {
     const newUrl = new URL(url);
-    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:';
+    return (newUrl.protocol === 'http:' || newUrl.protocol === 'https:') && newUrl.hostname.includes('.');
   } catch (e) {
     return false;
   }
@@ -297,9 +296,4 @@ export default function EditArticlePage() {
               {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Buat Gambar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+          </
