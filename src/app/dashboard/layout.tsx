@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2 } from 'lucide-react';
+import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2, Newspaper } from 'lucide-react';
 
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -94,6 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
+    { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", badge: 0 },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
   ];
 
@@ -130,9 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-              </SheetHeader>
+              <DialogTitle className="sr-only">Menu</DialogTitle>
               <nav className="grid gap-2 text-lg font-medium">
                 <Link href="#" className="flex items-center gap-2 text-lg font-semibold text-primary">
                   <HeartPulse className="h-6 w-6" />
