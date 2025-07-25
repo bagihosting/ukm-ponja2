@@ -53,6 +53,8 @@ export default function EditArticlePage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
   const {
     register,
@@ -129,8 +131,9 @@ export default function EditArticlePage() {
         const { imageUrl } = await generateImage({ prompt });
         setValue('imageUrl', imageUrl, { shouldValidate: true });
         toast({ title: 'Berhasil!', description: 'Gambar telah berhasil dibuat oleh AI.' });
+        setIsDialogOpen(false); // Close dialog on success
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Gagal Membuat Gambar', description: 'Terjadi kesalahan saat membuat gambar.' });
+        toast({ variant: 'destructive', title: 'Gagal Membuat Gambar', description: `Terjadi kesalahan: ${error instanceof Error ? error.message : String(error)}` });
     } finally {
         setIsGenerating(false);
     }
@@ -225,14 +228,14 @@ export default function EditArticlePage() {
                       id="imageUrl"
                       type="url"
                       className="w-full pl-10"
-                      placeholder={imageUrl?.startsWith('data:image') ? "Gambar berhasil dibuat oleh AI" : "https://contoh.com/gambar.jpg"}
+                      placeholder="https://contoh.com/gambar.jpg"
                       {...register('imageUrl')}
                     />
                   </div>
                   {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                 </div>
 
-                <Dialog>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full">
                       <Wand2 className="mr-2 h-4 w-4" />
