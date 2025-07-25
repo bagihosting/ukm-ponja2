@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,9 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { collection, getDocs, deleteDoc, doc, Timestamp, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 type Article = {
   id: string;
@@ -22,18 +25,61 @@ type Article = {
   status: 'published' | 'draft';
 };
 
-const initialArticles: Article[] = [
-  { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', imageUrl: 'https://placehold.co/100x100.png', author: 'Dr. Tirta', createdAt: new Date('2023-10-26'), status: 'published' },
-  { id: '2', title: 'Cara Mencegah Stunting pada Balita', imageUrl: 'https://placehold.co/100x100.png', author: 'Dr. Rahman', createdAt: new Date('2023-11-05'), status: 'published' },
-  { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', imageUrl: 'https://placehold.co/100x100.png', author: 'Puskesmas Ponja', createdAt: new Date('2023-11-15'), status: 'draft' },
-];
-
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
-  const handleDelete = (id: string) => {
-    setArticles(articles.filter(article => article.id !== id));
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const articlesCollection = collection(db, 'articles');
+        const q = query(articlesCollection, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const articlesList = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            imageUrl: data.imageUrl,
+            author: data.author,
+            createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+            status: data.status,
+          };
+        });
+        setArticles(articlesList);
+      } catch (error) {
+        console.error("Error fetching articles: ", error);
+        toast({
+          variant: 'destructive',
+          title: 'Gagal memuat artikel',
+          description: 'Terjadi kesalahan saat mengambil data dari server.',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, [toast]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'articles', id));
+      setArticles(articles.filter(article => article.id !== id));
+      toast({
+        title: 'Artikel Dihapus',
+        description: 'Artikel telah berhasil dihapus.',
+      });
+    } catch (error) {
+      console.error("Error deleting article: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal menghapus artikel',
+        description: 'Terjadi kesalahan saat menghapus data.',
+      });
+    }
   };
 
   return (
@@ -67,7 +113,13 @@ export default function ArticlesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {articles.length > 0 ? (
+                {loading ? (
+                   <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">
+                      <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                    </TableCell>
+                  </TableRow>
+                ) : articles.length > 0 ? (
                   articles.map((article) => (
                     <TableRow key={article.id}>
                       <TableCell className="hidden md:table-cell">
@@ -75,7 +127,7 @@ export default function ArticlesPage() {
                           alt="Article image"
                           className="aspect-square rounded-md object-cover"
                           height="64"
-                          src={article.imageUrl}
+                          src={article.imageUrl || 'https://placehold.co/100x100.png'}
                           width="64"
                           data-ai-hint="child health"
                         />

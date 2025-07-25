@@ -11,9 +11,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
-import { useEffect } from 'react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
@@ -22,22 +24,13 @@ const articleSchema = z.object({
   imageUrl: z.string().url({ message: 'URL gambar tidak valid.' }).optional().or(z.literal('')),
 });
 
-// Mock data fetching
-const getArticleById = (id: string) => {
-    const articles = [
-      { id: '1', title: 'Pentingnya Gizi Seimbang untuk Anak', author: 'Dr. Tirta', content: 'Konten artikel tentang gizi...', status: 'published', imageUrl: 'https://placehold.co/600x400.png' },
-      { id: '2', title: 'Cara Mencegah Stunting pada Balita', author: 'Dr. Rahman', content: 'Konten artikel tentang stunting...', status: 'published', imageUrl: 'https://placehold.co/600x400.png' },
-      { id: '3', title: 'Jadwal Imunisasi Wajib untuk Bayi', author: 'Puskesmas Ponja', content: 'Konten artikel tentang imunisasi...', status: 'draft', imageUrl: 'https://placehold.co/600x400.png' },
-    ];
-    return articles.find(article => article.id === id);
-};
-
-
 export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
   const articleId = params.id as string;
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof articleSchema>>({
     resolver: zodResolver(articleSchema),
@@ -51,29 +44,72 @@ export default function EditArticlePage() {
 
   useEffect(() => {
     if (articleId) {
-      const article = getArticleById(articleId);
-      if (article) {
-        form.reset(article);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Artikel tidak ditemukan',
-        });
-        router.push('/dashboard/articles');
-      }
+      const fetchArticle = async () => {
+        try {
+          const articleDocRef = doc(db, 'articles', articleId);
+          const articleDocSnap = await getDoc(articleDocRef);
+
+          if (articleDocSnap.exists()) {
+            const articleData = articleDocSnap.data();
+            form.reset({
+              title: articleData.title,
+              author: articleData.author,
+              content: articleData.content,
+              imageUrl: articleData.imageUrl,
+            });
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'Artikel tidak ditemukan',
+            });
+            router.push('/dashboard/articles');
+          }
+        } catch (error) {
+          console.error("Error fetching article: ", error);
+          toast({
+            variant: 'destructive',
+            title: 'Gagal memuat artikel',
+            description: 'Terjadi kesalahan saat mengambil data dari server.',
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchArticle();
     }
   }, [articleId, form, router, toast]);
 
-  const onSubmit = (values: z.infer<typeof articleSchema>) => {
-    console.log(values);
-    toast({
-      title: 'Artikel Diperbarui',
-      description: 'Perubahan pada artikel Anda telah berhasil disimpan.',
-    });
-    router.push('/dashboard/articles');
+  const onSubmit = async (values: z.infer<typeof articleSchema>) => {
+    setIsSubmitting(true);
+    try {
+      const articleDocRef = doc(db, 'articles', articleId);
+      await updateDoc(articleDocRef, values);
+      toast({
+        title: 'Artikel Diperbarui',
+        description: 'Perubahan pada artikel Anda telah berhasil disimpan.',
+      });
+      router.push('/dashboard/articles');
+    } catch (error) {
+      console.error("Error updating article: ", error);
+      setIsSubmitting(false);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal memperbarui artikel',
+        description: 'Terjadi kesalahan saat menyimpan perubahan.',
+      });
+    }
   };
 
   const imageUrl = form.watch('imageUrl');
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -163,10 +199,13 @@ export default function EditArticlePage() {
           </Card>
           
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')}>
+            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit">Simpan Perubahan</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Simpan Perubahan
+            </Button>
           </div>
         </form>
       </Form>

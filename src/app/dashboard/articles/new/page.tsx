@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,8 +10,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const articleSchema = z.object({
   title: z.string().min(3, { message: 'Judul harus memiliki setidaknya 3 karakter.' }),
@@ -24,6 +26,7 @@ const articleSchema = z.object({
 export default function NewArticlePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof articleSchema>>({
     resolver: zodResolver(articleSchema),
@@ -31,17 +34,32 @@ export default function NewArticlePage() {
       title: '',
       author: '',
       content: '',
-      imageUrl: '',
+      imageUrl: 'https://placehold.co/600x400.png',
     },
   });
 
-  const onSubmit = (values: z.infer<typeof articleSchema>) => {
-    console.log(values);
-    toast({
-      title: 'Artikel Dibuat',
-      description: 'Artikel baru Anda telah berhasil disimpan sebagai draf.',
-    });
-    router.push('/dashboard/articles');
+  const onSubmit = async (values: z.infer<typeof articleSchema>) => {
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'articles'), {
+        ...values,
+        status: 'draft',
+        createdAt: serverTimestamp(),
+      });
+      toast({
+        title: 'Artikel Dibuat',
+        description: 'Artikel baru Anda telah berhasil disimpan sebagai draf.',
+      });
+      router.push('/dashboard/articles');
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      setIsSubmitting(false);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Artikel',
+        description: 'Terjadi kesalahan saat menyimpan artikel baru.',
+      });
+    }
   };
 
   const imageUrl = form.watch('imageUrl');
@@ -134,10 +152,13 @@ export default function NewArticlePage() {
           </Card>
           
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')}>
+            <Button type="button" variant="outline" onClick={() => router.push('/dashboard/articles')} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit">Simpan Draf</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Simpan Draf
+            </Button>
           </div>
         </form>
       </Form>
