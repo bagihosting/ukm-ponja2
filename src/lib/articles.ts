@@ -14,18 +14,11 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from 'firebase/storage';
 
 if (!app) {
   throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
 }
 
-const storage = getStorage(app);
 const articlesCollection = collection(db, 'articles');
 
 export interface Article {
@@ -39,22 +32,14 @@ export interface Article {
 export interface ArticleInput {
   title: string;
   content: string;
-  imageFile?: File;
+  imageUrl?: string;
 }
 
 export interface ArticleUpdateInput {
   title?: string;
   content?: string;
-  imageFile?: File;
+  imageUrl?: string;
 }
-
-// Fungsi untuk mengunggah gambar dan mendapatkan URL
-const uploadImage = async (imageFile: File): Promise<string> => {
-  const storageRef = ref(storage, `articles/${Date.now()}_${imageFile.name}`);
-  const snapshot = await uploadBytes(storageRef, imageFile);
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  return downloadURL;
-};
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
@@ -65,8 +50,8 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
       createdAt: serverTimestamp(),
     };
 
-    if (article.imageFile) {
-      dataToAdd.imageUrl = await uploadImage(article.imageFile);
+    if (article.imageUrl) {
+      dataToAdd.imageUrl = article.imageUrl;
     }
     
     const docRef = await addDoc(articlesCollection, dataToAdd);
@@ -112,15 +97,13 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
   try {
     const docRef = doc(db, 'articles', id);
-    const dataToUpdate: { [key: string]: any } = {};
-
-    if (article.title) dataToUpdate.title = article.title;
-    if (article.content) dataToUpdate.content = article.content;
     
-    if (article.imageFile) {
-      dataToUpdate.imageUrl = await uploadImage(article.imageFile);
-    }
+    // Create a copy to avoid modifying the original object
+    const dataToUpdate: { [key: string]: any } = { ...article };
 
+    // Firestore does not allow updating with undefined values.
+    Object.keys(dataToUpdate).forEach(key => dataToUpdate[key] === undefined && delete dataToUpdate[key]);
+    
     if (Object.keys(dataToUpdate).length > 0) {
       await updateDoc(docRef, dataToUpdate);
     }
@@ -129,6 +112,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     throw new Error("Gagal memperbarui artikel");
   }
 };
+
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
