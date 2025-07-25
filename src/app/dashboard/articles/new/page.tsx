@@ -27,14 +27,16 @@ const articleSchema = z.object({
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
 
-const isValidUrl = (url: string) => {
-  try {
-    new URL(url);
+const isValidUrl = (url: string): boolean => {
+  if (!url) return false;
+  if (url.startsWith('data:image')) {
     return true;
+  }
+  try {
+    const newUrl = new URL(url);
+    // Ensure it's http or https and has a valid hostname with a dot.
+    return (newUrl.protocol === 'http:' || newUrl.protocol === 'https:') && newUrl.hostname.includes('.');
   } catch (e) {
-    if (url.startsWith('data:image')) {
-      return true;
-    }
     return false;
   }
 };
