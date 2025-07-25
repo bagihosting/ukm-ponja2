@@ -15,20 +15,32 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
+let app: FirebaseApp;
+let auth: Auth;
 let db: Firestore | null = null;
 
-if (firebaseConfig.apiKey) {
+if (!getApps().length) {
   try {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
   } catch (error) {
     console.error("Firebase initialization error:", error);
+    // @ts-ignore
+    app = null;
+    // @ts-ignore
+    auth = null;
+    db = null;
   }
 } else {
-  console.error("Firebase config not found. Skipping initialization. Make sure .env file is populated.");
+  app = getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+}
+
+// Check if Firebase was initialized correctly
+if (!app || !auth) {
+  console.error("Firebase is not configured correctly. Check your .env file and Firebase project setup.");
 }
 
 export { app, auth, db };

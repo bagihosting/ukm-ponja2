@@ -25,6 +25,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const isFirebaseReady = !!auth;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,7 +44,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      if (!auth) {
+      if (!isFirebaseReady) {
         throw new Error("Firebase is not configured correctly.");
       }
       await signInWithEmailAndPassword(auth, values.email, values.password);
@@ -51,7 +52,6 @@ export default function LoginPage() {
     } catch (error: any) {
       let errorMessage = 'An unexpected error occurred. Please try again.';
       
-      // Memberikan pesan error yang lebih spesifik berdasarkan kode error dari Firebase
       switch (error.code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
@@ -68,12 +68,15 @@ export default function LoginPage() {
           errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
           break;
         case 'auth/invalid-api-key':
-           errorMessage = "Terjadi kesalahan konfigurasi Firebase. Harap periksa kredensial Anda di berkas .env.";
+        case 'auth/app-deleted':
+        case 'auth/project-not-found':
+           errorMessage = "Kesalahan Konfigurasi Firebase. Harap periksa kredensial Anda di berkas .env.";
            break;
         default:
            if (error.message.includes("Firebase")) {
-            errorMessage = "Terjadi kesalahan konfigurasi Firebase. Harap periksa kredensial Anda.";
+            errorMessage = "Terjadi kesalahan pada Firebase. Periksa konsol untuk detailnya.";
            }
+           console.error("Login Error:", error);
            break;
       }
 
@@ -134,10 +137,15 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading || !auth}>
+              <Button type="submit" className="w-full" disabled={loading || !isFirebaseReady}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
+               {!isFirebaseReady && (
+                <p className="text-center text-sm text-destructive">
+                  Konfigurasi Firebase tidak ditemukan. Aplikasi tidak dapat berfungsi.
+                </p>
+              )}
             </form>
           </Form>
         </CardContent>
