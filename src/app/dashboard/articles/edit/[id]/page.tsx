@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getArticle, updateArticle, Article } from '@/lib/articles';
+import { getArticle, updateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { generateImage } from '@/ai/flows/generate-image-flow';
 
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
@@ -34,12 +36,15 @@ export default function EditArticlePage() {
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [prompt, setPrompt] = useState('');
 
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -96,6 +101,23 @@ export default function EditArticlePage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleGenerateImage = async () => {
+    if (!prompt) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const { imageUrl } = await generateImage({ prompt });
+        setValue('imageUrl', imageUrl, { shouldValidate: true });
+        toast({ title: 'Berhasil!', description: 'Gambar telah berhasil dibuat oleh AI.' });
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Gagal Membuat Gambar', description: 'Terjadi kesalahan saat membuat gambar.' });
+    } finally {
+        setIsGenerating(false);
     }
   };
   
@@ -188,12 +210,45 @@ export default function EditArticlePage() {
                       id="imageUrl"
                       type="url"
                       className="w-full pl-10"
-                      placeholder="https://contoh.com/gambar.jpg"
+                      placeholder={imageUrl?.startsWith('data:image') ? "Gambar berhasil dibuat oleh AI" : "https://contoh.com/gambar.jpg"}
                       {...register('imageUrl')}
                     />
                   </div>
                   {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                 </div>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Buat dengan AI
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Buat Gambar dari Teks</DialogTitle>
+                      <DialogDescription>
+                        Jelaskan gambar yang ingin Anda buat. AI akan membuatnya untuk Anda.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <Label htmlFor="prompt">Deskripsi Gambar</Label>
+                      <Textarea 
+                        id="prompt" 
+                        placeholder="Contoh: seekor kucing oranye tidur di atas tumpukan buku"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleGenerateImage} disabled={isGenerating}>
+                        {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Buat Gambar
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
                 {imageUrl && !errors.imageUrl && (
                   <div className="aspect-video relative">
                     <Image
