@@ -246,19 +246,19 @@ export default function ProfileSettingsPage() {
                     <TableRow>
                       <TableCell>
                         <form id="add-member-form" onSubmit={addMemberForm.handleSubmit(handleAddNewMember)}>
-                          <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" autoFocus />
+                          <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" autoFocus disabled={addMemberForm.formState.isSubmitting} />
                           {addMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.name.message}</p>}
                         </form>
                       </TableCell>
                       <TableCell>
-                        <Input form="add-member-form" {...addMemberForm.register('role')} placeholder="Peran dalam tim" />
+                        <Input form="add-member-form" {...addMemberForm.register('role')} placeholder="Peran dalam tim" disabled={addMemberForm.formState.isSubmitting} />
                         {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
                          <Button form="add-member-form" type="submit" size="icon" variant="ghost" disabled={addMemberForm.formState.isSubmitting}>
                            {addMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
                          </Button>
-                         <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)}><X className="h-4 w-4" /></Button>
+                         <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)} disabled={addMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
                   )}
@@ -268,19 +268,19 @@ export default function ProfileSettingsPage() {
                        <TableRow key={member.id}>
                         <TableCell>
                           <form id={`edit-member-form-${member.id}`} onSubmit={editMemberForm.handleSubmit(handleUpdateMember)}>
-                            <Input {...editMemberForm.register('name')} autoFocus />
+                            <Input {...editMemberForm.register('name')} autoFocus disabled={editMemberForm.formState.isSubmitting}/>
                             {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
                           </form>
                         </TableCell>
                         <TableCell>
-                          <Input form={`edit-member-form-${member.id}`} {...editMemberForm.register('role')} />
+                          <Input form={`edit-member-form-${member.id}`} {...editMemberForm.register('role')} disabled={editMemberForm.formState.isSubmitting}/>
                            {editMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.role.message}</p>}
                         </TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button form={`edit-member-form-${member.id}`} type="submit" size="icon" variant="ghost" disabled={editMemberForm.formState.isSubmitting}>
                             {editMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setEditingMemberId(null)}><X className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setEditingMemberId(null)} disabled={editMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -288,8 +288,8 @@ export default function ProfileSettingsPage() {
                         <TableCell>{member.name}</TableCell>
                         <TableCell>{member.role}</TableCell>
                         <TableCell className="text-right space-x-2">
-                          <Button size="icon" variant="ghost" onClick={() => startEditing(member)} disabled={isAddingMember}><Edit className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => startEditing(member)} disabled={isAddingMember || !!editingMemberId}><Edit className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember || !!editingMemberId}><Trash2 className="h-4 w-4 text-red-600" /></Button>
                         </TableCell>
                       </TableRow>
                     )
@@ -322,3 +322,5 @@ export default function ProfileSettingsPage() {
     </>
   );
 }
+
+    
