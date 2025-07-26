@@ -3,48 +3,51 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if a user is an authenticated admin.
-    function isAdmin() {
-      // This is a basic check. In a real-world scenario, you might have a 'roles' collection
-      // or custom claims to verify admin status more securely.
-      return request.auth != null;
-    }
 
-    // Default rule: Deny all reads and writes by default for security.
-    match /{document=**} {
-      allow read, write: if false;
+    // Helper function to check if a user is authenticated.
+    // In a real-world scenario, you might also check for a 'role' claim.
+    function isAdmin() {
+      return request.auth != null;
     }
 
     // Rules for the 'articles' collection
     match /articles/{articleId} {
-      allow read: if true; // Anyone can read articles
-      allow write: if isAdmin(); // Only admins can create, update, delete
+      // Anyone can read the list of articles or a single article.
+      allow get, list: if true;
+      // Only authenticated admins can create, update, or delete articles.
+      allow create, update, delete: if isAdmin();
     }
-
+    
     // Rules for the 'programs' collection
     match /programs/{programId} {
-      allow read: if true; // Anyone can read programs
-      allow write: if isAdmin(); // Only admins can manage programs
+      // Anyone can read the list of programs or a single program.
+      allow get, list: if true;
+      // Only authenticated admins can create, update, or delete programs.
+      allow create, update, delete: if isAdmin();
     }
 
     // Rules for the 'galleryImages' collection
     match /galleryImages/{imageId} {
-      allow read: if true; // Anyone can view gallery images
-      allow write: if isAdmin(); // Only admins can manage the gallery history
-    }
-
-    // Rules for the 'settings' collection (e.g., for SEO)
-    match /settings/{settingId} {
-        allow read: if true; // SEO settings need to be public for layout rendering
-        allow write: if isAdmin(); // Only admins can change SEO settings
+      // Anyone can read the list of gallery images or a single image record.
+      allow get, list: if true;
+      // Only authenticated admins can create, update, or delete gallery image records.
+      allow create, update, delete: if isAdmin();
     }
     
-    // Rules for 'users' collection.
-    // User data should be managed by Firebase Auth and backend functions,
-    // but admins may need read access for management purposes.
+    // Rules for the 'settings' collection
+    match /settings/{settingId} {
+      // Anyone can read settings documents (like SEO).
+      allow get, list: if true;
+      // Only authenticated admins can write to settings.
+      allow write: if isAdmin();
+    }
+    
+    // Rules for the 'users' collection
     match /users/{userId} {
-        allow read: if isAdmin(); // Allow authenticated admins to read user data
-        allow write: if false;      // Disallow client-side writes for security
+       // Only admins can read user data. No one can list all users from the client.
+      allow get: if isAdmin();
+      // Writing to the users collection should be handled by server-side logic or functions, not directly from the client.
+      allow list, write: if false;
     }
   }
 }
