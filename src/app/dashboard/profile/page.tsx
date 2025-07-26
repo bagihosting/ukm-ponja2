@@ -50,6 +50,10 @@ const memberSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type MemberFormValues = z.infer<typeof memberSchema>;
 
+// Separate form for editing, to avoid state conflicts
+const editMemberSchema = memberSchema;
+type EditMemberFormValues = z.infer<typeof editMemberSchema>;
+
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -63,9 +67,13 @@ export default function ProfileSettingsPage() {
     resolver: zodResolver(profileSchema),
   });
   
-  const memberForm = useForm<MemberFormValues>({
+  const addMemberForm = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
     defaultValues: { name: '', role: ''},
+  });
+
+  const editMemberForm = useForm<EditMemberFormValues>({
+    resolver: zodResolver(editMemberSchema),
   });
 
 
@@ -105,23 +113,18 @@ export default function ProfileSettingsPage() {
       setTeamMembers([...teamMembers, { id: newMemberId, ...data }]);
       toast({ title: 'Berhasil', description: 'Anggota baru berhasil ditambahkan.' });
       setIsAddingMember(false);
-      memberForm.reset();
+      addMemberForm.reset();
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Gagal Menambah', description: error.message });
     }
   };
 
-  const handleUpdateMember = async (memberId: string) => {
-    const member = teamMembers.find(m => m.id === memberId);
-    if (!member) return;
-
-    const values = memberForm.getValues();
+  const handleUpdateMember = async (memberId: string, data: EditMemberFormValues) => {
     try {
-      await updateTeamMember(memberId, values);
-      setTeamMembers(teamMembers.map(m => (m.id === memberId ? { ...m, ...values } : m)));
+      await updateTeamMember(memberId, data);
+      setTeamMembers(teamMembers.map(m => (m.id === memberId ? { ...m, ...data } : m)));
       toast({ title: 'Berhasil', description: 'Anggota berhasil diperbarui.' });
       setIsEditingMember(null);
-      memberForm.reset();
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: error.message });
     }
@@ -129,13 +132,13 @@ export default function ProfileSettingsPage() {
   
   const startEditing = (member: TeamMember) => {
     setIsEditingMember(member.id);
-    memberForm.reset({ name: member.name, role: member.role });
+    editMemberForm.reset({ name: member.name, role: member.role });
     setIsAddingMember(false);
   };
 
   const cancelEditing = () => {
     setIsEditingMember(null);
-    memberForm.reset();
+    editMemberForm.reset();
   };
 
   const handleDeleteMember = async () => {
@@ -205,7 +208,7 @@ export default function ProfileSettingsPage() {
                 <CardDescription>Kelola anggota tim yang ditampilkan di halaman profil.</CardDescription>
               </div>
               {!isAddingMember && (
-                <Button size="sm" onClick={() => { setIsAddingMember(true); setIsEditingMember(null); memberForm.reset(); }}>
+                <Button size="sm" onClick={() => { setIsAddingMember(true); setIsEditingMember(null); addMemberForm.reset(); }}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Tambah Anggota
                 </Button>
@@ -225,15 +228,15 @@ export default function ProfileSettingsPage() {
                 {isAddingMember && (
                    <TableRow>
                     <TableCell>
-                      <Input {...memberForm.register('name')} placeholder="Nama Anggota" />
-                       {memberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{memberForm.formState.errors.name.message}</p>}
+                      <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" />
+                       {addMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.name.message}</p>}
                     </TableCell>
                     <TableCell>
-                      <Input {...memberForm.register('role')} placeholder="Peran dalam tim" />
-                       {memberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{memberForm.formState.errors.role.message}</p>}
+                      <Input {...addMemberForm.register('role')} placeholder="Peran dalam tim" />
+                       {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <Button size="icon" variant="ghost" onClick={memberForm.handleSubmit(handleAddNewMember)}><Save className="h-4 w-4 text-green-600" /></Button>
+                       <Button size="icon" variant="ghost" onClick={addMemberForm.handleSubmit(handleAddNewMember)}><Save className="h-4 w-4 text-green-600" /></Button>
                        <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)}><X className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
@@ -242,10 +245,16 @@ export default function ProfileSettingsPage() {
                 {teamMembers.map((member) => (
                   isEditingMember === member.id ? (
                      <TableRow key={member.id}>
-                      <TableCell><Input {...memberForm.register('name')} /></TableCell>
-                      <TableCell><Input {...memberForm.register('role')} /></TableCell>
+                      <TableCell>
+                        <Input {...editMemberForm.register('name')} />
+                        {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
+                      </TableCell>
+                      <TableCell>
+                        <Input {...editMemberForm.register('role')} />
+                         {editMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.role.message}</p>}
+                      </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="icon" variant="ghost" onClick={() => handleUpdateMember(member.id)}><Save className="h-4 w-4 text-green-600" /></Button>
+                        <Button size="icon" variant="ghost" onClick={editMemberForm.handleSubmit((data) => handleUpdateMember(member.id, data))}><Save className="h-4 w-4 text-green-600" /></Button>
                         <Button size="icon" variant="ghost" onClick={cancelEditing}><X className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
@@ -287,3 +296,5 @@ export default function ProfileSettingsPage() {
     </div>
   );
 }
+
+    
