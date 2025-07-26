@@ -27,6 +27,7 @@ service cloud.firestore {
 
     // Aturan default yang penting untuk keamanan:
     // Menolak semua akses ke koleksi lain yang tidak didefinisikan secara eksplisit.
+    // Ini adalah jaring pengaman untuk mencegah akses yang tidak diinginkan di masa mendatang.
     match /{document=**} {
       allow read, write: if false;
     }
