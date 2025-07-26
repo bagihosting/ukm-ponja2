@@ -161,7 +161,6 @@ export default function HomePage() {
           {/* Slider Section */}
           {loading ? <div className="my-8 h-[50vh] bg-muted rounded-lg animate-pulse" /> : galleryImages.length > 0 && (
             <section className="my-8">
-                <h2 className="text-3xl font-bold tracking-tight text-center mb-6">Galeri Kegiatan</h2>
                 <Carousel 
                     opts={{
                     align: "start",
@@ -187,6 +186,17 @@ export default function HomePage() {
                 </Carousel>
             </section>
           )}
+
+          {/* Intro Section */}
+          <section className="py-12 text-center">
+            <div className="mx-auto max-w-3xl">
+                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Selamat Datang di UKM PONJA</h1>
+                <p className="mt-6 text-lg leading-8 text-muted-foreground">
+                    Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
+                </p>
+            </div>
+          </section>
+
 
           {/* Articles Section */}
           <section id="articles" className="py-12 space-y-8">
