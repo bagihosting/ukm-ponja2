@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2, Newspaper, Image as ImageIcon } from 'lucide-react';
+import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2, Newspaper, Image as ImageIcon, Briefcase } from 'lucide-react';
 
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -96,6 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navLinks = [
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
     { href: "/dashboard/articles", icon: Newspaper, label: "Articles", badge: 0 },
+    { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", badge: 0 },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
   ];
 
