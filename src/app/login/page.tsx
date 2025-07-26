@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
@@ -17,17 +17,15 @@ import { Loader2, Lock } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  email: z.string().email({ message: 'Silakan masukkan email yang valid.' }),
+  password: z.string().min(1, { message: 'Kata sandi tidak boleh kosong.' }),
 });
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const { user, loading: authLoading } = useAuth();
-  const isFirebaseReady = !!auth;
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,16 +34,23 @@ export default function LoginPage() {
     },
   });
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
     try {
-      if (!isFirebaseReady) {
-        throw new Error("Firebase is not configured correctly.");
+      if (!auth) {
+        throw new Error("Konfigurasi Firebase tidak ditemukan. Aplikasi tidak dapat berfungsi.");
       }
       await signInWithEmailAndPassword(auth, values.email, values.password);
+      // Redirect is handled by the effect hook, but we can push here as well for faster navigation
       router.push('/dashboard');
     } catch (error: any) {
-      let errorMessage = 'An unexpected error occurred. Please try again.';
+      let errorMessage = 'Terjadi kesalahan tak terduga. Silakan coba lagi.';
       
       switch (error.code) {
         case 'auth/user-not-found':
@@ -70,7 +75,7 @@ export default function LoginPage() {
            break;
         default:
            if (error.message.includes("Firebase")) {
-            errorMessage = "Terjadi kesalahan pada Firebase. Periksa konsol untuk detailnya.";
+            errorMessage = `Terjadi kesalahan pada Firebase: ${error.message}`;
            }
            console.error("Login Error:", error);
            break;
@@ -81,12 +86,13 @@ export default function LoginPage() {
         title: 'Login Gagal',
         description: errorMessage,
       });
-    } finally {
-      setLoading(false);
     }
   }
+  
+  const isLoading = form.formState.isSubmitting || authLoading;
 
-  if (authLoading || (!authLoading && user)) {
+  // Show a loader while checking auth state or if user is found, before redirect
+  if (authLoading || user) {
     return (
        <div className="flex h-screen w-full items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -102,7 +108,7 @@ export default function LoginPage() {
             <Lock className="h-8 w-8 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl font-bold">Admin Sign In</CardTitle>
-          <CardDescription>Enter your credentials to access the dashboard</CardDescription>
+          <CardDescription>Masukkan kredensial Anda untuk mengakses dasbor</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -114,7 +120,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@example.com" {...field} />
+                      <Input placeholder="nama@contoh.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,7 +131,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Kata Sandi</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -133,11 +139,11 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading || !isFirebaseReady}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
-               {!isFirebaseReady && (
+               {!auth && (
                 <p className="text-center text-sm text-destructive">
                   Konfigurasi Firebase tidak ditemukan. Aplikasi tidak dapat berfungsi.
                 </p>
