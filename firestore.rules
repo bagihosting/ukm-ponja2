@@ -3,30 +3,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Fungsi bantuan untuk memeriksa apakah pengguna terautentikasi (dianggap sebagai admin)
+    // Fungsi ini adalah jantung dari keamanan Anda.
+    // Ia memeriksa apakah permintaan (request) yang masuk ke Firestore
+    // membawa informasi autentikasi yang valid. Jika ya, pengguna dianggap admin.
     function isAdmin() {
       return request.auth != null;
     }
 
     // Aturan untuk koleksi "articles"
-    // Siapa pun dapat membaca artikel.
-    // Hanya admin yang dapat membuat, memperbarui, atau menghapus artikel.
+    // 'allow read: if true;' berarti siapa saja, bahkan pengunjung anonim,
+    // dapat melihat data artikel. Ini penting untuk portal publik Anda.
+    // 'allow write: if isAdmin();' berarti hanya pengguna yang sudah login
+    // yang dapat membuat, mengubah, atau menghapus artikel.
     match /articles/{articleId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // Aturan untuk koleksi "galleryImages"
-    // Siapa pun dapat melihat gambar di galeri.
-    // Hanya admin yang dapat menambahkan atau menghapus riwayat gambar.
+    // Sama seperti artikel, galeri bisa dilihat oleh siapa saja.
+    // Namun, hanya admin yang bisa menambahkan atau menghapus gambar.
     match /galleryImages/{imageId} {
       allow read: if true;
       allow create, delete: if isAdmin();
     }
 
-    // Aturan default yang sangat penting:
-    // Tolak semua akses baca dan tulis ke koleksi lain yang tidak didefinisikan di atas.
-    // Ini mencegah akses yang tidak disengaja ke data sensitif di masa depan.
+    // Aturan Penutup (Sangat Penting untuk Keamanan)
+    // Aturan ini secara eksplisit menolak semua akses baca dan tulis
+    // ke koleksi lain yang mungkin Anda buat di masa depan secara tidak sengaja.
+    // Ini adalah prinsip keamanan "least privilege".
     match /{document=**} {
       allow read, write: if false;
     }
