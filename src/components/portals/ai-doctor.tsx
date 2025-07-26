@@ -7,14 +7,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { askDoctor, type AskDoctorInput } from '@/ai/flows/ask-doctor-flow';
+import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
 import { HeartPulse, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function AiDoctor() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [isAsking, setIsAsking] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { toast } = useToast();
+  
+  const isLoading = isAsking || isGeneratingImage;
 
   const handleAsk = async () => {
     if (!question.trim()) {
@@ -26,14 +33,37 @@ export function AiDoctor() {
       return;
     }
 
-    setIsLoading(true);
+    setIsAsking(true);
     setAnswer('');
+    setImageUrl('');
 
     try {
+      // 1. Get the text answer and image suggestion
       const input: AskDoctorInput = { question };
       const result = await askDoctor(input);
+      
       if (result.answer) {
         setAnswer(result.answer);
+        
+        // 2. If there's an image suggestion, generate the image in parallel
+        if (result.imageSuggestion) {
+            setIsGeneratingImage(true);
+            try {
+                const imageInput: GenerateImageInput = { prompt: result.imageSuggestion };
+                const imageResult = await generateImage(imageInput);
+                if (imageResult.imageUrl) {
+                    setImageUrl(imageResult.imageUrl);
+                }
+            } catch (imageError: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Gagal Membuat Gambar',
+                    description: `Terjadi kesalahan saat membuat gambar: ${imageError.message}`,
+                });
+            } finally {
+                setIsGeneratingImage(false);
+            }
+        }
       } else {
         throw new Error('AI tidak memberikan jawaban.');
       }
@@ -44,7 +74,7 @@ export function AiDoctor() {
         description: `Terjadi kesalahan: ${error.message}`,
       });
     } finally {
-      setIsLoading(false);
+      setIsAsking(false);
     }
   };
 
@@ -69,10 +99,10 @@ export function AiDoctor() {
           className="resize-none"
         />
         <Button onClick={handleAsk} disabled={isLoading} className="w-full">
-          {isLoading ? (
+          {isAsking ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Memproses...
+              Memproses Jawaban...
             </>
           ) : (
              <>
@@ -83,14 +113,37 @@ export function AiDoctor() {
         </Button>
       </CardContent>
 
-      {answer && (
+      {(isAsking || answer) && (
         <CardFooter>
-          <Alert>
-            <AlertTitle className="font-semibold">Jawaban Dokter Puskesmas:</AlertTitle>
-            <AlertDescription className="whitespace-pre-wrap text-foreground">
-              {answer}
-            </AlertDescription>
-          </Alert>
+          <div className="w-full">
+             <AlertTitle className="font-semibold text-xl mb-4">Jawaban Dokter Puskesmas:</AlertTitle>
+             <div className="grid md:grid-cols-2 gap-6 items-start">
+                 <div className="space-y-4">
+                    {isGeneratingImage ? (
+                        <Skeleton className="w-full aspect-video rounded-lg" />
+                    ) : imageUrl ? (
+                        <AspectRatio ratio={16/9} className="bg-muted rounded-lg overflow-hidden border">
+                            <img src={imageUrl} alt="Ilustrasi jawaban dokter" className="w-full h-full object-cover" />
+                        </AspectRatio>
+                    ) : null}
+                 </div>
+                 <div>
+                    {isAsking ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                        </div>
+                    ) : (
+                        <Alert className="border-none p-0">
+                            <AlertDescription className="whitespace-pre-wrap text-foreground text-base">
+                            {answer}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                 </div>
+             </div>
+          </div>
         </CardFooter>
       )}
     </Card>

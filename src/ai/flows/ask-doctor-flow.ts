@@ -18,6 +18,7 @@ export type AskDoctorInput = z.infer<typeof AskDoctorInputSchema>;
 
 const AskDoctorOutputSchema = z.object({
   answer: z.string().describe('Jawaban yang dihasilkan AI untuk pertanyaan kesehatan.'),
+  imageSuggestion: z.string().describe('Deskripsi singkat dan fotorealistik dalam bahasa Inggris untuk menghasilkan gambar yang relevan dengan jawaban. Contoh: "stethoscope on a doctor\'s desk" atau "healthy balanced meal".'),
 });
 export type AskDoctorOutput = z.infer<typeof AskDoctorOutputSchema>;
 
@@ -31,6 +32,8 @@ const prompt = ai.definePrompt({
   output: { schema: AskDoctorOutputSchema },
   prompt: `Anda adalah seorang dokter dari Puskesmas Pondok Jagung - Tangerang Selatan. 
 Sebagai asisten kesehatan virtual, tugas Anda adalah menjawab pertanyaan kesehatan dari pengguna dengan ramah, jelas, mudah dipahami, dan mendukung.
+
+Selain memberikan jawaban, buat juga deskripsi singkat dalam BAHASA INGGRIS untuk menghasilkan gambar yang relevan secara visual dengan topik jawaban.
 
 Gunakan gaya bahasa yang empatik dan profesional. 
 
