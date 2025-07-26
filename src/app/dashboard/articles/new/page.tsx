@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Sparkles, Download } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addArticle } from '@/lib/articles';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
 
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
@@ -41,15 +39,11 @@ export default function NewArticlePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -83,31 +77,6 @@ export default function NewArticlePage() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGenerateImage = async () => {
-    if (!aiPrompt) {
-      toast({ variant: 'destructive', title: 'Prompt Kosong', description: 'Silakan masukkan deskripsi gambar.' });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const input: GenerateImageInput = { prompt: aiPrompt };
-      const result = await generateImage(input);
-      if (result.imageUrl) {
-        setValue('imageUrl', result.imageUrl, { shouldValidate: true });
-        toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan URL ditambahkan.' });
-        setIsAiModalOpen(false);
-        setAiPrompt('');
-      } else {
-        throw new Error('AI tidak mengembalikan URL gambar.');
-      }
-    } catch (error: any) {
-      console.error(error);
-      toast({ variant: 'destructive', title: 'Gagal Membuat Gambar', description: `Terjadi kesalahan: ${error.message}` });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -182,7 +151,7 @@ export default function NewArticlePage() {
               <CardHeader>
                 <CardTitle>Gambar Artikel</CardTitle>
                 <CardDescription>
-                  Tempelkan URL atau buat gambar dengan AI.
+                  Tempelkan URL gambar untuk artikel.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -202,11 +171,6 @@ export default function NewArticlePage() {
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
 
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Buat dengan AI
-                  </Button>
-
                   {imageUrl && isValidUrl(imageUrl) && (
                     <div className="space-y-2">
                         <div className="aspect-video relative">
@@ -217,12 +181,6 @@ export default function NewArticlePage() {
                                 className="object-cover rounded-md"
                             />
                         </div>
-                        <a href={imageUrl} download="generated-image.png" className="inline-block w-full">
-                            <Button type="button" variant="secondary" size="sm" className="w-full">
-                                <Download className="mr-2 h-4 w-4" />
-                                Unduh Gambar
-                            </Button>
-                        </a>
                     </div>
                   )}
                 </div>
@@ -240,38 +198,6 @@ export default function NewArticlePage() {
           </Button>
         </div>
       </form>
-      
-      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Buat Gambar dengan AI</DialogTitle>
-            <DialogDescription>
-              Masukkan deskripsi (prompt) untuk gambar yang ingin Anda buat.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2 pb-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-prompt">Deskripsi Gambar</Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder='Contoh: "Kucing lucu memakai kacamata hitam"'
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                disabled={isGenerating}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isGenerating}>Batal</Button>
-            </DialogClose>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGenerating || !aiPrompt}>
-              {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Buat Gambar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
