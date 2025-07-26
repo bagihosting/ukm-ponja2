@@ -72,14 +72,16 @@ function toArticle(doc: any): Article {
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
   try {
+    // Start with the base data
     const dataToAdd: { [key: string]: any } = {
-      ...article,
+      title: article.title,
+      content: article.content,
       createdAt: serverTimestamp(),
     };
     
     // Only include imageUrl if it's a non-empty string
-    if (!article.imageUrl) {
-        delete dataToAdd.imageUrl;
+    if (article.imageUrl) {
+        dataToAdd.imageUrl = article.imageUrl;
     }
     
     const docRef = await addDoc(articlesCollection, dataToAdd);
@@ -89,6 +91,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     throw new Error(`Gagal menambahkan artikel: ${e.message}`);
   }
 };
+
 
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
