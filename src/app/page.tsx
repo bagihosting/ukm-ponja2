@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import React from 'react';
 
 
@@ -27,11 +27,11 @@ function PortalNavbar() {
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center justify-between">
-                {/* Desktop Menu */}
+                {/* Desktop Logo and Navigation */}
                 <div className="mr-4 hidden md:flex">
                     <Link href="/" className="mr-6 flex items-center space-x-2">
                         <HeartPulse className="h-6 w-6 text-primary" />
-                        <span className="hidden font-bold sm:inline-block">UKM PONJA</span>
+                        <span className="font-bold sm:inline-block">UKM PONJA</span>
                     </Link>
                     <nav className="flex items-center space-x-6 text-sm font-medium">
                         {navLinks.map(({ href, label }) => (
@@ -41,55 +41,52 @@ function PortalNavbar() {
                         ))}
                     </nav>
                 </div>
-                
-                {/* Mobile Menu */}
-                <div className="md:hidden">
-                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
+
+                {/* Mobile Menu Trigger and Logo */}
+                <div className="flex items-center md:hidden">
+                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                             <Button variant="ghost" size="icon">
+                             <Button variant="ghost" size="icon" className="mr-2">
                                 <Menu className="h-6 w-6" />
                                 <span className="sr-only">Buka Menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left">
-                            <SheetHeader>
-                               <SheetTitle>
-                                 <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+                        <SheetContent side="left" className="w-[240px]">
+                            <div className="p-4">
+                               <Link href="/" className="mb-8 flex items-center space-x-2" onClick={() => setIsOpen(false)}>
                                     <HeartPulse className="h-6 w-6 text-primary" />
                                     <span className="font-bold">UKM PONJA</span>
                                 </Link>
-                               </SheetTitle>
-                            </SheetHeader>
-                             <nav className="mt-8 grid gap-4">
-                                {navLinks.map(({ href, label }) => (
-                                    <Link 
-                                        key={label} 
-                                        href={href} 
-                                        className="text-lg font-medium text-foreground/80 hover:text-foreground"
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        {label}
+                                <nav className="mt-8 grid gap-4">
+                                    {navLinks.map(({ href, label }) => (
+                                        <Link 
+                                            key={label} 
+                                            href={href} 
+                                            className="text-lg font-medium text-foreground/80 hover:text-foreground"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            {label}
+                                        </Link>
+                                    ))}
+                                </nav>
+                                <div className="mt-8 border-t pt-4">
+                                     <Link href="/login" onClick={() => setIsOpen(false)}>
+                                        <Button variant="outline" className="w-full">Admin Login</Button>
                                     </Link>
-                                ))}
-                            </nav>
+                                </div>
+                            </div>
                         </SheetContent>
                     </Sheet>
+                    <Link href="/" className="flex items-center space-x-2 md:hidden">
+                        <HeartPulse className="h-6 w-6 text-primary" />
+                        <span className="font-bold sm:inline-block">UKM PONJA</span>
+                    </Link>
                 </div>
-
-                <div className="hidden md:flex flex-1 items-center justify-end space-x-2">
+                
+                {/* Desktop Login Button */}
+                <div className="hidden flex-1 items-center justify-end md:flex">
                     <Link href="/login">
                         <Button variant="ghost">Admin Login</Button>
-                    </Link>
-                </div>
-
-                 {/* Mobile Brand and Login */}
-                <div className="flex items-center gap-4 md:hidden">
-                    <Link href="/" className="flex items-center space-x-2">
-                        <HeartPulse className="h-6 w-6 text-primary" />
-                         <span className="font-bold sm:inline-block">UKM PONJA</span>
-                    </Link>
-                     <Link href="/login">
-                        <Button variant="ghost" size="sm">Login</Button>
                     </Link>
                 </div>
             </div>
@@ -190,7 +187,7 @@ export default function HomePage() {
           {/* Intro Section */}
           <section className="py-12 text-center">
             <div className="mx-auto max-w-3xl">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Selamat Datang di UKM PONJA</h1>
+                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
                 <p className="mt-6 text-lg leading-8 text-muted-foreground">
                     Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
                 </p>
