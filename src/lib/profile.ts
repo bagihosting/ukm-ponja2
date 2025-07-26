@@ -89,15 +89,14 @@ export const updateProfileContent = async (content: Partial<ProfileContent>): Pr
 // --- Team Members Management ---
 
 /**
- * Retrieves all team members from Firestore, ordered by their role.
+ * Retrieves all team members from Firestore.
+ * Note: Server-side ordering is removed to avoid needing a composite index.
+ * Sorting should be handled on the client-side.
  * @returns A promise that resolves with an array of team members.
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
   try {
-    // Note: To order by role effectively, a numeric 'order' field might be better
-    // than alphabetical sorting if a specific hierarchy is needed.
-    const q = query(teamMembersCollection, orderBy('role'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(teamMembersCollection);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
