@@ -7,69 +7,56 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy } from 'lucide-react';
-import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { Loader2, Upload, Copy, Trash2, MoreHorizontal } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface UploadedImage {
-  url: string;
-  name: string;
-  date: string; // Store date as ISO string for localStorage
-}
-
-const LOCAL_STORAGE_KEY = 'uploadedImagesGallery';
+import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
   const { toast } = useToast();
 
-  // Load images from localStorage on initial render
   useEffect(() => {
-    try {
-      const storedImages = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedImages) {
-        setUploadedImages(JSON.parse(storedImages));
+    const fetchImages = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedImages = await getGalleryImages();
+        setImages(fetchedImages);
+      } catch (error) {
+        console.error("Failed to fetch images:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Gagal Memuat',
+          description: 'Tidak dapat memuat daftar gambar dari database.',
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to parse images from localStorage", error);
-    }
-  }, []);
-
-  // Save images to localStorage whenever the list changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uploadedImages));
-    } catch (error) {
-      console.error("Failed to save images to localStorage", error);
-    }
-  }, [uploadedImages]);
+    };
+    fetchImages();
+  }, [toast]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-       // Batasi ukuran file (misal 10MB)
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({
           variant: 'destructive',
           title: 'File Terlalu Besar',
           description: 'Ukuran gambar tidak boleh melebihi 10MB.',
         });
-        event.target.value = ''; // Reset input file
+        event.target.value = '';
         return;
       }
       setSelectedFile(file);
     }
-  };
-
-  const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleUpload = async () => {
@@ -84,16 +71,8 @@ export default function GalleryPage() {
 
     setIsUploading(true);
     try {
-      const dataUri = await fileToDataUri(selectedFile);
-      const publicUrl = await uploadImageToFreeImage(dataUri);
-      
-      const newImage: UploadedImage = {
-        url: publicUrl,
-        name: selectedFile.name,
-        date: new Date().toISOString(),
-      };
-      
-      setUploadedImages(prevImages => [newImage, ...prevImages]);
+      const newImage = await uploadGalleryImage(selectedFile);
+      setImages(prevImages => [newImage, ...prevImages]);
 
       toast({
         title: 'Berhasil!',
@@ -101,7 +80,6 @@ export default function GalleryPage() {
       });
 
       setSelectedFile(null);
-      // Reset input file secara programmatic
       const fileInput = document.getElementById('picture') as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
@@ -117,7 +95,7 @@ export default function GalleryPage() {
       setIsUploading(false);
     }
   };
-  
+
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url).then(() => {
       toast({
@@ -127,17 +105,44 @@ export default function GalleryPage() {
     });
   };
 
+  const handleDeleteClick = (image: GalleryImage) => {
+    setImageToDelete(image);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!imageToDelete) return;
+
+    try {
+      await deleteGalleryImage(imageToDelete.id, imageToDelete.storagePath);
+      setImages(images.filter((image) => image.id !== imageToDelete.id));
+      toast({
+        title: 'Berhasil',
+        description: 'Gambar telah berhasil dihapus.',
+      });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Menghapus',
+        description: 'Terjadi kesalahan saat menghapus gambar: ' + err.message,
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setImageToDelete(null);
+    }
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">Galeri Gambar</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-semibold md:text-2xl">Galeri Firebase</h1>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="lg:col-span-1 h-fit">
           <CardHeader>
             <CardTitle>Unggah Gambar Baru</CardTitle>
-            <CardDescription>Pilih gambar dari komputer Anda untuk diunggah.</CardDescription>
+            <CardDescription>Unggah gambar ke Firebase Storage.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid w-full max-w-sm items-center gap-2">
@@ -159,7 +164,7 @@ export default function GalleryPage() {
                   ) : (
                     <>
                       <Upload className="mr-2 h-4 w-4" />
-                      Unggah Gambar
+                      Unggah ke Firebase
                     </>
                   )}
                 </Button>
@@ -170,11 +175,17 @@ export default function GalleryPage() {
         
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Hasil Unggahan</CardTitle>
-            <CardDescription>Daftar gambar yang telah Anda unggah.</CardDescription>
+            <CardTitle>Daftar Gambar di Firebase</CardTitle>
+            <CardDescription>Daftar gambar yang tersimpan di Firebase Storage.</CardDescription>
           </CardHeader>
           <CardContent>
-             {uploadedImages.length > 0 ? (
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ) : images.length > 0 ? (
                 <div className="border rounded-md">
                     <Table>
                         <TableHeader>
@@ -186,18 +197,32 @@ export default function GalleryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {uploadedImages.map((image) => (
-                                <TableRow key={image.url}>
+                            {images.map((image) => (
+                                <TableRow key={image.id}>
                                     <TableCell>
                                         <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
                                     </TableCell>
                                     <TableCell className="font-medium truncate max-w-[200px]">{image.name}</TableCell>
-                                    <TableCell>{new Date(image.date).toLocaleDateString('id-ID')}</TableCell>
+                                    <TableCell>{new Date(image.createdAt.seconds * 1000).toLocaleDateString('id-ID')}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="icon" onClick={() => handleCopyUrl(image.url)}>
-                                            <Copy className="h-4 w-4" />
-                                            <span className="sr-only">Salin URL</span>
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                    <span className="sr-only">Toggle menu</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleCopyUrl(image.url)}>
+                                                    <Copy className="mr-2 h-4 w-4" />
+                                                    Salin URL
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(image)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Hapus
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -212,6 +237,23 @@ export default function GalleryPage() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Ini akan menghapus gambar secara permanen dari Firebase Storage dan database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ya, Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
