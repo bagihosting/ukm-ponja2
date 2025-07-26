@@ -49,13 +49,15 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
             </Button>
             <article>
                 {article.imageUrl && (
-                    <AspectRatio ratio={16/9} className="bg-muted rounded-lg overflow-hidden mb-8 shadow-lg">
-                        <img 
-                            src={article.imageUrl} 
-                            alt={article.title} 
-                            className="w-full h-full object-cover"
-                        />
-                    </AspectRatio>
+                    <div className="mb-8 overflow-hidden rounded-lg shadow-lg">
+                        <AspectRatio ratio={16/9} className="bg-muted">
+                            <img 
+                                src={article.imageUrl} 
+                                alt={article.title} 
+                                className="w-full h-full object-cover"
+                            />
+                        </AspectRatio>
+                    </div>
                 )}
 
                 <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">

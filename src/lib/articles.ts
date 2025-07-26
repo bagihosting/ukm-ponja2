@@ -15,9 +15,10 @@ import {
   deleteDoc, 
   serverTimestamp,
   Timestamp,
-  FieldValue
+  deleteField,
+  query,
+  orderBy
 } from 'firebase/firestore';
-import { deleteField } from 'firebase/firestore';
 
 
 if (!db) {
@@ -45,7 +46,7 @@ export interface ArticleInput {
 export interface ArticleUpdateInput {
   title?: string;
   content?: string;
-  imageUrl?: string | FieldValue;
+  imageUrl?: string;
 }
 
 // Helper to convert Firestore doc to a client-safe Article object
@@ -68,15 +69,13 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
   }
 
   try {
-    // Start with the base data
     const dataToAdd: { [key: string]: any } = {
       title: article.title,
       content: article.content,
       createdAt: serverTimestamp(),
     };
     
-    // Only include imageUrl if it's a non-empty string
-    if (article.imageUrl && article.imageUrl.trim() !== '') {
+    if (article.imageUrl) {
         dataToAdd.imageUrl = article.imageUrl;
     }
     
@@ -92,7 +91,8 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
   try {
-    const querySnapshot = await getDocs(articlesCollection);
+    const q = query(articlesCollection, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toArticle);
   } catch (e: any) {
     console.error("Error getting documents: ", e);
@@ -126,10 +126,10 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
   try {
     const docRef = doc(db, 'articles', id);
     
-    const dataToUpdate: ArticleUpdateInput = { ...article };
+    // Create a mutable copy to work with
+    const dataToUpdate: { [key: string]: any } = { ...article };
 
-    // Handle empty imageUrl string to remove it from the document.
-    if (article.imageUrl === '' || article.imageUrl === null) {
+    if (article.imageUrl === '' || article.imageUrl === null || article.imageUrl === undefined) {
         dataToUpdate.imageUrl = deleteField();
     }
     

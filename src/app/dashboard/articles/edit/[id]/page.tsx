@@ -9,7 +9,7 @@ import * as z from 'zod';
 import { ChevronLeft, Loader2, Link as LinkIcon, Wand2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,7 +35,6 @@ export default function EditArticlePage() {
   const { id } = params;
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -47,7 +46,7 @@ export default function EditArticlePage() {
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
   });
@@ -83,7 +82,6 @@ export default function EditArticlePage() {
 
   const onSubmit = async (data: ArticleFormValues) => {
     if (typeof id !== 'string') return;
-    setLoading(true);
     try {
       await updateArticle(id, {
         title: data.title,
@@ -95,14 +93,13 @@ export default function EditArticlePage() {
         description: 'Artikel telah berhasil diperbarui.',
       });
       router.push('/dashboard/articles');
+      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Gagal Memperbarui',
         description: `Terjadi kesalahan: ${error.message}`,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -119,6 +116,7 @@ export default function EditArticlePage() {
         setValue('imageUrl', result.imageUrl, { shouldValidate: true });
         toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan URL telah ditambahkan.' });
         setIsAiModalOpen(false);
+        setAiPrompt('');
       } else {
         throw new Error('AI tidak mengembalikan URL gambar.');
       }
@@ -135,11 +133,18 @@ export default function EditArticlePage() {
   
   if (pageLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-1/2" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+      <div className="space-y-4 p-4">
+        <div className="flex items-center gap-4 mb-4">
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-7 w-48" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
+            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+                <Skeleton className="h-64 w-full" />
+            </div>
+             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                <Skeleton className="h-48 w-full" />
+            </div>
         </div>
       </div>
     );
@@ -155,6 +160,7 @@ export default function EditArticlePage() {
             size="icon"
             className="h-7 w-7"
             onClick={() => router.back()}
+            disabled={isSubmitting}
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Kembali</span>
@@ -168,11 +174,12 @@ export default function EditArticlePage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/dashboard/articles')}
+              disabled={isSubmitting}
             >
               Batal
             </Button>
-            <Button type="submit" size="sm" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan Perubahan
             </Button>
           </div>
@@ -182,6 +189,7 @@ export default function EditArticlePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Detail Artikel</CardTitle>
+                <CardDescription>Perbarui judul dan konten untuk artikel Anda.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6">
@@ -192,6 +200,7 @@ export default function EditArticlePage() {
                       type="text"
                       className="w-full"
                       {...register('title')}
+                      disabled={isSubmitting}
                     />
                     {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
                   </div>
@@ -201,6 +210,7 @@ export default function EditArticlePage() {
                       id="content"
                       className="min-h-32"
                       {...register('content')}
+                      disabled={isSubmitting}
                     />
                     {errors.content && <p className="text-sm text-red-500">{errors.content.message}</p>}
                   </div>
@@ -225,12 +235,13 @@ export default function EditArticlePage() {
                         className="w-full pl-10"
                         placeholder="https://..."
                         {...register('imageUrl')}
+                        disabled={isSubmitting}
                       />
                     </div>
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
                   <ImagePreview imageUrl={imageUrl} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)} disabled={isSubmitting}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Buat dengan AI
                   </Button>
@@ -240,11 +251,11 @@ export default function EditArticlePage() {
           </div>
         </div>
         <div className="mt-4 flex items-center justify-end gap-2 md:hidden">
-          <Button type="button" variant="outline" size="sm" onClick={() => router.push('/dashboard/articles')}>
+          <Button type="button" variant="outline" size="sm" onClick={() => router.push('/dashboard/articles')} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button type="submit" size="sm" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Simpan Perubahan
           </Button>
         </div>
@@ -274,7 +285,7 @@ export default function EditArticlePage() {
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isGeneratingImage}>Batal</Button>
             </DialogClose>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage}>
+            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage || !aiPrompt}>
               {isGeneratingImage ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
