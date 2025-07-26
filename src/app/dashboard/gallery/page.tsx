@@ -41,7 +41,7 @@ export default function GalleryPage() {
       setError(error.message);
       toast({
         variant: 'destructive',
-        title: 'Gagal Memuat Gambar',
+        title: 'Gagal Memuat Riwayat Gambar',
         description: error.message,
       });
     } finally {

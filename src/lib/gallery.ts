@@ -50,7 +50,7 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
     // 1. Convert file to data URI
     const dataUri = await fileToDataUri(file);
 
-    // 2. Upload to external host
+    // 2. Upload to external host (freeimage.host)
     const url = await uploadImageToFreeImage(dataUri);
 
     // 3. Save metadata to Firestore
@@ -65,7 +65,7 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
     return {
       id: docRef.id,
       ...docData,
-      createdAt: new Timestamp(new Date().getTime() / 1000, 0) // Approximate timestamp
+      createdAt: new Timestamp(new Date().getTime() / 1000, 0) // Approximate timestamp for immediate UI update
     } as GalleryImage;
 
   } catch (e: any) {
@@ -99,6 +99,7 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
 
 /**
  * Deletes an image metadata from Firestore.
+ * This does not delete the image from the external host.
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
