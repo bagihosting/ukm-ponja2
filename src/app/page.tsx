@@ -62,7 +62,7 @@ export default async function HomePage() {
           
           {/* Slider Section */}
           {galleryImages.length > 0 && (
-            <section className="my-8">
+            <section className="my-8" aria-label="Galeri Kegiatan Terbaru">
                 <Carousel 
                     opts={{
                     align: "start",
@@ -76,7 +76,7 @@ export default async function HomePage() {
                             <AspectRatio ratio={16 / 9} className="bg-muted rounded-lg overflow-hidden shadow-lg">
                                <img
                                  src={image.url}
-                                 alt={image.name}
+                                 alt={image.name || 'Gambar dari galeri kegiatan'}
                                  className="w-full h-full object-cover"
                                />
                             </AspectRatio>
@@ -90,9 +90,9 @@ export default async function HomePage() {
           )}
 
           {/* Intro Section */}
-          <section className="py-12 text-center">
+          <section className="py-12 text-center" aria-labelledby="intro-heading">
             <div className="mx-auto max-w-3xl">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
+                <h1 id="intro-heading" className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
                 <p className="mt-6 text-lg leading-8 text-muted-foreground">
                     Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
                 </p>
@@ -100,17 +100,18 @@ export default async function HomePage() {
           </section>
 
           {/* AI Doctor Section */}
-          <section id="ai-doctor" className="my-12">
+          <section id="ai-doctor" className="my-12" aria-label="Konsultasi dengan AI Dokter">
             <AiDoctor />
           </section>
 
           {/* Articles Section */}
-          <section id="articles" className="py-12 space-y-12">
+          <section id="articles" className="py-12 space-y-12" aria-labelledby="articles-heading">
+            <h2 id="articles-heading" className="sr-only">Artikel dan Berita Kesehatan</h2>
             
             {/* Headline News */}
             {headlineArticle && (
-              <div>
-                <h2 className="font-bold text-3xl md:text-4xl mb-6">Artikel Terbaru</h2>
+              <div aria-labelledby="headline-article-title">
+                <h3 className="font-bold text-3xl md:text-4xl mb-6">Artikel Terbaru</h3>
                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="grid md:grid-cols-2">
                     <AspectRatio ratio={16/9}>
@@ -123,7 +124,7 @@ export default async function HomePage() {
                     </AspectRatio>
                     <div className="flex flex-col justify-center p-6">
                       <CardHeader>
-                        <CardTitle className="text-3xl">{headlineArticle.title}</CardTitle>
+                        <CardTitle id="headline-article-title" className="text-3xl">{headlineArticle.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
                          <p className="text-base text-muted-foreground">
@@ -145,12 +146,12 @@ export default async function HomePage() {
 
             {/* Trending News */}
             {trendingArticles.length > 0 && (
-              <div>
-                <h2 className="font-bold text-3xl md:text-4xl mb-6">Berita Trending</h2>
+              <div aria-labelledby="trending-articles-title">
+                <h3 id="trending-articles-title" className="font-bold text-3xl md:text-4xl mb-6">Berita Trending</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   {trendingArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <Link href={`/artikel/${article.id}`}>
+                        <Link href={`/artikel/${article.id}`} aria-label={`Baca artikel: ${article.title}`}>
                             <AspectRatio ratio={16 / 9} className="bg-muted">
                                 <img
                                 src={article.imageUrl || 'https://placehold.co/400x225.png'}
@@ -180,8 +181,8 @@ export default async function HomePage() {
 
             {/* Health Information */}
             {healthArticles.length > 0 && (
-              <div>
-                <h2 className="font-bold text-3xl md:text-4xl mb-6">Informasi Kesehatan</h2>
+              <div aria-labelledby="health-info-title">
+                <h3 id="health-info-title" className="font-bold text-3xl md:text-4xl mb-6">Informasi Kesehatan</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {healthArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -220,9 +221,9 @@ export default async function HomePage() {
           
           {/* Programs & Reports Section */}
           <div className="grid md:grid-cols-2 gap-8 my-12">
-            <section id="programs" className="space-y-6">
+            <section id="programs" className="space-y-6" aria-labelledby="ukm-programs-title">
                 <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-                <h2 className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Program UKM</h2>
+                <h2 id="ukm-programs-title" className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Program UKM</h2>
                 <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
                     Lihat program dan inisiatif yang sedang kami jalankan.
                 </p>
@@ -276,9 +277,9 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            <section id="reports" className="space-y-6">
+            <section id="reports" className="space-y-6" aria-labelledby="public-reports-title">
                 <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-                <h2 className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Laporan</h2>
+                <h2 id="public-reports-title" className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Laporan</h2>
                 <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
                     Akses laporan publik dan analisis dari kegiatan kami.
                 </p>
@@ -300,5 +301,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
-    
