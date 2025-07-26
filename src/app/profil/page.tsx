@@ -1,4 +1,6 @@
 
+'use server';
+
 import { User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -12,7 +14,7 @@ const MemberCard = ({ name, role, className }: { name: string, role: string, cla
   <div className={cn("flex flex-col items-center text-center", className)}>
     <Avatar className="w-24 h-24 mb-4 shadow-lg border-4 border-background">
       <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
-        {name.split(' ').map(n => n[0]).join('')}
+        {name.split(' ').map(n => n[0]).join('').substring(0,2)}
       </AvatarFallback>
     </Avatar>
     <div className="text-center">
@@ -42,16 +44,19 @@ export default async function ProfilePage() {
   let error: string | null = null;
 
   try {
+    // Fetch both profile and team members data in parallel.
     [profile, teamMembers] = await Promise.all([
         getProfileContent(),
         getTeamMembers()
     ]);
   } catch (e: any) {
     console.error("Failed to load profile data:", e);
+    // Set a user-friendly error message to be displayed in the UI.
     error = "Gagal memuat data profil. Silakan coba lagi nanti.";
   }
   
-  // Sorting members into their respective roles on the client side
+  // Sort members into their respective roles on the server side.
+  // This logic is safe to run even if data fetching fails (arrays will be empty).
   const pembina = teamMembers.filter(m => m.role.toLowerCase().includes('pembina') || m.role.toLowerCase().includes('penasihat'));
   const ketua = teamMembers.find(m => m.role.toLowerCase() === 'ketua umum');
   const pengurusInti = teamMembers.filter(m => ['sekretaris', 'bendahara'].includes(m.role.toLowerCase()));
@@ -160,7 +165,7 @@ export default async function ProfilePage() {
                           </OrgChartLevel>
                       )}
 
-                      {teamMembers.length === 0 && (
+                      {teamMembers.length === 0 && !pembina.length && (
                         <div className="text-center text-muted-foreground py-16">
                             Struktur organisasi belum diatur.
                         </div>
@@ -175,4 +180,3 @@ export default async function ProfilePage() {
     </div>
   );
 }
-

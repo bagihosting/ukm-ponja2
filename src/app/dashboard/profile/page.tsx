@@ -12,6 +12,7 @@ import {
   addTeamMember,
   updateTeamMember,
   deleteTeamMember,
+  defaultProfileContent,
   type ProfileContent,
   type TeamMember
 } from '@/lib/profile';
@@ -82,11 +83,14 @@ export default function ProfileSettingsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [profile, members] = await Promise.all([getProfileContent(), getTeamMembers()]);
+      const [profile, members] = await Promise.all([
+        getProfileContent().catch(() => defaultProfileContent), // Fallback on error
+        getTeamMembers()
+      ]);
       profileForm.reset(profile);
       setTeamMembers(members);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data profil dari server.' });
+      toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data dari server.' });
     } finally {
       setLoading(false);
     }
@@ -138,7 +142,7 @@ export default function ProfileSettingsPage() {
     setIsAddingMember(false);
   };
 
-  const handleDeleteMember = async () => {
+  const confirmDelete = async () => {
     if (!deletingMemberId) return;
     try {
       await deleteTeamMember(deletingMemberId);
@@ -233,69 +237,67 @@ export default function ProfileSettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama</TableHead>
-                    <TableHead>Peran</TableHead>
-                    <TableHead className="text-right w-[100px]">Tindakan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isAddingMember && (
+              <form onSubmit={editMemberForm.handleSubmit(handleUpdateMember)}>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell>
-                        <form id="add-member-form" onSubmit={addMemberForm.handleSubmit(handleAddNewMember)}>
+                      <TableHead>Nama</TableHead>
+                      <TableHead>Peran</TableHead>
+                      <TableHead className="text-right w-[100px]">Tindakan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isAddingMember && (
+                      <TableRow>
+                        <TableCell>
                           <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" autoFocus disabled={addMemberForm.formState.isSubmitting} />
                           {addMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.name.message}</p>}
-                        </form>
-                      </TableCell>
-                      <TableCell>
-                        <Input form="add-member-form" {...addMemberForm.register('role')} placeholder="Peran dalam tim" disabled={addMemberForm.formState.isSubmitting} />
-                        {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                         <Button form="add-member-form" type="submit" size="icon" variant="ghost" disabled={addMemberForm.formState.isSubmitting}>
-                           {addMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
-                         </Button>
-                         <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)} disabled={addMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                        </TableCell>
+                        <TableCell>
+                          <Input {...addMemberForm.register('role')} placeholder="Peran dalam tim" disabled={addMemberForm.formState.isSubmitting} />
+                          {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                           <Button type="button" size="icon" variant="ghost" disabled={addMemberForm.formState.isSubmitting} onClick={addMemberForm.handleSubmit(handleAddNewMember)}>
+                             {addMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
+                           </Button>
+                           <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)} disabled={addMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    )}
 
-                  {teamMembers.map((member) => (
-                    editingMemberId === member.id ? (
-                       <TableRow key={member.id}>
-                        <TableCell>
-                          <form id={`edit-member-form-${member.id}`} onSubmit={editMemberForm.handleSubmit(handleUpdateMember)}>
-                            <Input {...editMemberForm.register('name')} autoFocus disabled={editMemberForm.formState.isSubmitting}/>
-                            {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
-                          </form>
-                        </TableCell>
-                        <TableCell>
-                          <Input form={`edit-member-form-${member.id}`} {...editMemberForm.register('role')} disabled={editMemberForm.formState.isSubmitting}/>
-                           {editMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.role.message}</p>}
-                        </TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <Button form={`edit-member-form-${member.id}`} type="submit" size="icon" variant="ghost" disabled={editMemberForm.formState.isSubmitting}>
-                            {editMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setEditingMemberId(null)} disabled={editMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      <TableRow key={member.id}>
-                        <TableCell>{member.name}</TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <Button size="icon" variant="ghost" onClick={() => startEditing(member)} disabled={isAddingMember || !!editingMemberId}><Edit className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember || !!editingMemberId}><Trash2 className="h-4 w-4 text-red-600" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  ))}
-                </TableBody>
-              </Table>
+                    {teamMembers.map((member) => (
+                      editingMemberId === member.id ? (
+                         <TableRow key={member.id}>
+                          <TableCell>
+                              <Input {...editMemberForm.register('name')} autoFocus disabled={editMemberForm.formState.isSubmitting}/>
+                              {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
+                          </TableCell>
+                          <TableCell>
+                            <Input {...editMemberForm.register('role')} disabled={editMemberForm.formState.isSubmitting}/>
+                             {editMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.role.message}</p>}
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button type="submit" size="icon" variant="ghost" disabled={editMemberForm.formState.isSubmitting}>
+                              {editMemberForm.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
+                            </Button>
+                            <Button type="button" size="icon" variant="ghost" onClick={() => setEditingMemberId(null)} disabled={editMemberForm.formState.isSubmitting}><X className="h-4 w-4" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        <TableRow key={member.id}>
+                          <TableCell>{member.name}</TableCell>
+                          <TableCell>{member.role}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button size="icon" variant="ghost" onClick={() => startEditing(member)} disabled={isAddingMember || !!editingMemberId}><Edit className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember || !!editingMemberId}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    ))}
+                  </TableBody>
+                </Table>
+              </form>
               {teamMembers.length === 0 && !isAddingMember && (
                 <p className="text-center text-muted-foreground py-4">Belum ada anggota tim.</p>
               )}
@@ -313,7 +315,7 @@ export default function ProfileSettingsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteMember} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -322,5 +324,3 @@ export default function ProfileSettingsPage() {
     </>
   );
 }
-
-    

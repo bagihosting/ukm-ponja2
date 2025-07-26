@@ -12,9 +12,7 @@ import {
   addDoc,
   getDocs,
   updateDoc,
-  deleteDoc,
-  query,
-  orderBy
+  deleteDoc
 } from 'firebase/firestore';
 
 // Define types for profile data
@@ -40,7 +38,7 @@ const teamMembersCollection = collection(db, 'teamMembers');
 const profileDocRef = doc(profileCollection, 'main'); // Use a known ID 'main'
 
 // Default content to be used if the profile document doesn't exist yet.
-const defaultProfileContent: ProfileContent = {
+export const defaultProfileContent: ProfileContent = {
   about: "Unit Kegiatan Mahasiswa Pondok Lanjut Usia (UKM PONJA) adalah sebuah organisasi mahasiswa yang berdedikasi untuk memberikan kontribusi positif kepada masyarakat, khususnya para lansia. Kami percaya bahwa setiap individu, tanpa memandang usia, berhak mendapatkan kualitas hidup yang baik, perhatian, dan kebahagiaan.",
   vision: "Menjadi wadah bagi mahasiswa untuk mengembangkan kepedulian sosial dan menjadi pelopor dalam upaya peningkatan kesejahteraan lansia.",
   mission: "Menyelenggarakan kegiatan-kegiatan yang bermanfaat seperti pemeriksaan kesehatan rutin, senam bersama, penyuluhan, serta kegiatan rekreasi untuk menjaga kesehatan fisik dan mental para lansia."
@@ -48,8 +46,8 @@ const defaultProfileContent: ProfileContent = {
 
 /**
  * Retrieves the main profile content from Firestore.
- * If the document doesn't exist, it creates it with default content and returns it.
- * This ensures the application always has profile data to display.
+ * If the document doesn't exist, it returns the default content without writing to the DB.
+ * This prevents permission errors for unauthenticated users.
  * @returns A promise that resolves with the profile content.
  */
 export const getProfileContent = async (): Promise<ProfileContent> => {
@@ -58,26 +56,27 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
     if (docSnap.exists()) {
       return docSnap.data() as ProfileContent;
     } else {
-      // If document doesn't exist, create it with default content.
-      // This is a crucial step for first-time setup.
-      await setDoc(profileDocRef, defaultProfileContent);
+      // Document does not exist, return default content without trying to create it here.
       return defaultProfileContent;
     }
   } catch (e: any) {
-    console.error("Error getting or creating profile content: ", e);
-    // In case of error, returning default content can be a fallback,
-    // though throwing an error is better to signal a problem.
-    throw new Error('Gagal mengambil atau membuat konten profil.');
+    console.error("Error getting profile content: ", e);
+    // Throw an error to be handled by the calling component (e.g., ProfilePage)
+    throw new Error('Gagal mengambil data profil.');
   }
 };
+
 
 /**
  * Creates or updates the main profile content in Firestore using set with merge.
  * This will create the document if it doesn't exist, or update it if it does.
+ * This should only be called by an authenticated admin user.
  * @param content The profile content to save.
  */
 export const updateProfileContent = async (content: Partial<ProfileContent>): Promise<void> => {
   try {
+    // setDoc with merge: true will create the document if it doesn't exist,
+    // or update the fields if it does. This is perfect for our use case.
     await setDoc(profileDocRef, content, { merge: true });
   } catch (e: any) {
     console.error("Error updating profile content: ", e);
@@ -90,8 +89,6 @@ export const updateProfileContent = async (content: Partial<ProfileContent>): Pr
 
 /**
  * Retrieves all team members from Firestore.
- * Note: Server-side ordering is removed to avoid needing a composite index.
- * Sorting should be handled on the client-side.
  * @returns A promise that resolves with an array of team members.
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
