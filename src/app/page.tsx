@@ -58,11 +58,11 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col">
       <PortalNavbar />
       <main className="flex-1">
-        <div className="container relative">
+        <div className="container relative space-y-12">
           
           {/* Slider Section */}
           {galleryImages.length > 0 && (
-            <section className="my-8" aria-label="Galeri Kegiatan Terbaru">
+            <section className="pt-8" aria-label="Galeri Kegiatan Terbaru">
                 <Carousel 
                     opts={{
                     align: "start",
@@ -92,7 +92,7 @@ export default async function HomePage() {
           {/* Intro Section */}
           <section className="py-12 text-center" aria-labelledby="intro-heading">
             <div className="mx-auto max-w-3xl">
-                <h1 id="intro-heading" className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
+                <h1 id="intro-heading" className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
                 <p className="mt-6 text-lg leading-8 text-muted-foreground">
                     Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
                 </p>
@@ -100,35 +100,30 @@ export default async function HomePage() {
           </section>
 
           {/* AI Doctor Section */}
-          <section id="ai-doctor" className="my-12" aria-label="Konsultasi dengan AI Dokter">
+          <section id="ai-doctor" className="py-12" aria-label="Konsultasi dengan AI Dokter">
             <AiDoctor />
           </section>
 
           {/* Articles Section */}
-          <section id="articles" className="py-12 space-y-12" aria-labelledby="articles-heading">
-            <h2 id="articles-heading" className="sr-only">Artikel dan Berita Kesehatan</h2>
+          <section id="articles" className="py-12 space-y-16" aria-labelledby="articles-heading">
+             <div className="text-center">
+                 <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">Artikel & Berita Kesehatan</h2>
+                 <p className="mt-4 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">Ikuti berita terbaru dan dapatkan informasi kesehatan terpercaya dari kami.</p>
+            </div>
             
             {/* Headline News */}
             {headlineArticle && (
-              <div aria-labelledby="headline-article-title">
-                <h3 className="font-bold text-3xl md:text-4xl mb-6">Artikel Terbaru</h3>
+              <div>
                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="grid md:grid-cols-2">
-                    <AspectRatio ratio={16/9}>
-                       <img
-                          src={headlineArticle.imageUrl || 'https://placehold.co/600x400.png'}
-                          alt={headlineArticle.title}
-                          className="w-full h-full object-cover"
-                          data-ai-hint="news article"
-                        />
-                    </AspectRatio>
-                    <div className="flex flex-col justify-center p-6">
+                    <div className="order-last md:order-first flex flex-col justify-center p-6 md:p-8">
                       <CardHeader>
-                        <CardTitle id="headline-article-title" className="text-3xl">{headlineArticle.title}</CardTitle>
+                         <Badge variant="secondary" className="w-fit mb-4">Artikel Terbaru</Badge>
+                        <CardTitle className="text-3xl font-bold">{headlineArticle.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                         <p className="text-base text-muted-foreground">
-                          {truncate(headlineArticle.content, 150)}
+                         <p className="text-base text-muted-foreground leading-relaxed">
+                          {truncate(headlineArticle.content, 180)}
                         </p>
                       </CardContent>
                       <CardFooter>
@@ -139,6 +134,14 @@ export default async function HomePage() {
                         </Button>
                       </CardFooter>
                     </div>
+                     <AspectRatio ratio={16/9}>
+                       <img
+                          src={headlineArticle.imageUrl || 'https://placehold.co/600x400.png'}
+                          alt={headlineArticle.title}
+                          className="w-full h-full object-cover"
+                          data-ai-hint="news article"
+                        />
+                    </AspectRatio>
                   </div>
                 </Card>
               </div>
@@ -146,9 +149,9 @@ export default async function HomePage() {
 
             {/* Trending News */}
             {trendingArticles.length > 0 && (
-              <div aria-labelledby="trending-articles-title">
-                <h3 id="trending-articles-title" className="font-bold text-3xl md:text-4xl mb-6">Berita Trending</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center">Berita Trending</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {trendingArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <Link href={`/artikel/${article.id}`} aria-label={`Baca artikel: ${article.title}`}>
@@ -156,17 +159,17 @@ export default async function HomePage() {
                                 <img
                                 src={article.imageUrl || 'https://placehold.co/400x225.png'}
                                 alt={article.title}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                 data-ai-hint="news placeholder"
                                 />
                             </AspectRatio>
                         </Link>
-                        <CardHeader className="flex-grow">
-                          <CardTitle className="text-lg leading-tight mb-2">
+                        <CardHeader className="flex-grow p-4">
+                          <h4 className="text-lg font-semibold leading-tight mb-2">
                             <Link href={`/artikel/${article.id}`} className="hover:underline">
                                 {truncate(article.title, 60)}
                             </Link>
-                          </CardTitle>
+                          </h4>
                            <p className="text-xs text-muted-foreground">
                             {new Date(article.createdAt).toLocaleDateString('id-ID', {
                                 year: 'numeric', month: 'long', day: 'numeric'
@@ -181,8 +184,8 @@ export default async function HomePage() {
 
             {/* Health Information */}
             {healthArticles.length > 0 && (
-              <div aria-labelledby="health-info-title">
-                <h3 id="health-info-title" className="font-bold text-3xl md:text-4xl mb-6">Informasi Kesehatan</h3>
+              <div>
+                <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center">Informasi Kesehatan Lainnya</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {healthArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -190,19 +193,19 @@ export default async function HomePage() {
                             <img
                             src={article.imageUrl || 'https://placehold.co/400x300.png'}
                             alt={article.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             data-ai-hint="health information"
                             />
                         </AspectRatio>
-                        <CardHeader>
-                          <CardTitle className="text-lg leading-tight">{truncate(article.title, 50)}</CardTitle>
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base font-semibold leading-tight">{truncate(article.title, 50)}</CardTitle>
                         </CardHeader>
-                         <CardContent className="flex-grow">
+                         <CardContent className="flex-grow px-4 pb-4">
                           <p className="text-sm text-muted-foreground">
                             {truncate(article.content, 80)}
                           </p>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="p-4 bg-muted/50">
                            <Button variant="outline" className="w-full" asChild>
                              <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
                            </Button>
@@ -214,86 +217,90 @@ export default async function HomePage() {
             )}
 
             {articles.length === 0 && (
-                <p className="col-span-full text-center text-muted-foreground py-8">Belum ada artikel yang dipublikasikan.</p>
+                 <Card>
+                    <CardContent className="py-16 text-center text-muted-foreground">
+                        <p>Belum ada artikel yang dipublikasikan.</p>
+                    </CardContent>
+                </Card>
             )}
 
           </section>
           
           {/* Programs & Reports Section */}
-          <div className="grid md:grid-cols-2 gap-8 my-12">
-            <section id="programs" className="space-y-6" aria-labelledby="ukm-programs-title">
-                <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-                <h2 id="ukm-programs-title" className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Program UKM</h2>
-                <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                    Lihat program dan inisiatif yang sedang kami jalankan.
-                </p>
-                </div>
-                {programs.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <Card className="shadow-lg">
-                      <CardHeader>
-                        <CardTitle>UKM Esensial</CardTitle>
-                        <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {essentialPrograms.length > 0 ? essentialPrograms.map(program => (
-                          <div key={program.id} className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">{program.name}</span>
-                          </div>
-                        )) : (
-                          <p className="text-sm text-muted-foreground">Belum ada program.</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                     <Card className="shadow-lg">
-                      <CardHeader>
-                        <CardTitle>UKM Pengembangan</CardTitle>
-                        <CardDescription>Program inovatif untuk kebutuhan spesifik.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                         {developmentPrograms.length > 0 ? developmentPrograms.map(program => (
-                          <div key={program.id} className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-accent" />
-                            <span className="text-sm text-muted-foreground">{program.name}</span>
-                          </div>
-                        )) : (
+          <section id="programs-reports" className="py-12" aria-labelledby="programs-reports-title">
+             <div className="text-center">
+                 <h2 id="programs-reports-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">Program & Laporan</h2>
+                 <p className="mt-4 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">Jelajahi inisiatif dan akses laporan publik dari kegiatan kami.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 mt-12">
+                <div id="programs" className="space-y-6">
+                    {programs.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 gap-6">
+                        <Card className="shadow-lg h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle>UKM Esensial</CardTitle>
+                            <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2 flex-grow">
+                            {essentialPrograms.length > 0 ? essentialPrograms.map(program => (
+                            <div key={program.id} className="flex items-start gap-3">
+                                <CheckCircle2 className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                                <span className="text-sm text-muted-foreground">{program.name}</span>
+                            </div>
+                            )) : (
                             <p className="text-sm text-muted-foreground">Belum ada program.</p>
-                        )}
-                      </CardContent>
+                            )}
+                        </CardContent>
+                        </Card>
+                        <Card className="shadow-lg h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle>UKM Pengembangan</CardTitle>
+                            <CardDescription>Inisiatif inovatif untuk kebutuhan spesifik.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2 flex-grow">
+                            {developmentPrograms.length > 0 ? developmentPrograms.map(program => (
+                            <div key={program.id} className="flex items-start gap-3">
+                                <CheckCircle2 className="h-4 w-4 text-accent mt-1 flex-shrink-0" />
+                                <span className="text-sm text-muted-foreground">{program.name}</span>
+                            </div>
+                            )) : (
+                                <p className="text-sm text-muted-foreground">Belum ada program.</p>
+                            )}
+                        </CardContent>
+                        </Card>
+                    </div>
+                    ) : (
+                    <Card className="shadow-lg">
+                        <CardContent className="p-8 text-center text-muted-foreground">
+                            <p>Belum ada program yang ditambahkan.</p>
+                        </CardContent>
                     </Card>
-                  </div>
-                ) : (
-                  <Card className="shadow-lg">
-                    <CardContent className="p-8 text-center text-muted-foreground">
-                        <p>Belum ada program yang ditambahkan.</p>
-                    </CardContent>
-                  </Card>
-                )}
-                <div className="text-center">
-                  <Button asChild variant="link">
-                    <Link href="/program-ukm">Lihat Semua Program <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
+                    )}
+                    <div className="text-center pt-4">
+                    <Button asChild>
+                        <Link href="/program-ukm">Lihat Semua Program <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                    </div>
                 </div>
-            </section>
 
-            <section id="reports" className="space-y-6" aria-labelledby="public-reports-title">
-                <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-                <h2 id="public-reports-title" className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Laporan</h2>
-                <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                    Akses laporan publik dan analisis dari kegiatan kami.
-                </p>
+                <div id="reports" className="space-y-6">
+                    <Card className="shadow-lg h-full flex flex-col justify-between">
+                         <CardHeader>
+                             <CardTitle>Laporan Publik</CardTitle>
+                             <CardDescription>Akses laporan dan dokumen publik dari kegiatan kami.</CardDescription>
+                         </CardHeader>
+                        <CardContent className="text-center text-muted-foreground flex-grow flex items-center justify-center">
+                            <p>Fitur ini sedang dalam pengembangan.</p>
+                        </CardContent>
+                         <CardFooter className="justify-center">
+                            <Button asChild variant="secondary">
+                                <Link href="/laporan">Lihat Laporan</Link>
+                            </Button>
+                         </CardFooter>
+                    </Card>
                 </div>
-                <Card className="shadow-lg">
-                    <CardContent className="p-8 text-center text-muted-foreground">
-                        <p>Fitur ini sedang dalam pengembangan.</p>
-                        <Button asChild variant="link">
-                            <Link href="/laporan">Lihat Selengkapnya</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </section>
-          </div>
+            </div>
+          </section>
 
         </div>
       </main>
