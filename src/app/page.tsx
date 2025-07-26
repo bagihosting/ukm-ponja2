@@ -136,33 +136,34 @@ export default async function HomePage() {
             {trendingArticles.length > 0 && (
               <div>
                 <h2 className="font-bold text-3xl md:text-4xl mb-6">Berita Trending</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   {trendingArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <AspectRatio ratio={16 / 9} className="bg-muted">
-                        {article.imageUrl ? (
-                            <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
-                        )}
-                        </AspectRatio>
-                        <CardHeader>
-                          <CardTitle className="text-xl leading-tight">{truncate(article.title, 60)}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                          <p className="text-sm text-muted-foreground">
-                            {truncate(article.content, 100)}
+                        <Link href={`/artikel/${article.id}`}>
+                            <AspectRatio ratio={16 / 9} className="bg-muted">
+                            {article.imageUrl ? (
+                                <img
+                                src={article.imageUrl}
+                                alt={article.title}
+                                className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
+                            )}
+                            </AspectRatio>
+                        </Link>
+                        <CardHeader className="flex-grow">
+                          <CardTitle className="text-lg leading-tight mb-2">
+                            <Link href={`/artikel/${article.id}`} className="hover:underline">
+                                {truncate(article.title, 60)}
+                            </Link>
+                          </CardTitle>
+                           <p className="text-xs text-muted-foreground">
+                            {new Date(article.createdAt).toLocaleDateString('id-ID', {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                            })}
                           </p>
-                        </CardContent>
-                        <CardFooter>
-                           <Button variant="outline" className="w-full" asChild>
-                             <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
-                           </Button>
-                        </CardFooter>
+                        </CardHeader>
                     </Card>
                   ))}
                 </div>
