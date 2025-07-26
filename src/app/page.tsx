@@ -1,37 +1,21 @@
 
+'use client'
+
 import Link from 'next/link';
-import { HeartPulse } from 'lucide-react';
+import { HeartPulse, Menu } from 'lucide-react';
 import { getArticles, type Article } from '@/lib/articles';
 import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import React from 'react';
 
-async function fetchGalleryImages() {
-  try {
-    const images = await getGalleryImages();
-    // Return only the first 5 images for the slider, sorted by date
-    return images
-      .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
-      .slice(0, 5);
-  } catch (error) {
-    console.error("Gagal memuat gambar galeri untuk portal:", error);
-    return []; // Return empty array on error
-  }
-}
-
-async function fetchArticles() {
-  try {
-    const articles = await getArticles();
-    return articles.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
-  } catch (error) {
-    console.error("Gagal memuat artikel untuk portal:", error);
-    return []; // Return empty array on error
-  }
-}
 
 function PortalNavbar() {
+    const [isOpen, setIsOpen] = React.useState(false);
+
     const navLinks = [
       { href: "/", label: "Home" },
       { href: "/profil", label: "Profil" },
@@ -42,7 +26,8 @@ function PortalNavbar() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
+            <div className="container flex h-14 items-center justify-between">
+                {/* Desktop Menu */}
                 <div className="mr-4 hidden md:flex">
                     <Link href="/" className="mr-6 flex items-center space-x-2">
                         <HeartPulse className="h-6 w-6 text-primary" />
@@ -56,10 +41,55 @@ function PortalNavbar() {
                         ))}
                     </nav>
                 </div>
-                {/* Mobile Menu can be added here */}
-                <div className="flex flex-1 items-center justify-end space-x-2">
+                
+                {/* Mobile Menu */}
+                <div className="md:hidden">
+                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                        <SheetTrigger asChild>
+                             <Button variant="ghost" size="icon">
+                                <Menu className="h-6 w-6" />
+                                <span className="sr-only">Buka Menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left">
+                            <SheetHeader>
+                               <SheetTitle>
+                                 <Link href="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+                                    <HeartPulse className="h-6 w-6 text-primary" />
+                                    <span className="font-bold">UKM PONJA</span>
+                                </Link>
+                               </SheetTitle>
+                            </SheetHeader>
+                             <nav className="mt-8 grid gap-4">
+                                {navLinks.map(({ href, label }) => (
+                                    <Link 
+                                        key={label} 
+                                        href={href} 
+                                        className="text-lg font-medium text-foreground/80 hover:text-foreground"
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                            </nav>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+
+                <div className="hidden md:flex flex-1 items-center justify-end space-x-2">
                     <Link href="/login">
                         <Button variant="ghost">Admin Login</Button>
+                    </Link>
+                </div>
+
+                 {/* Mobile Brand and Login */}
+                <div className="flex items-center gap-4 md:hidden">
+                    <Link href="/" className="flex items-center space-x-2">
+                        <HeartPulse className="h-6 w-6 text-primary" />
+                         <span className="font-bold sm:inline-block">UKM PONJA</span>
+                    </Link>
+                     <Link href="/login">
+                        <Button variant="ghost" size="sm">Login</Button>
                     </Link>
                 </div>
             </div>
@@ -89,9 +119,38 @@ function truncate(text: string, length: number) {
     return text.substring(0, length) + '...';
 }
 
-export default async function HomePage() {
-  const galleryImages = await fetchGalleryImages();
-  const articles = await fetchArticles();
+// NOTE: This component is now client-side to support the mobile menu state.
+// Data fetching will be done client-side with useEffect.
+export default function HomePage() {
+  const [galleryImages, setGalleryImages] = React.useState<GalleryImage[]>([]);
+  const [articles, setArticles] = React.useState<Article[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [fetchedImages, fetchedArticles] = await Promise.all([
+          getGalleryImages(),
+          getArticles()
+        ]);
+        
+        const sortedImages = fetchedImages
+          .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+          .slice(0, 5);
+        setGalleryImages(sortedImages);
+
+        const sortedArticles = fetchedArticles.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+        setArticles(sortedArticles);
+      } catch (error) {
+        console.error("Gagal memuat data portal:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -100,7 +159,7 @@ export default async function HomePage() {
         <div className="container relative">
           
           {/* Slider Section */}
-          {galleryImages.length > 0 && (
+          {loading ? <div className="my-8 h-[50vh] bg-muted rounded-lg animate-pulse" /> : galleryImages.length > 0 && (
             <section className="my-8">
                 <h2 className="text-3xl font-bold tracking-tight text-center mb-6">Galeri Kegiatan</h2>
                 <Carousel 
@@ -137,8 +196,15 @@ export default async function HomePage() {
                 Baca berita dan pembaruan terkini dari kegiatan kami.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {articles.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {loading ? Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
+                    <AspectRatio ratio={4/3} className="bg-muted animate-pulse" />
+                    <CardHeader><div className="h-6 w-3/4 bg-muted animate-pulse rounded-md" /></CardHeader>
+                    <CardContent><div className="h-10 w-full bg-muted animate-pulse rounded-md" /></CardContent>
+                    <div className="p-4 pt-0 mt-auto"><div className="h-10 w-full bg-muted animate-pulse rounded-md" /></div>
+                </Card>
+              )) : articles.length > 0 ? (
                 articles.map(article => (
                   <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <AspectRatio ratio={4 / 3} className="bg-muted">
