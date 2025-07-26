@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Trash2, MoreHorizontal } from 'lucide-react';
+import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generateAndSaveGalleryImage, type GenerateGalleryImageInput } from '@/ai/flows/generate-gallery-image-flow';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -22,6 +24,8 @@ export default function GalleryPage() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const fetchImages = async () => {
@@ -29,7 +33,6 @@ export default function GalleryPage() {
     setError(null);
     try {
       const fetchedImages = await getGalleryImages();
-      // Sort on the client-side as a temporary fix
       const sortedImages = fetchedImages.sort((a, b) => {
         const dateA = a.createdAt?.seconds ?? 0;
         const dateB = b.createdAt?.seconds ?? 0;
@@ -82,21 +85,14 @@ export default function GalleryPage() {
     setIsUploading(true);
     try {
       await uploadGalleryImage(selectedFile);
-      
       toast({
         title: 'Berhasil!',
         description: `Gambar "${selectedFile.name}" berhasil diunggah dan riwayat disimpan.`,
       });
-      
-      // Refresh the list from Firestore to show the new image
       await fetchImages(); 
-
       setSelectedFile(null);
       const fileInput = document.getElementById('picture') as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = '';
-      }
-
+      if (fileInput) fileInput.value = '';
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -105,6 +101,29 @@ export default function GalleryPage() {
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+  
+  const handleGenerateImage = async () => {
+    if (!aiPrompt) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const input: GenerateGalleryImageInput = { prompt: aiPrompt };
+        await generateAndSaveGalleryImage(input);
+        toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan disimpan ke galeri.' });
+        setAiPrompt('');
+        await fetchImages(); // Refresh
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Gagal Membuat Gambar',
+            description: `Terjadi kesalahan: ${error.message}`,
+        });
+    } finally {
+        setIsGenerating(false);
     }
   };
 
@@ -124,7 +143,6 @@ export default function GalleryPage() {
 
   const confirmDelete = async () => {
     if (!imageToDelete) return;
-
     try {
       await deleteGalleryImage(imageToDelete.id);
       setImages(images.filter((image) => image.id !== imageToDelete.id));
@@ -150,7 +168,7 @@ export default function GalleryPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="lg:col-span-1 h-fit">
           <CardHeader>
             <CardTitle>Unggah Gambar Baru</CardTitle>
@@ -161,31 +179,44 @@ export default function GalleryPage() {
               <Label htmlFor="picture">Gambar</Label>
               <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
             </div>
-
             {selectedFile && (
                <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
                 </p>
                  <Button onClick={handleUpload} disabled={isUploading}>
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Mengunggah...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Unggah Gambar
-                    </>
-                  )}
+                  {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {isUploading ? 'Mengunggah...' : 'Unggah Gambar'}
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
+
+        <Card className="lg:col-span-1 h-fit">
+          <CardHeader>
+            <CardTitle>Buat Gambar dengan AI</CardTitle>
+            <CardDescription>Gunakan AI untuk membuat gambar dari teks.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="ai-prompt">Deskripsi Gambar (Prompt)</Label>
+                <Textarea 
+                    id="ai-prompt"
+                    placeholder="Contoh: Kucing oranye di atas tumpukan buku"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    disabled={isGenerating}
+                />
+            </div>
+            <Button onClick={handleGenerateImage} disabled={isGenerating || !aiPrompt}>
+                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                {isGenerating ? 'Membuat...' : 'Buat Gambar'}
+            </Button>
+          </CardContent>
+        </Card>
         
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-2 xl:col-span-1">
           <CardHeader>
             <CardTitle>Riwayat Gambar</CardTitle>
             <CardDescription>Daftar gambar yang riwayatnya tersimpan.</CardDescription>
@@ -203,13 +234,12 @@ export default function GalleryPage() {
                     <p className="text-sm mt-1">{error}</p>
                 </div>
             ) : images.length > 0 ? (
-                <div className="border rounded-md">
+                <div className="border rounded-md max-h-[400px] overflow-y-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[80px]">Gambar</TableHead>
                                 <TableHead>Nama File</TableHead>
-                                <TableHead>Tanggal</TableHead>
                                 <TableHead className="text-right">Tindakan</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -219,8 +249,7 @@ export default function GalleryPage() {
                                     <TableCell>
                                         <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
                                     </TableCell>
-                                    <TableCell className="font-medium truncate max-w-[200px]">{image.name}</TableCell>
-                                    <TableCell>{image.createdAt ? new Date(image.createdAt.seconds * 1000).toLocaleDateString('id-ID') : 'N/A'}</TableCell>
+                                    <TableCell className="font-medium truncate max-w-[150px]">{image.name}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

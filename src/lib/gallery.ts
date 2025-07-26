@@ -29,6 +29,12 @@ export interface GalleryImage {
   createdAt: Timestamp;
 }
 
+export interface GalleryImageInput {
+  name: string;
+  url: string;
+}
+
+
 // Converts a File to a a data URI
 function fileToDataUri(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -39,13 +45,32 @@ function fileToDataUri(file: File): Promise<string> {
     });
 }
 
+/**
+ * Adds a new gallery image record to Firestore.
+ * @param imageData The data for the new image record.
+ * @returns The ID of the newly created document.
+ */
+export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
+    try {
+        const docData = {
+            ...imageData,
+            createdAt: serverTimestamp(),
+        };
+        const docRef = await addDoc(galleryCollection, docData);
+        return docRef.id;
+    } catch (e: any) {
+        console.error("Error adding document to gallery: ", e);
+        throw new Error(`Gagal menyimpan riwayat gambar ke Firestore: ${e.message}`);
+    }
+};
+
 
 /**
  * Uploads an image file to freeimage.host and saves its metadata to Firestore.
  * @param file The image file to upload.
  * @returns A promise that resolves with the metadata of the newly added image.
  */
-export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
+export const uploadGalleryImage = async (file: File): Promise<string> => {
   try {
     // 1. Convert file to data URI
     const dataUri = await fileToDataUri(file);
@@ -54,20 +79,10 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
     const url = await uploadImageToFreeImage(dataUri);
 
     // 3. Save metadata to Firestore
-    const docData = {
-      name: file.name,
-      url: url,
-      createdAt: serverTimestamp(),
-    };
-    
-    const docRef = await addDoc(galleryCollection, docData);
-
-    return {
-      id: docRef.id,
-      ...docData,
-      createdAt: new Timestamp(new Date().getTime() / 1000, 0) // Approximate timestamp for immediate UI update
-    } as GalleryImage;
-
+    return await addGalleryImageRecord({
+        name: file.name,
+        url: url,
+    });
   } catch (e: any) {
     console.error("Error uploading image and saving to Firestore: ", e);
     throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
