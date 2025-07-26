@@ -18,12 +18,13 @@ import { getArticle, updateArticle } from '@/lib/articles';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
+import ImagePreview from '@/components/portals/image-preview';
 
 
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
   content: z.string().min(1, { message: 'Konten tidak boleh kosong.' }),
-  imageUrl: z.string(),
+  imageUrl: z.string().url({ message: "URL tidak valid" }).or(z.literal("")),
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
@@ -228,24 +229,8 @@ export default function EditArticlePage() {
                     </div>
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
-
-                  {imageUrl && (
-                    <div className="space-y-2">
-                      <div className="aspect-video relative overflow-hidden rounded-md">
-                        <img
-                          key={imageUrl}
-                          src={imageUrl}
-                          alt="Pratinjau Gambar"
-                          className="w-full h-full object-cover"
-                          onError={(e) => { 
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none'; 
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                   <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
+                  <ImagePreview imageUrl={imageUrl} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Buat dengan AI
                   </Button>

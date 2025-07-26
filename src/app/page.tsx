@@ -1,5 +1,5 @@
 
-'use client'
+'use server'
 
 import Link from 'next/link';
 import { getArticles, type Article } from '@/lib/articles';
@@ -8,10 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
-import React from 'react';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
-
 
 function truncate(text: string, length: number) {
     if (!text || text.length <= length) {
@@ -20,38 +18,28 @@ function truncate(text: string, length: number) {
     return text.substring(0, length) + '...';
 }
 
-// NOTE: This component is now client-side to support the mobile menu state.
-// Data fetching will be done client-side with useEffect.
-export default function HomePage() {
-  const [galleryImages, setGalleryImages] = React.useState<GalleryImage[]>([]);
-  const [articles, setArticles] = React.useState<Article[]>([]);
-  const [loading, setLoading] = React.useState(true);
+async function fetchData() {
+  try {
+    const [fetchedImages, fetchedArticles] = await Promise.all([
+      getGalleryImages(),
+      getArticles()
+    ]);
+    
+    const sortedImages = fetchedImages
+      .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+      .slice(0, 5);
 
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [fetchedImages, fetchedArticles] = await Promise.all([
-          getGalleryImages(),
-          getArticles()
-        ]);
-        
-        const sortedImages = fetchedImages
-          .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
-          .slice(0, 5);
-        setGalleryImages(sortedImages);
+    const sortedArticles = fetchedArticles.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+    
+    return { galleryImages: sortedImages, articles: sortedArticles };
+  } catch (error) {
+    console.error("Gagal memuat data portal:", error);
+    return { galleryImages: [], articles: [] };
+  }
+}
 
-        const sortedArticles = fetchedArticles.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
-        setArticles(sortedArticles);
-      } catch (error) {
-        console.error("Gagal memuat data portal:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
+export default async function HomePage() {
+  const { galleryImages, articles } = await fetchData();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -60,7 +48,7 @@ export default function HomePage() {
         <div className="container relative">
           
           {/* Slider Section */}
-          {loading ? <div className="my-8 h-[50vh] bg-muted rounded-lg animate-pulse" /> : galleryImages.length > 0 && (
+          {galleryImages.length > 0 && (
             <section className="my-8">
                 <Carousel 
                     opts={{
@@ -108,14 +96,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {loading ? Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
-                    <AspectRatio ratio={4/3} className="bg-muted animate-pulse" />
-                    <CardHeader><div className="h-6 w-3/4 bg-muted animate-pulse rounded-md" /></CardHeader>
-                    <CardContent><div className="h-10 w-full bg-muted animate-pulse rounded-md" /></CardContent>
-                    <div className="p-4 pt-0 mt-auto"><div className="h-10 w-full bg-muted animate-pulse rounded-md" /></div>
-                </Card>
-              )) : articles.length > 0 ? (
+              {articles.length > 0 ? (
                 articles.map(article => (
                   <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <AspectRatio ratio={4 / 3} className="bg-muted">

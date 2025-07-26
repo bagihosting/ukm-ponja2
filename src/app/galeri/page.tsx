@@ -1,8 +1,7 @@
 
-import Link from 'next/link';
-import { HeartPulse } from 'lucide-react';
-import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
-import { Button } from '@/components/ui/button';
+'use server';
+
+import { getGalleryImages } from '@/lib/gallery';
 import { Card } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { PortalNavbar } from '@/components/portals/navbar';
@@ -11,6 +10,7 @@ import { PortalFooter } from '@/components/portals/footer';
 async function fetchGalleryImages() {
   try {
     const images = await getGalleryImages();
+    // Sorting on the server after fetching
     return images.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
   } catch (error) {
     console.error("Gagal memuat gambar galeri:", error);

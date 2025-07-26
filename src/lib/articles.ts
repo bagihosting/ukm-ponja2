@@ -1,7 +1,8 @@
 
+'use server';
+
 import { 
-  db, 
-  app 
+  db
 } from './firebase'; 
 import { 
   collection, 
@@ -18,7 +19,7 @@ import {
 import { deleteField } from 'firebase/firestore';
 
 
-if (!app) {
+if (!db) {
   throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
 }
 
@@ -52,6 +53,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
       createdAt: serverTimestamp(),
     };
     
+    // Only include imageUrl if it's a non-empty string
     if (!article.imageUrl) {
         delete dataToAdd.imageUrl;
     }
@@ -100,23 +102,15 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
   try {
     const docRef = doc(db, 'articles', id);
     
-    const dataToUpdate: { [key: string]: any } = { ...article };
-
-    // Firestore does not allow updating with undefined values.
-    Object.keys(dataToUpdate).forEach(key => {
-      if (dataToUpdate[key] === undefined) {
-        delete dataToUpdate[key];
-      }
-    });
+    const dataToUpdate: ArticleUpdateInput = { ...article };
 
     // Handle empty imageUrl string to remove it from the document.
-    if (article.imageUrl === '') {
+    if (article.imageUrl === '' || article.imageUrl === null) {
         dataToUpdate.imageUrl = deleteField();
     }
     
-    if (Object.keys(dataToUpdate).length > 0) {
-      await updateDoc(docRef, dataToUpdate);
-    }
+    await updateDoc(docRef, dataToUpdate);
+
   } catch (e: any) {
     console.error("Error updating document: ", e);
     throw new Error(`Gagal memperbarui artikel: ${e.message}`);

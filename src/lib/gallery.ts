@@ -1,4 +1,6 @@
 
+'use server';
+
 import { 
   db
 } from './firebase'; 
@@ -91,24 +93,20 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
 
 /**
  * Retrieves all images from the 'galleryImages' collection in Firestore.
- * NOTE: To enable server-side sorting, you must create a composite index in Firestore.
- * The error message in the browser console will usually provide a direct link to create it.
- * For now, sorting is done on the client-side as a fallback.
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   try {
-    // Server-side ordering is removed to prevent index-not-found errors.
-    // If you create the index, you can uncomment the line below and remove client-side sorting.
-    // const q = query(galleryCollection, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(galleryCollection);
+    const q = query(galleryCollection, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     } as GalleryImage));
   } catch (e: any) {
     console.error("Error getting documents: ", e);
-    throw new Error(`Gagal mengambil daftar gambar dari Firebase: ${e.message}`);
+    // On failure, return an empty array to prevent the page from crashing.
+    return [];
   }
 };
 
@@ -119,10 +117,8 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
     try {
-        // Delete the document from Firestore
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);
-
     } catch (e: any) {
         console.error("Error deleting image metadata: ", e);
         throw new Error(`Gagal menghapus riwayat gambar dari Firebase: ${e.message}`);

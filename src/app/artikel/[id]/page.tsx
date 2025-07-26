@@ -1,7 +1,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { HeartPulse, Calendar, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { getArticle } from '@/lib/articles';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
