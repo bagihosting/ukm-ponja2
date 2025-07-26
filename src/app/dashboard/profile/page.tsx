@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, FC } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -51,29 +51,29 @@ const memberSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type MemberFormValues = z.infer<typeof memberSchema>;
 
-// -- Reusable Components for Form Logic --
+// -- Reusable Form Components --
 
 interface AddMemberFormProps {
   onSuccess: () => void;
+  onCancel: () => void;
 }
 
-const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
+const AddMemberForm: FC<AddMemberFormProps> = ({ onSuccess, onCancel }) => {
   const { toast } = useToast();
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
     defaultValues: { name: '', role: '' },
   });
 
-  const { formState: { isSubmitting, errors }, register, handleSubmit, reset } = form;
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-  const handleAddNewMember = async (data: MemberFormValues) => {
+  const handleAddNewMember: SubmitHandler<MemberFormValues> = async (data) => {
     try {
       await addTeamMember(data);
       toast({ title: 'Berhasil', description: 'Anggota baru berhasil ditambahkan.' });
-      reset();
-      onSuccess(); // Triggers data reload and UI change
+      onSuccess();
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menambah', description: `Terjadi kesalahan: ${error.message}` });
+      toast({ variant: 'destructive', title: 'Gagal Menambah', description: error.message });
     }
   };
 
@@ -91,7 +91,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
         <Button type="button" size="icon" variant="ghost" disabled={isSubmitting} onClick={handleSubmit(handleAddNewMember)}>
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
         </Button>
-        <Button size="icon" variant="ghost" onClick={onSuccess} disabled={isSubmitting}>
+        <Button size="icon" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
           <X className="h-4 w-4" />
         </Button>
       </TableCell>
@@ -99,34 +99,33 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
   );
 };
 
-
 interface EditMemberRowProps {
   member: TeamMember;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const EditMemberRow: React.FC<EditMemberRowProps> = ({ member, onSuccess, onCancel }) => {
+const EditMemberRow: FC<EditMemberRowProps> = ({ member, onSuccess, onCancel }) => {
     const { toast } = useToast();
     const form = useForm<MemberFormValues>({
         resolver: zodResolver(memberSchema),
         defaultValues: { name: member.name, role: member.role },
     });
 
-    const { formState: { isSubmitting, errors }, register, handleSubmit } = form;
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
-    const handleUpdateMember = async (data: MemberFormValues) => {
+    const handleUpdateMember: SubmitHandler<MemberFormValues> = async (data) => {
         try {
             await updateTeamMember(member.id, data);
             toast({ title: 'Berhasil', description: 'Anggota berhasil diperbarui.' });
             onSuccess();
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: `Terjadi kesalahan: ${error.message}` });
+            toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: error.message });
         }
     };
 
     return (
-        <TableRow key={member.id}>
+        <TableRow>
             <TableCell>
                 <Input {...register('name')} autoFocus disabled={isSubmitting} />
                 {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
@@ -162,31 +161,27 @@ export default function ProfileSettingsPage() {
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      about: '',
-      vision: '',
-      mission: ''
-    }
+    defaultValues: defaultProfileContent
   });
 
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
       const [profile, members] = await Promise.all([
         getProfileContent(),
         getTeamMembers()
       ]);
-      profileForm.reset(profile || defaultProfileContent);
+      profileForm.reset(profile);
       setTeamMembers(members);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data dari server.' });
-      profileForm.reset(defaultProfileContent); // Ensure form is not empty on error
+      profileForm.reset(defaultProfileContent);
     } finally {
       setLoading(false);
     }
   }, [profileForm, toast]);
 
   useEffect(() => {
-    setLoading(true);
     loadData();
   }, [loadData]);
   
@@ -206,7 +201,7 @@ export default function ProfileSettingsPage() {
       await updateProfileContent(data);
       toast({ title: 'Berhasil', description: 'Konten profil berhasil diperbarui.' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: `Terjadi kesalahan: ${error.message}` });
+      toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
     } finally {
       setSavingProfile(false);
     }
@@ -217,12 +212,22 @@ export default function ProfileSettingsPage() {
     try {
       await deleteTeamMember(deletingMemberId);
       toast({ title: 'Berhasil', description: 'Anggota berhasil dihapus.' });
-      reloadTeamMembers(); // Reload data
+      await reloadTeamMembers();
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menghapus', description: `Terjadi kesalahan: ${error.message}` });
+      toast({ variant: 'destructive', title: 'Gagal Menghapus', description: error.message });
     } finally {
       setDeletingMemberId(null);
     }
+  };
+  
+  const handleAddSuccess = () => {
+    setIsAddingMember(false);
+    reloadTeamMembers();
+  };
+
+  const handleEditSuccess = () => {
+    setEditingMemberId(null);
+    reloadTeamMembers();
   };
 
   if (loading) {
@@ -298,7 +303,7 @@ export default function ProfileSettingsPage() {
                 <CardDescription>Kelola anggota tim yang ditampilkan di halaman profil.</CardDescription>
               </div>
               {!isAddingMember && !editingMemberId && (
-                <Button size="sm" onClick={() => setIsAddingMember(true)}>
+                <Button size="sm" onClick={() => { setIsAddingMember(true); setEditingMemberId(null); } }>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Tambah Anggota
                 </Button>
@@ -316,12 +321,7 @@ export default function ProfileSettingsPage() {
               </TableHeader>
               <TableBody>
                 {isAddingMember && (
-                  <AddMemberForm 
-                    onSuccess={() => {
-                        setIsAddingMember(false);
-                        reloadTeamMembers();
-                    }}
-                  />
+                    <AddMemberForm onSuccess={handleAddSuccess} onCancel={() => setIsAddingMember(false)} />
                 )}
 
                 {teamMembers.map((member) => (
@@ -329,10 +329,7 @@ export default function ProfileSettingsPage() {
                       <EditMemberRow 
                         key={member.id}
                         member={member} 
-                        onSuccess={() => {
-                            setEditingMemberId(null);
-                            reloadTeamMembers();
-                        }}
+                        onSuccess={handleEditSuccess}
                         onCancel={() => setEditingMemberId(null)}
                       />
                   ) : (

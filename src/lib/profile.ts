@@ -12,7 +12,9 @@ import {
   addDoc,
   getDocs,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  orderBy,
+  query
 } from 'firebase/firestore';
 import type { ProfileContent } from './constants';
 import { defaultProfileContent } from './constants';
@@ -37,8 +39,7 @@ const profileDocRef = doc(profileCollection, 'main'); // Use a known ID 'main'
 
 /**
  * Retrieves the main profile content from Firestore.
- * If the document doesn't exist, it returns the default content without writing to the DB.
- * This prevents permission errors for unauthenticated users.
+ * If the document doesn't exist, it creates it with default content and returns it.
  * @returns A promise that resolves with the profile content.
  */
 export const getProfileContent = async (): Promise<ProfileContent> => {
@@ -47,15 +48,15 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
     if (docSnap.exists()) {
       return docSnap.data() as ProfileContent;
     } else {
-      // Document does not exist, return default content.
-      // The admin page will handle creating it on first save.
+      // Document does not exist, create it with default content.
+      await setDoc(profileDocRef, defaultProfileContent);
       return defaultProfileContent;
     }
   } catch (e: any) {
-    console.error("Error getting profile content: ", e);
-    // In case of a real error (like permission denied on an existing doc),
-    // return default content as a fallback for public view.
-    return defaultProfileContent;
+    console.error("Error getting or creating profile content: ", e);
+    // In case of error, returning default content can be a fallback,
+    // though throwing an error is better to signal a problem.
+    throw new Error('Gagal mengambil atau membuat konten profil.');
   }
 };
 
@@ -80,12 +81,14 @@ export const updateProfileContent = async (content: Partial<ProfileContent>): Pr
 // --- Team Members Management ---
 
 /**
- * Retrieves all team members from Firestore.
+ * Retrieves all team members from Firestore, ordered by role.
+ * Note: A composite index might be required in Firestore for this to work.
  * @returns A promise that resolves with an array of team members.
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
   try {
-    const querySnapshot = await getDocs(teamMembersCollection);
+    const q = query(teamMembersCollection, orderBy("role"));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -93,7 +96,17 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
   } catch (e: any)
     {
     console.error("Error getting team members: ", e);
-    throw new Error('Gagal mengambil daftar anggota tim.');
+    // Fallback to fetching without ordering if index is missing
+    try {
+        const querySnapshot = await getDocs(teamMembersCollection);
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as TeamMember));
+    } catch (fallbackError: any) {
+        console.error("Fallback fetch also failed:", fallbackError);
+        throw new Error('Gagal mengambil daftar anggota tim.');
+    }
   }
 };
 

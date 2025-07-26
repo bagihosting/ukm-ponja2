@@ -8,6 +8,7 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { getProfileContent, getTeamMembers, type TeamMember, type ProfileContent } from '@/lib/profile';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 // Enhanced MemberCard for the new organization chart
 const MemberCard = ({ name, role, className }: { name: string, role: string, className?: string }) => (
@@ -165,7 +166,7 @@ export default async function ProfilePage() {
                           </OrgChartLevel>
                       )}
 
-                      {teamMembers.length === 0 && !pembina.length && (
+                      {teamMembers.length === 0 && (
                         <div className="text-center text-muted-foreground py-16">
                             Struktur organisasi belum diatur.
                         </div>
