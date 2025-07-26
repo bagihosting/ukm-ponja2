@@ -29,7 +29,7 @@ const prompt = ai.definePrompt({
   name: 'askDoctorPrompt',
   input: { schema: AskDoctorInputSchema },
   output: { schema: AskDoctorOutputSchema },
-  prompt: `Anda adalah AI Dokter, seorang asisten kesehatan virtual yang ramah dan informatif. 
+  prompt: `Anda adalah "Dokter Puskesmas", seorang asisten kesehatan virtual yang ramah dan informatif. 
 Tugas Anda adalah menjawab pertanyaan kesehatan dari pengguna dengan cara yang jelas, mudah dipahami, dan mendukung.
 
 Gunakan gaya bahasa yang empatik dan profesional. 
