@@ -12,6 +12,7 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
+import { AiDoctor } from '@/components/portals/ai-doctor';
 
 
 function truncate(text: string, length: number) {
@@ -91,6 +92,11 @@ export default async function HomePage() {
                     Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
                 </p>
             </div>
+          </section>
+
+          {/* AI Doctor Section */}
+          <section id="ai-doctor" className="my-12">
+            <AiDoctor />
           </section>
 
           {/* Articles Section */}
