@@ -3,12 +3,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HeartPulse, Menu } from 'lucide-react';
+import { HeartPulse, Menu, LogIn, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/context/auth-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function PortalNavbar() {
     const [isOpen, setIsOpen] = React.useState(false);
+    const { user, loading } = useAuth();
 
     const navLinks = [
       { href: "/", label: "Home" },
@@ -17,6 +20,55 @@ export function PortalNavbar() {
       { href: "/galeri", label: "Galeri" },
       { href: "/laporan", label: "Laporan" },
     ];
+
+    const AuthButton = () => {
+      if (loading) {
+        return <Skeleton className="h-9 w-24 rounded-md" />;
+      }
+
+      if (user) {
+        return (
+          <Link href="/dashboard" passHref>
+            <Button variant="outline">
+                <LayoutDashboard className="mr-2 h-4 w-4"/>
+                Dasbor
+            </Button>
+          </Link>
+        );
+      }
+
+      return (
+        <Link href="/login" passHref>
+          <Button variant="ghost">
+            Login
+          </Button>
+        </Link>
+      );
+    };
+    
+    const AuthButtonMobile = () => {
+        if (loading) {
+            return <Skeleton className="h-10 w-full" />;
+        }
+        if (user) {
+            return (
+                 <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                        <LayoutDashboard className="mr-2 h-4 w-4"/>
+                        Dasbor
+                    </Button>
+                </Link>
+            )
+        }
+        return (
+            <Link href="/login" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" className="w-full">
+                    <LogIn className="mr-2 h-4 w-4"/>
+                    Login
+                </Button>
+            </Link>
+        )
+    }
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -46,15 +98,15 @@ export function PortalNavbar() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[240px]">
-                            <SheetHeader className="sr-only">
-                                <SheetTitle>Menu</SheetTitle>
+                            <SheetHeader>
+                                <SheetTitle className="sr-only">Menu</SheetTitle>
                             </SheetHeader>
-                            <div className="p-4">
+                            <div className="p-4 flex flex-col h-full">
                                <Link href="/" className="mb-8 flex items-center space-x-2" onClick={() => setIsOpen(false)}>
                                     <HeartPulse className="h-6 w-6 text-primary" />
                                     <span className="font-bold">UKM PONJA</span>
                                 </Link>
-                                <nav className="mt-8 grid gap-4">
+                                <nav className="grid gap-4">
                                     {navLinks.map(({ href, label }) => (
                                         <Link 
                                             key={label} 
@@ -66,10 +118,8 @@ export function PortalNavbar() {
                                         </Link>
                                     ))}
                                 </nav>
-                                <div className="mt-8 border-t pt-4">
-                                     <Link href="/login" onClick={() => setIsOpen(false)}>
-                                        <Button variant="outline" className="w-full">Admin Login</Button>
-                                    </Link>
+                                <div className="mt-auto border-t pt-4">
+                                    <AuthButtonMobile />
                                 </div>
                             </div>
                         </SheetContent>
@@ -82,9 +132,7 @@ export function PortalNavbar() {
                 
                 {/* Desktop Login Button */}
                 <div className="hidden flex-1 items-center justify-end md:flex">
-                    <Link href="/login">
-                        <Button variant="ghost">Admin Login</Button>
-                    </Link>
+                    <AuthButton />
                 </div>
             </div>
         </header>
