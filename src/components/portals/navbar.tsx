@@ -15,7 +15,6 @@ export function PortalNavbar() {
 
     const navLinks = [
       { href: "/", label: "Home" },
-      { href: "/profil", label: "Profil" },
       { href: "/program-ukm", label: "Program UKM" },
       { href: "/galeri", label: "Galeri" },
       { href: "/laporan", label: "Laporan" },

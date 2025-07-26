@@ -98,7 +98,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard", icon: Home, label: "Dashboard", disabled: false },
     { href: "/dashboard/articles", icon: Newspaper, label: "Articles", disabled: false },
     { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
-    { href: "/dashboard/profile", icon: User, label: "Profil", disabled: false },
     { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: true },
     { href: "/dashboard/reports", icon: LineChart, label: "Laporan", disabled: true },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", disabled: false },
