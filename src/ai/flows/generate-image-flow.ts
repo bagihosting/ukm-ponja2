@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { addGalleryImageRecord } from '@/lib/gallery';
 import { z } from 'genkit';
 
 const GenerateImageInputSchema = z.object({
@@ -52,12 +53,24 @@ const generateImageFlow = ai.defineFlow(
     }
 
     // 2. Upload the generated image to the external hosting service
+    let publicUrl: string;
     try {
-      const publicUrl = await uploadImageToFreeImage(imageDataUri);
-      return { imageUrl: publicUrl };
+      publicUrl = await uploadImageToFreeImage(imageDataUri);
     } catch (error) {
       console.error('Error uploading image:', error);
       throw new Error('Gagal mengunggah gambar yang telah dibuat.');
     }
+
+    // 3. Save the image record to the gallery in Firestore
+    try {
+        const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+        await addGalleryImageRecord({ name: imageName, url: publicUrl });
+    } catch (error) {
+        console.error('Error saving image to gallery:', error);
+        // We will not throw an error here, as the image was successfully generated and uploaded.
+        // The user can still use the URL. We will just log the error.
+    }
+    
+    return { imageUrl: publicUrl };
   }
 );
