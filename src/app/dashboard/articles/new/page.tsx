@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -5,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Sparkles } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Sparkles, Download } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -207,13 +208,21 @@ export default function NewArticlePage() {
                   </Button>
 
                   {imageUrl && isValidUrl(imageUrl) && (
-                    <div className="aspect-video relative">
-                      <Image
-                        src={imageUrl}
-                        alt="Pratinjau Gambar"
-                        fill
-                        className="object-cover rounded-md"
-                      />
+                    <div className="space-y-2">
+                        <div className="aspect-video relative">
+                            <Image
+                                src={imageUrl}
+                                alt="Pratinjau Gambar"
+                                fill
+                                className="object-cover rounded-md"
+                            />
+                        </div>
+                        <a href={imageUrl} download="generated-image.png" className="inline-block w-full">
+                            <Button type="button" variant="secondary" size="sm" className="w-full">
+                                <Download className="mr-2 h-4 w-4" />
+                                Unduh Gambar
+                            </Button>
+                        </a>
                     </div>
                   )}
                 </div>
