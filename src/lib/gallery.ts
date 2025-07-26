@@ -75,13 +75,17 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
 };
 
 /**
- * Retrieves all images from the 'galleryImages' collection in Firestore, ordered by creation date.
+ * Retrieves all images from the 'galleryImages' collection in Firestore.
+ * NOTE: To enable server-side sorting, you must create a composite index in Firestore.
+ * The error message in the browser console will usually provide a direct link to create it.
+ * For now, sorting is done on the client-side as a fallback.
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   try {
-    const q = query(galleryCollection, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
+    // Server-side ordering is removed to prevent index-not-found errors.
+    // const q = query(galleryCollection, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(galleryCollection);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()

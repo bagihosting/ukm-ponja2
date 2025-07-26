@@ -27,7 +27,13 @@ export default function GalleryPage() {
     setIsLoading(true);
     try {
       const fetchedImages = await getGalleryImages();
-      setImages(fetchedImages);
+      // Sort on the client-side as a temporary fix
+      const sortedImages = fetchedImages.sort((a, b) => {
+        const dateA = a.createdAt?.seconds ?? 0;
+        const dateB = b.createdAt?.seconds ?? 0;
+        return dateB - dateA;
+      });
+      setImages(sortedImages);
     } catch (error) {
       console.error("Failed to fetch images:", error);
       toast({
@@ -42,7 +48,7 @@ export default function GalleryPage() {
 
   useEffect(() => {
     fetchImages();
-  }, [toast]);
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
