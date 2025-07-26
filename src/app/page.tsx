@@ -2,115 +2,16 @@
 'use client'
 
 import Link from 'next/link';
-import { HeartPulse, Menu } from 'lucide-react';
 import { getArticles, type Article } from '@/lib/articles';
 import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import React from 'react';
+import { PortalNavbar } from '@/components/portals/navbar';
+import { PortalFooter } from '@/components/portals/footer';
 
-
-function PortalNavbar() {
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    const navLinks = [
-      { href: "/", label: "Home" },
-      { href: "/profil", label: "Profil" },
-      { href: "/program-ukm", label: "Program UKM" },
-      { href: "/galeri", label: "Galeri" },
-      { href: "/laporan", label: "Laporan" },
-    ];
-
-    return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center justify-between">
-                {/* Desktop Logo and Navigation */}
-                <div className="mr-4 hidden md:flex">
-                    <Link href="/" className="mr-6 flex items-center space-x-2">
-                        <HeartPulse className="h-6 w-6 text-primary" />
-                        <span className="font-bold sm:inline-block">UKM PONJA</span>
-                    </Link>
-                    <nav className="flex items-center space-x-6 text-sm font-medium">
-                        {navLinks.map(({ href, label }) => (
-                            <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                {label}
-                            </Link>
-                        ))}
-                    </nav>
-                </div>
-
-                {/* Mobile Menu Trigger and Logo */}
-                <div className="flex items-center md:hidden">
-                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                        <SheetTrigger asChild>
-                             <Button variant="ghost" size="icon" className="mr-2">
-                                <Menu className="h-6 w-6" />
-                                <span className="sr-only">Buka Menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-[240px]">
-                           <SheetHeader className="sr-only">
-                                <SheetTitle>Menu</SheetTitle>
-                           </SheetHeader>
-                            <div className="p-4">
-                               <Link href="/" className="mb-8 flex items-center space-x-2" onClick={() => setIsOpen(false)}>
-                                    <HeartPulse className="h-6 w-6 text-primary" />
-                                    <span className="font-bold">UKM PONJA</span>
-                                </Link>
-                                <nav className="mt-8 grid gap-4">
-                                    {navLinks.map(({ href, label }) => (
-                                        <Link 
-                                            key={label} 
-                                            href={href} 
-                                            className="text-lg font-medium text-foreground/80 hover:text-foreground"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            {label}
-                                        </Link>
-                                    ))}
-                                </nav>
-                                <div className="mt-8 border-t pt-4">
-                                     <Link href="/login" onClick={() => setIsOpen(false)}>
-                                        <Button variant="outline" className="w-full">Admin Login</Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                    <Link href="/" className="flex items-center space-x-2 md:hidden">
-                        <HeartPulse className="h-6 w-6 text-primary" />
-                        <span className="font-bold sm:inline-block">UKM PONJA</span>
-                    </Link>
-                </div>
-                
-                {/* Desktop Login Button */}
-                <div className="hidden flex-1 items-center justify-end md:flex">
-                    <Link href="/login">
-                        <Button variant="ghost">Admin Login</Button>
-                    </Link>
-                </div>
-            </div>
-        </header>
-    );
-}
-
-function PortalFooter() {
-    return (
-        <footer className="py-6 md:px-8 md:py-0 bg-secondary text-secondary-foreground mt-12">
-            <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-                <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                    Dibangun dengan ❤️ oleh Rani Kirana.
-                </p>
-                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-right">
-                    Hak Cipta © {new Date().getFullYear()} UKM PONJA.
-                </p>
-            </div>
-        </footer>
-    )
-}
 
 function truncate(text: string, length: number) {
     if (!text || text.length <= length) {
