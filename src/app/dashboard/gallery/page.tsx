@@ -187,7 +187,7 @@ export default function GalleryPage() {
         
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Riwayat Gambar dari Firestore</CardTitle>
+            <CardTitle>Riwayat Gambar</CardTitle>
             <CardDescription>Daftar gambar yang riwayatnya tersimpan di Firestore.</CardDescription>
           </CardHeader>
           <CardContent>
