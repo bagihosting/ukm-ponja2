@@ -29,6 +29,7 @@ export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileContent>(defaultProfileContent);
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -46,6 +47,7 @@ export default function ProfileSettingsPage() {
     setIsLoading(true);
     try {
       const profile = await getProfileContent();
+      setProfileData(profile); // Set state for display
       reset(profile); // Populate the form with data from Firestore
     } catch (error: any) {
       toast({
@@ -53,7 +55,8 @@ export default function ProfileSettingsPage() {
         title: 'Gagal Memuat Data',
         description: error.message || 'Gagal mengambil data dari server.',
       });
-      reset(defaultProfileContent); // Reset to default on error
+      setProfileData(defaultProfileContent);
+      reset(defaultProfileContent);
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +70,12 @@ export default function ProfileSettingsPage() {
     try {
       await updateProfileContent(data);
       toast({ title: 'Berhasil', description: 'Konten profil berhasil diperbarui.' });
-      reset(data); // Sync form state with the new saved data
+      await loadProfileData(); // Reload data from Firestore to ensure UI is in sync
       setIsDialogOpen(false); // Close dialog on success
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
     }
   };
-  
-  const currentValues = form.watch();
 
   return (
     <div className="space-y-8">
@@ -144,17 +145,17 @@ export default function ProfileSettingsPage() {
                 <div className="space-y-4 text-sm text-muted-foreground">
                     <div>
                         <h3 className="font-semibold text-foreground mb-2">Deskripsi Umum</h3>
-                        <p className="whitespace-pre-wrap">{currentValues.about || 'Belum diisi.'}</p>
+                        <p className="whitespace-pre-wrap">{profileData.about || 'Belum diisi.'}</p>
                     </div>
                     <hr/>
                     <div>
                         <h3 className="font-semibold text-foreground mb-2">Visi</h3>
-                        <p className="whitespace-pre-wrap">{currentValues.vision || 'Belum diisi.'}</p>
+                        <p className="whitespace-pre-wrap">{profileData.vision || 'Belum diisi.'}</p>
                     </div>
                      <hr/>
                     <div>
                         <h3 className="font-semibold text-foreground mb-2">Misi</h3>
-                        <p className="whitespace-pre-wrap">{currentValues.mission || 'Belum diisi.'}</p>
+                        <p className="whitespace-pre-wrap">{profileData.mission || 'Belum diisi.'}</p>
                     </div>
                 </div>
             )}
