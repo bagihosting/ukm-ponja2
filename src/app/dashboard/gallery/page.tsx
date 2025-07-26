@@ -154,7 +154,7 @@ export default function GalleryPage() {
         <Card className="lg:col-span-1 h-fit">
           <CardHeader>
             <CardTitle>Unggah Gambar Baru</CardTitle>
-            <CardDescription>Unggah gambar ke freeimage.host dan simpan riwayat ke Firestore.</CardDescription>
+            <CardDescription>Unggah Gambar di fitur ini</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid w-full max-w-sm items-center gap-2">
@@ -188,7 +188,7 @@ export default function GalleryPage() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Riwayat Gambar</CardTitle>
-            <CardDescription>Daftar gambar yang riwayatnya tersimpan di Firestore.</CardDescription>
+            <CardDescription>Daftar gambar yang riwayatnya tersimpan.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
