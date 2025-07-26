@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
+import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, addGalleryImageRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateAndSaveGalleryImage, type GenerateGalleryImageInput } from '@/ai/flows/generate-gallery-image-flow';
+import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function GalleryPage() {
@@ -24,9 +25,14 @@ export default function GalleryPage() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
+  const { toast } = useToast();
+
+  // AI Modal State
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchImages = async () => {
     setIsLoading(true);
@@ -103,29 +109,6 @@ export default function GalleryPage() {
       setIsUploading(false);
     }
   };
-  
-  const handleGenerateImage = async () => {
-    if (!aiPrompt) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
-        return;
-    }
-    setIsGenerating(true);
-    try {
-        const input: GenerateGalleryImageInput = { prompt: aiPrompt };
-        await generateAndSaveGalleryImage(input);
-        toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan disimpan ke galeri.' });
-        setAiPrompt('');
-        await fetchImages(); // Refresh
-    } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Gagal Membuat Gambar',
-            description: `Terjadi kesalahan: ${error.message}`,
-        });
-    } finally {
-        setIsGenerating(false);
-    }
-  };
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url).then(() => {
@@ -161,6 +144,65 @@ export default function GalleryPage() {
       setImageToDelete(null);
     }
   };
+  
+  const resetAiModal = () => {
+    setAiPrompt('');
+    setGeneratedImageUrl(null);
+    setIsGenerating(false);
+    setIsSaving(false);
+  }
+
+  const handleGenerateImage = async () => {
+    if (!aiPrompt) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
+        return;
+    }
+    setIsGenerating(true);
+    setGeneratedImageUrl(null);
+    try {
+        const input: GenerateImageInput = { prompt: aiPrompt };
+        const result = await generateImage(input);
+        if (result.imageUrl) {
+            setGeneratedImageUrl(result.imageUrl);
+            toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat. Klik simpan untuk menambahkannya ke galeri.' });
+        } else {
+            throw new Error('AI tidak mengembalikan URL gambar.');
+        }
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Gagal Membuat Gambar',
+            description: `Terjadi kesalahan: ${error.message}`,
+        });
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const handleSaveToGallery = async () => {
+    if (!generatedImageUrl || !aiPrompt) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Tidak ada gambar untuk disimpan.' });
+        return;
+    }
+    setIsSaving(true);
+    try {
+        const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+        await addGalleryImageRecord({ name: imageName, url: generatedImageUrl });
+        toast({ title: 'Berhasil!', description: 'Gambar telah disimpan ke galeri Anda.' });
+        await fetchImages();
+        setIsAiModalOpen(false);
+        resetAiModal();
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Gagal Menyimpan ke Galeri',
+            description: `Terjadi kesalahan: ${error.message}`,
+        });
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
 
   return (
     <>
@@ -168,8 +210,8 @@ export default function GalleryPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="lg:col-span-1 h-fit">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle>Unggah Gambar Baru</CardTitle>
             <CardDescription>Unggah Gambar di fitur ini</CardDescription>
@@ -190,33 +232,14 @@ export default function GalleryPage() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-1 h-fit">
-          <CardHeader>
-            <CardTitle>Buat Gambar dengan AI</CardTitle>
-            <CardDescription>Gunakan AI untuk membuat gambar dari teks.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="ai-prompt">Deskripsi Gambar (Prompt)</Label>
-                <Textarea 
-                    id="ai-prompt"
-                    placeholder="Contoh: Kucing oranye di atas tumpukan buku"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    disabled={isGenerating}
-                />
-            </div>
-            <Button onClick={handleGenerateImage} disabled={isGenerating || !aiPrompt}>
-                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                {isGenerating ? 'Membuat...' : 'Buat Gambar'}
+            <Button variant="outline" onClick={() => setIsAiModalOpen(true)}>
+              <Wand2 className="mr-2 h-4 w-4" />
+              Buat dengan AI
             </Button>
           </CardContent>
         </Card>
         
-        <Card className="lg:col-span-2 xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle>Riwayat Gambar</CardTitle>
             <CardDescription>Daftar gambar yang riwayatnya tersimpan.</CardDescription>
@@ -300,6 +323,74 @@ export default function GalleryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isAiModalOpen} onOpenChange={(isOpen) => { setIsAiModalOpen(isOpen); if (!isOpen) resetAiModal(); }}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Buat Gambar dengan AI</DialogTitle>
+            <DialogDescription>
+              Tulis deskripsi, buat gambar, lalu simpan ke galeri Anda.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="ai-prompt">Deskripsi Gambar (Prompt)</Label>
+              <Textarea
+                id="ai-prompt"
+                placeholder='Contoh: "Sebuah danau di pegunungan saat matahari terbenam"'
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                disabled={isGenerating || isSaving}
+              />
+            </div>
+             <Button type="button" onClick={handleGenerateImage} disabled={isGenerating || !aiPrompt}>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Membuat...
+                </>
+              ) : (
+                <>
+                 <Wand2 className="mr-2 h-4 w-4" />
+                 Buat Gambar
+                </>
+              )}
+            </Button>
+            
+            {isGenerating && (
+                <div className="aspect-video w-full flex items-center justify-center bg-muted rounded-md">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            )}
+
+            {generatedImageUrl && (
+                <div className="space-y-2">
+                    <Label>Hasil Gambar</Label>
+                    <div className="aspect-video relative overflow-hidden rounded-md border">
+                        <img
+                          src={generatedImageUrl}
+                          alt="Gambar yang dibuat AI"
+                          className="w-full h-full object-cover"
+                        />
+                    </div>
+                </div>
+            )}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" disabled={isGenerating || isSaving}>Batal</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleSaveToGallery} disabled={!generatedImageUrl || isSaving || isGenerating}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : "Simpan ke Galeri"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
