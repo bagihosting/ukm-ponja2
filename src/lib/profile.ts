@@ -14,14 +14,11 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
+import type { ProfileContent } from './constants';
+import { defaultProfileContent } from './constants';
 
-// Define types for profile data
-export interface ProfileContent {
-  about: string;
-  vision: string;
-  mission: string;
-}
 
+// Define types for profile data that include an ID
 export interface TeamMember {
   id: string;
   name: string;
@@ -37,12 +34,6 @@ const profileCollection = collection(db, 'profile');
 const teamMembersCollection = collection(db, 'teamMembers');
 const profileDocRef = doc(profileCollection, 'main'); // Use a known ID 'main'
 
-// Default content to be used if the profile document doesn't exist yet.
-export const defaultProfileContent: ProfileContent = {
-  about: "Unit Kegiatan Mahasiswa Pondok Lanjut Usia (UKM PONJA) adalah sebuah organisasi mahasiswa yang berdedikasi untuk memberikan kontribusi positif kepada masyarakat, khususnya para lansia. Kami percaya bahwa setiap individu, tanpa memandang usia, berhak mendapatkan kualitas hidup yang baik, perhatian, dan kebahagiaan.",
-  vision: "Menjadi wadah bagi mahasiswa untuk mengembangkan kepedulian sosial dan menjadi pelopor dalam upaya peningkatan kesejahteraan lansia.",
-  mission: "Menyelenggarakan kegiatan-kegiatan yang bermanfaat seperti pemeriksaan kesehatan rutin, senam bersama, penyuluhan, serta kegiatan rekreasi untuk menjaga kesehatan fisik dan mental para lansia."
-};
 
 /**
  * Retrieves the main profile content from Firestore.
@@ -56,20 +47,21 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
     if (docSnap.exists()) {
       return docSnap.data() as ProfileContent;
     } else {
-      // Document does not exist, return default content without trying to create it here.
+      // Document does not exist, return default content.
+      // The admin page will handle creating it on first save.
       return defaultProfileContent;
     }
   } catch (e: any) {
     console.error("Error getting profile content: ", e);
-    // Throw an error to be handled by the calling component (e.g., ProfilePage)
-    throw new Error('Gagal mengambil data profil.');
+    // In case of a real error (like permission denied on an existing doc),
+    // return default content as a fallback for public view.
+    return defaultProfileContent;
   }
 };
 
 
 /**
  * Creates or updates the main profile content in Firestore using set with merge.
- * This will create the document if it doesn't exist, or update it if it does.
  * This should only be called by an authenticated admin user.
  * @param content The profile content to save.
  */
