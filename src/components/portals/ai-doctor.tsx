@@ -56,7 +56,7 @@ export function AiDoctor() {
         </div>
         <CardTitle className="text-3xl font-bold">Tanya Dokter Puskesmas</CardTitle>
         <CardDescription className="text-lg">
-          Punya pertanyaan seputar kesehatan? Tanyakan pada asisten AI kami.
+          Punya pertanyaan seputar kesehatan? Tanyakan pada Dokter kami.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
