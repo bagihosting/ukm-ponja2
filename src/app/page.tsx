@@ -152,15 +152,12 @@ export default async function HomePage() {
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <Link href={`/artikel/${article.id}`}>
                             <AspectRatio ratio={16 / 9} className="bg-muted">
-                            {article.imageUrl ? (
                                 <img
-                                src={article.imageUrl}
+                                src={article.imageUrl || 'https://placehold.co/400x225.png'}
                                 alt={article.title}
                                 className="w-full h-full object-cover"
+                                data-ai-hint="news placeholder"
                                 />
-                            ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
-                            )}
                             </AspectRatio>
                         </Link>
                         <CardHeader className="flex-grow">
@@ -189,15 +186,12 @@ export default async function HomePage() {
                   {healthArticles.map(article => (
                      <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <AspectRatio ratio={4 / 3} className="bg-muted">
-                        {article.imageUrl ? (
                             <img
-                            src={article.imageUrl}
+                            src={article.imageUrl || 'https://placehold.co/400x300.png'}
                             alt={article.title}
                             className="w-full h-full object-cover"
+                            data-ai-hint="health information"
                             />
-                        ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
-                        )}
                         </AspectRatio>
                         <CardHeader>
                           <CardTitle className="text-lg leading-tight">{truncate(article.title, 50)}</CardTitle>
@@ -306,3 +300,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
+    
