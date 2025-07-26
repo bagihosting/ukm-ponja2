@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ChevronLeft, Loader2, Link as LinkIcon, Wand2 } from 'lucide-react';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -185,7 +184,7 @@ export default function NewArticlePage() {
                       <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="imageUrl"
-                        type="url"
+                        type="text"
                         className="w-full pl-10"
                         placeholder="https://..."
                         {...register('imageUrl')}
@@ -196,13 +195,16 @@ export default function NewArticlePage() {
 
                   {imageUrl && (
                     <div className="space-y-2">
-                        <div className="aspect-video relative">
-                            <Image
+                        <div className="aspect-video relative overflow-hidden rounded-md">
+                            <img
+                                key={imageUrl}
                                 src={imageUrl}
                                 alt="Pratinjau Gambar"
-                                fill
-                                className="object-cover rounded-md"
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { 
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none'; 
+                                }}
                             />
                         </div>
                     </div>
