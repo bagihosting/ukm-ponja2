@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import React from 'react';
 
 
@@ -52,6 +52,9 @@ function PortalNavbar() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[240px]">
+                           <SheetHeader className="sr-only">
+                                <SheetTitle>Menu</SheetTitle>
+                           </SheetHeader>
                             <div className="p-4">
                                <Link href="/" className="mb-8 flex items-center space-x-2" onClick={() => setIsOpen(false)}>
                                     <HeartPulse className="h-6 w-6 text-primary" />

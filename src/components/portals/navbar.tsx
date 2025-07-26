@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { HeartPulse, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export function PortalNavbar() {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -46,6 +46,9 @@ export function PortalNavbar() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[240px]">
+                            <SheetHeader className="sr-only">
+                                <SheetTitle>Menu</SheetTitle>
+                            </SheetHeader>
                             <div className="p-4">
                                <Link href="/" className="mb-8 flex items-center space-x-2" onClick={() => setIsOpen(false)}>
                                     <HeartPulse className="h-6 w-6 text-primary" />
