@@ -2,7 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,36 +14,28 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
-let storage;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-// Pastikan kode ini hanya berjalan di lingkungan browser
-if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
-  if (!getApps().length) {
-    try {
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db = getFirestore(app);
-      storage = getStorage(app);
-    } catch (error) {
-      console.error("Firebase initialization error:", error);
-      app = null;
-      auth = null;
-      db = null;
-    }
-  } else {
+try {
+  if (getApps().length) {
     app = getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
+  } else {
+    app = initializeApp(firebaseConfig);
   }
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} catch (error: any) {
+  console.error("Firebase initialization error:", error.message);
+  // Set to dummy objects to avoid breaking the app
+  app = null as any;
+  auth = null as any;
+  db = null as any;
+  storage = null as any;
 }
 
-// Check if Firebase was initialized correctly
-if (!app || !auth) {
-  console.error("Firebase is not configured correctly. Check your .env file and ensure NEXT_PUBLIC_ variables are set.");
-}
 
 export { app, auth, db, storage };
