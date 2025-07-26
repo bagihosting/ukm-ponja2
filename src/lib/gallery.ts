@@ -1,7 +1,6 @@
 
 import { 
-  db,
-  storage
+  db
 } from './firebase'; 
 import { 
   collection, 
@@ -14,15 +13,10 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL,
-  deleteObject
-} from "firebase/storage";
-import { v4 as uuidv4 } from 'uuid';
+import { uploadImageToFreeImage } from './image-hosting';
 
-if (!db || !storage) {
+
+if (!db) {
   throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
 }
 
@@ -31,33 +25,38 @@ const galleryCollection = collection(db, 'galleryImages');
 export interface GalleryImage {
   id: string;
   name: string;
-  url: string;
-  storagePath: string;
+  url: string; // URL from freeimage.host
   createdAt: Timestamp;
 }
 
+// Converts a File to a a data URI
+function fileToDataUri(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+
 /**
- * Uploads an image file to Firebase Storage and saves its metadata to Firestore.
+ * Uploads an image file to freeimage.host and saves its metadata to Firestore.
  * @param file The image file to upload.
  * @returns A promise that resolves with the metadata of the newly added image.
  */
 export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
   try {
-    // 1. Create a unique path in Firebase Storage
-    const storagePath = `gallery/${uuidv4()}-${file.name}`;
-    const storageRef = ref(storage, storagePath);
+    // 1. Convert file to data URI
+    const dataUri = await fileToDataUri(file);
 
-    // 2. Upload the file
-    const snapshot = await uploadBytes(storageRef, file);
+    // 2. Upload to external host
+    const url = await uploadImageToFreeImage(dataUri);
 
-    // 3. Get the public URL
-    const url = await getDownloadURL(snapshot.ref);
-
-    // 4. Save metadata to Firestore
+    // 3. Save metadata to Firestore
     const docData = {
       name: file.name,
       url: url,
-      storagePath: storagePath,
       createdAt: serverTimestamp(),
     };
     
@@ -70,8 +69,8 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
     } as GalleryImage;
 
   } catch (e) {
-    console.error("Error uploading image: ", e);
-    throw new Error("Gagal mengunggah gambar ke Firebase.");
+    console.error("Error uploading image and saving to Firestore: ", e);
+    throw new Error("Gagal mengunggah gambar dan menyimpan riwayat.");
   }
 };
 
@@ -94,29 +93,17 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
 };
 
 /**
- * Deletes an image from Firebase Storage and its metadata from Firestore.
+ * Deletes an image metadata from Firestore.
  * @param id The Firestore document ID of the image metadata.
- * @param storagePath The path of the image file in Firebase Storage.
  */
-export const deleteGalleryImage = async (id: string, storagePath: string): Promise<void> => {
+export const deleteGalleryImage = async (id: string): Promise<void> => {
     try {
-        // 1. Delete the file from Firebase Storage
-        const storageRef = ref(storage, storagePath);
-        await deleteObject(storageRef);
-
-        // 2. Delete the document from Firestore
+        // Delete the document from Firestore
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);
 
     } catch (e: any) {
-        console.error("Error deleting image: ", e);
-        // If file not found in storage, still try to delete from DB
-        if (e.code === 'storage/object-not-found') {
-            console.warn('File not found in storage, deleting from Firestore anyway.');
-            const docRef = doc(db, 'galleryImages', id);
-            await deleteDoc(docRef);
-            return;
-        }
-        throw new Error("Gagal menghapus gambar dari Firebase.");
+        console.error("Error deleting image metadata: ", e);
+        throw new Error("Gagal menghapus riwayat gambar dari Firebase.");
     }
 };

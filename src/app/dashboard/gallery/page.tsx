@@ -23,23 +23,24 @@ export default function GalleryPage() {
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
   const { toast } = useToast();
 
+  const fetchImages = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedImages = await getGalleryImages();
+      setImages(fetchedImages);
+    } catch (error) {
+      console.error("Failed to fetch images:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Memuat',
+        description: 'Tidak dapat memuat daftar gambar dari database.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchImages = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedImages = await getGalleryImages();
-        setImages(fetchedImages);
-      } catch (error) {
-        console.error("Failed to fetch images:", error);
-        toast({
-          variant: 'destructive',
-          title: 'Gagal Memuat',
-          description: 'Tidak dapat memuat daftar gambar dari database.',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchImages();
   }, [toast]);
 
@@ -71,13 +72,15 @@ export default function GalleryPage() {
 
     setIsUploading(true);
     try {
-      const newImage = await uploadGalleryImage(selectedFile);
-      setImages(prevImages => [newImage, ...prevImages]);
-
+      await uploadGalleryImage(selectedFile);
+      
       toast({
         title: 'Berhasil!',
-        description: `Gambar "${selectedFile.name}" berhasil diunggah.`,
+        description: `Gambar "${selectedFile.name}" berhasil diunggah dan riwayat disimpan.`,
       });
+      
+      // Refresh the list from Firestore to show the new image
+      fetchImages(); 
 
       setSelectedFile(null);
       const fileInput = document.getElementById('picture') as HTMLInputElement;
@@ -114,17 +117,17 @@ export default function GalleryPage() {
     if (!imageToDelete) return;
 
     try {
-      await deleteGalleryImage(imageToDelete.id, imageToDelete.storagePath);
+      await deleteGalleryImage(imageToDelete.id);
       setImages(images.filter((image) => image.id !== imageToDelete.id));
       toast({
         title: 'Berhasil',
-        description: 'Gambar telah berhasil dihapus.',
+        description: 'Riwayat gambar telah berhasil dihapus.',
       });
     } catch (err: any) {
       toast({
         variant: 'destructive',
         title: 'Gagal Menghapus',
-        description: 'Terjadi kesalahan saat menghapus gambar: ' + err.message,
+        description: 'Terjadi kesalahan saat menghapus riwayat gambar: ' + err.message,
       });
     } finally {
       setIsDeleteDialogOpen(false);
@@ -135,14 +138,14 @@ export default function GalleryPage() {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold md:text-2xl">Galeri Firebase</h1>
+        <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="lg:col-span-1 h-fit">
           <CardHeader>
             <CardTitle>Unggah Gambar Baru</CardTitle>
-            <CardDescription>Unggah gambar ke Firebase Storage.</CardDescription>
+            <CardDescription>Unggah gambar ke freeimage.host dan simpan riwayat ke Firestore.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid w-full max-w-sm items-center gap-2">
@@ -164,7 +167,7 @@ export default function GalleryPage() {
                   ) : (
                     <>
                       <Upload className="mr-2 h-4 w-4" />
-                      Unggah ke Firebase
+                      Unggah Gambar
                     </>
                   )}
                 </Button>
@@ -175,8 +178,8 @@ export default function GalleryPage() {
         
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Daftar Gambar di Firebase</CardTitle>
-            <CardDescription>Daftar gambar yang tersimpan di Firebase Storage.</CardDescription>
+            <CardTitle>Riwayat Gambar dari Firestore</CardTitle>
+            <CardDescription>Daftar gambar yang riwayatnya tersimpan di Firestore.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -203,7 +206,7 @@ export default function GalleryPage() {
                                         <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
                                     </TableCell>
                                     <TableCell className="font-medium truncate max-w-[200px]">{image.name}</TableCell>
-                                    <TableCell>{new Date(image.createdAt.seconds * 1000).toLocaleDateString('id-ID')}</TableCell>
+                                    <TableCell>{image.createdAt ? new Date(image.createdAt.seconds * 1000).toLocaleDateString('id-ID') : 'N/A'}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -243,7 +246,7 @@ export default function GalleryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Ini akan menghapus gambar secara permanen dari Firebase Storage dan database.
+              Tindakan ini tidak dapat dibatalkan. Ini hanya akan menghapus riwayat gambar dari database, bukan gambar dari server freeimage.host.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
