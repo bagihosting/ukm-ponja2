@@ -17,8 +17,7 @@ const profileDocRef = doc(db, 'profile', 'main');
 
 /**
  * Retrieves the main profile content from Firestore.
- * If the document doesn't exist, it returns the default content without writing to the DB.
- * This function is safe for public, non-authenticated access.
+ * If the document doesn't exist, it returns the default content.
  * @returns A promise that resolves with the profile content.
  */
 export const getProfileContent = async (): Promise<ProfileContent> => {
@@ -28,26 +27,24 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
       return docSnap.data() as ProfileContent;
     } else {
       // Document does not exist, return default content.
-      // The document will be created by the admin from the dashboard.
+      // The document will be created on the first admin update.
       return defaultProfileContent;
     }
   } catch (e: any) {
     console.error("Error getting profile content: ", e);
-    // Throw an error to be caught by the calling component.
-    throw new Error('Gagal mengambil konten profil.');
+    throw new Error('Gagal mengambil konten profil dari database.');
   }
 };
 
 
 /**
  * Creates or updates the main profile content in Firestore.
- * This should only be called by an authenticated admin user from the dashboard.
  * @param content The profile content to save.
  */
 export const updateProfileContent = async (content: Partial<ProfileContent>): Promise<void> => {
   try {
     // setDoc with merge: true will create the document if it doesn't exist,
-    // or update the specified fields if it does. This is robust.
+    // or update the specified fields if it does. This is robust and safe.
     await setDoc(profileDocRef, content, { merge: true });
   } catch (e: any) {
     console.error("Error updating profile content: ", e);

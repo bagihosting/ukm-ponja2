@@ -67,6 +67,7 @@ export default function ProfileSettingsPage() {
     try {
       await updateProfileContent(data);
       toast({ title: 'Berhasil', description: 'Konten profil berhasil diperbarui.' });
+      reset(data); // Sync form state with the new saved data
       setIsDialogOpen(false); // Close dialog on success
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
