@@ -186,11 +186,11 @@ export default function EditProgramPage() {
             <Skeleton className="h-7 w-7 rounded-md" />
             <Skeleton className="h-7 w-48" />
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
                 <Skeleton className="h-64 w-full" />
             </div>
-             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+             <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
                 <Skeleton className="h-48 w-full" />
             </div>
         </div>
@@ -232,8 +232,8 @@ export default function EditProgramPage() {
             </Button>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
-          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Detail Program</CardTitle>
@@ -322,7 +322,7 @@ export default function EditProgramPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Gambar Program</CardTitle>

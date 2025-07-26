@@ -136,8 +136,8 @@ export default function NewArticlePage() {
             </Button>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
-          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Detail Artikel</CardTitle>
@@ -170,7 +170,7 @@ export default function NewArticlePage() {
               </CardContent>
             </Card>
           </div>
-          <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Gambar Artikel</CardTitle>
@@ -239,7 +239,7 @@ export default function NewArticlePage() {
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isGeneratingImage}>Batal</Button>
             </DialogClose>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage}>
+            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage || !aiPrompt}>
               {isGeneratingImage ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
