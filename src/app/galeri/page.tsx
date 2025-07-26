@@ -78,13 +78,15 @@ export default function GalleryPage() {
           )}
 
           {loading ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
                 {Array.from({ length: 8 }).map((_, index) => (
-                    <Skeleton key={index} className="h-64 w-full rounded-lg" />
+                    <AspectRatio key={index} ratio={1}>
+                        <Skeleton className="h-full w-full rounded-lg" />
+                    </AspectRatio>
                 ))}
              </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
               {filteredImages.length > 0 ? (
                 filteredImages.map(image => (
                   <Card key={image.id} className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 group">
@@ -99,9 +101,9 @@ export default function GalleryPage() {
                   </Card>
                 ))
               ) : (
-                <p className="col-span-full text-center text-muted-foreground py-16">
-                  Tidak ada gambar dalam kategori ini.
-                </p>
+                <div className="col-span-full text-center text-muted-foreground py-16">
+                  <p>Tidak ada gambar dalam kategori ini.</p>
+                </div>
               )}
             </div>
           )}

@@ -26,47 +26,41 @@ export default async function ProgramsPage() {
   const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan');
 
   const renderProgramList = (programList: Program[]) => (
-    <ul className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {programList.map(program => (
-        <li key={program.id}>
-            <Card className="overflow-hidden shadow-md flex flex-col h-full">
-                <div className="grid md:grid-cols-3">
-                    {program.imageUrl && (
-                        <div className="md:col-span-1">
-                            <AspectRatio ratio={4/3}>
-                                <img src={program.imageUrl} alt={program.name} className="w-full h-full object-cover"/>
-                            </AspectRatio>
+        <Card key={program.id} className="overflow-hidden shadow-md flex flex-col h-full">
+            {program.imageUrl && (
+                <AspectRatio ratio={16/9}>
+                    <img src={program.imageUrl} alt={program.name} className="w-full h-full object-cover"/>
+                </AspectRatio>
+            )}
+            <div className="flex flex-col flex-grow">
+                <CardHeader>
+                    <CardTitle>{program.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p className="text-muted-foreground text-sm">{program.description}</p>
+                </CardContent>
+                {program.personInChargeName && (
+                  <CardFooter>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                            <AvatarImage src={program.personInChargePhotoUrl} alt={program.personInChargeName} />
+                            <AvatarFallback>
+                                <UserCircle className="h-5 w-5"/>
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="text-sm font-semibold">{program.personInChargeName}</p>
+                            <p className="text-xs text-muted-foreground">Penanggung Jawab</p>
                         </div>
-                    )}
-                    <div className={program.imageUrl ? "md:col-span-2 flex flex-col" : "md:col-span-3 flex flex-col"}>
-                        <CardHeader>
-                            <CardTitle>{program.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                            <p className="text-muted-foreground">{program.description}</p>
-                        </CardContent>
-                        {program.personInChargeName && (
-                          <CardFooter>
-                              <div className="flex items-center gap-3">
-                                <Avatar>
-                                    <AvatarImage src={program.personInChargePhotoUrl} alt={program.personInChargeName} />
-                                    <AvatarFallback>
-                                        <UserCircle className="h-5 w-5"/>
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-semibold">{program.personInChargeName}</p>
-                                    <p className="text-xs text-muted-foreground">Penanggung Jawab</p>
-                                </div>
-                              </div>
-                          </CardFooter>
-                        )}
-                    </div>
-                </div>
-            </Card>
-        </li>
+                      </div>
+                  </CardFooter>
+                )}
+            </div>
+        </Card>
       ))}
-    </ul>
+    </div>
   );
 
   return (
@@ -82,19 +76,19 @@ export default async function ProgramsPage() {
               </p>
             </div>
 
-            <div className="mt-12 max-w-4xl mx-auto">
+            <div className="mt-12 max-w-5xl mx-auto">
               {programs.length > 0 ? (
-                <Accordion type="multiple" defaultValue={['esensial', 'pengembangan']} className="w-full">
+                <Accordion type="multiple" defaultValue={['esensial', 'pengembangan']} className="w-full space-y-8">
                   <AccordionItem value="esensial">
-                    <AccordionTrigger className="text-2xl font-semibold">UKM Esensial</AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                      {essentialPrograms.length > 0 ? renderProgramList(essentialPrograms) : <p className="text-muted-foreground text-center py-4">Belum ada program UKM Esensial.</p>}
+                    <AccordionTrigger className="text-2xl font-semibold md:text-3xl">UKM Esensial</AccordionTrigger>
+                    <AccordionContent className="pt-6">
+                      {essentialPrograms.length > 0 ? renderProgramList(essentialPrograms) : <p className="text-muted-foreground text-center py-8">Belum ada program UKM Esensial.</p>}
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="pengembangan">
-                    <AccordionTrigger className="text-2xl font-semibold">UKM Pengembangan</AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                      {developmentPrograms.length > 0 ? renderProgramList(developmentPrograms) : <p className="text-muted-foreground text-center py-4">Belum ada program UKM Pengembangan.</p>}
+                    <AccordionTrigger className="text-2xl font-semibold md:text-3xl">UKM Pengembangan</AccordionTrigger>
+                    <AccordionContent className="pt-6">
+                      {developmentPrograms.length > 0 ? renderProgramList(developmentPrograms) : <p className="text-muted-foreground text-center py-8">Belum ada program UKM Pengembangan.</p>}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

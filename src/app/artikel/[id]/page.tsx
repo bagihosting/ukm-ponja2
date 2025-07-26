@@ -39,9 +39,9 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
   return (
     <div className="flex min-h-screen flex-col">
       <PortalNavbar />
-      <main className="flex-1 py-12">
-        <div className="container">
-            <Button asChild variant="ghost" className="mb-8">
+      <main className="flex-1 py-8 md:py-12">
+        <div className="container max-w-4xl">
+            <Button asChild variant="ghost" className="mb-6 md:mb-8">
                 <Link href="/">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Kembali ke Semua Artikel
@@ -49,7 +49,7 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
             </Button>
             <article>
                 {article.imageUrl && (
-                    <div className="mb-8 overflow-hidden rounded-lg shadow-lg">
+                    <div className="mb-6 md:mb-8 overflow-hidden rounded-lg shadow-lg">
                         <AspectRatio ratio={16/9} className="bg-muted">
                             <img 
                                 src={article.imageUrl} 
@@ -60,11 +60,11 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
                     </div>
                 )}
 
-                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4">
+                <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl mb-4">
                     {article.title}
                 </h1>
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 md:mb-8">
                     <Calendar className="h-4 w-4" />
                     <span>Diterbitkan pada {formattedDate}</span>
                 </div>
