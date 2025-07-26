@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -107,7 +107,7 @@ export default function ProfileSettingsPage() {
     }
   };
   
-  const handleAddNewMember = async (data: MemberFormValues) => {
+  const handleAddNewMember: SubmitHandler<MemberFormValues> = async (data) => {
     try {
       const newMemberId = await addTeamMember(data);
       setTeamMembers([...teamMembers, { id: newMemberId, ...data }]);
@@ -119,10 +119,11 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const handleUpdateMember = async (memberId: string, data: EditMemberFormValues) => {
+  const handleUpdateMember: SubmitHandler<EditMemberFormValues> = async (data) => {
+    if (!isEditingMember) return;
     try {
-      await updateTeamMember(memberId, data);
-      setTeamMembers(teamMembers.map(m => (m.id === memberId ? { ...m, ...data } : m)));
+      await updateTeamMember(isEditingMember, data);
+      setTeamMembers(teamMembers.map(m => (m.id === isEditingMember ? { ...m, ...data } : m)));
       toast({ title: 'Berhasil', description: 'Anggota berhasil diperbarui.' });
       setIsEditingMember(null);
     } catch (error: any) {
@@ -245,17 +246,21 @@ export default function ProfileSettingsPage() {
               </TableHeader>
               <TableBody>
                 {isAddingMember && (
-                   <TableRow>
+                  <TableRow>
                     <TableCell>
-                      <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" />
-                       {addMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.name.message}</p>}
+                      <form id="add-member-form" onSubmit={addMemberForm.handleSubmit(handleAddNewMember)}>
+                        <Input {...addMemberForm.register('name')} placeholder="Nama Anggota" />
+                        {addMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.name.message}</p>}
+                      </form>
                     </TableCell>
                     <TableCell>
-                      <Input {...addMemberForm.register('role')} placeholder="Peran dalam tim" />
-                       {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
+                      <Input form="add-member-form" {...addMemberForm.register('role')} placeholder="Peran dalam tim" />
+                      {addMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{addMemberForm.formState.errors.role.message}</p>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <Button size="icon" variant="ghost" onClick={addMemberForm.handleSubmit(handleAddNewMember)}><Save className="h-4 w-4 text-green-600" /></Button>
+                       <Button form="add-member-form" type="submit" size="icon" variant="ghost" disabled={addMemberForm.formState.isSubmitting}>
+                         <Save className="h-4 w-4 text-green-600" />
+                       </Button>
                        <Button size="icon" variant="ghost" onClick={() => setIsAddingMember(false)}><X className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
@@ -265,15 +270,19 @@ export default function ProfileSettingsPage() {
                   isEditingMember === member.id ? (
                      <TableRow key={member.id}>
                       <TableCell>
-                        <Input {...editMemberForm.register('name')} />
-                        {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
+                        <form id={`edit-member-form-${member.id}`} onSubmit={editMemberForm.handleSubmit(handleUpdateMember)}>
+                          <Input {...editMemberForm.register('name')} />
+                          {editMemberForm.formState.errors.name && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.name.message}</p>}
+                        </form>
                       </TableCell>
                       <TableCell>
-                        <Input {...editMemberForm.register('role')} />
+                        <Input form={`edit-member-form-${member.id}`} {...editMemberForm.register('role')} />
                          {editMemberForm.formState.errors.role && <p className="text-sm text-red-500 mt-1">{editMemberForm.formState.errors.role.message}</p>}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="icon" variant="ghost" onClick={editMemberForm.handleSubmit((data) => handleUpdateMember(member.id, data))}><Save className="h-4 w-4 text-green-600" /></Button>
+                        <Button form={`edit-member-form-${member.id}`} type="submit" size="icon" variant="ghost" disabled={editMemberForm.formState.isSubmitting}>
+                          <Save className="h-4 w-4 text-green-600" />
+                        </Button>
                         <Button size="icon" variant="ghost" onClick={cancelEditing}><X className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
@@ -315,3 +324,5 @@ export default function ProfileSettingsPage() {
     </div>
   );
 }
+
+    
