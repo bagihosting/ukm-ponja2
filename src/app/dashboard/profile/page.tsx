@@ -1,19 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, FC } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {
-  getProfileContent,
-  updateProfileContent,
-  getTeamMembers,
-  addTeamMember,
-  updateTeamMember,
-  deleteTeamMember,
-  type TeamMember
-} from '@/lib/profile';
+import { getProfileContent, updateProfileContent } from '@/lib/profile';
 import type { ProfileContent } from '@/lib/constants';
 import { defaultProfileContent } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -22,20 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, PlusCircle, Edit, Save, X } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
 
 const profileSchema = z.object({
   about: z.string().min(1, 'Deskripsi tidak boleh kosong'),
@@ -43,134 +23,29 @@ const profileSchema = z.object({
   mission: z.string().min(1, 'Misi tidak boleh kosong'),
 });
 
-const memberSchema = z.object({
-  name: z.string().min(1, 'Nama tidak boleh kosong'),
-  role: z.string().min(1, 'Peran tidak boleh kosong'),
-});
-
 type ProfileFormValues = z.infer<typeof profileSchema>;
-type MemberFormValues = z.infer<typeof memberSchema>;
 
-// -- Reusable Form Components --
-
-interface AddMemberFormProps {
-  onSuccess: () => void;
-  onCancel: () => void;
-}
-
-const AddMemberForm: FC<AddMemberFormProps> = ({ onSuccess, onCancel }) => {
-  const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<MemberFormValues>({
-    resolver: zodResolver(memberSchema),
-    defaultValues: { name: '', role: '' },
-  });
-
-  const handleAddNewMember: SubmitHandler<MemberFormValues> = async (data) => {
-    try {
-      await addTeamMember(data);
-      toast({ title: 'Berhasil', description: 'Anggota baru berhasil ditambahkan.' });
-      onSuccess();
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menambah', description: error.message });
-    }
-  };
-
-  return (
-    <TableRow>
-      <TableCell>
-        <Input {...register('name')} placeholder="Nama Anggota" autoFocus disabled={isSubmitting} />
-        {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
-      </TableCell>
-      <TableCell>
-        <Input {...register('role')} placeholder="Peran dalam tim" disabled={isSubmitting} />
-        {errors.role && <p className="text-sm text-red-500 mt-1">{errors.role.message}</p>}
-      </TableCell>
-      <TableCell className="text-right space-x-2">
-        <Button type="button" size="icon" variant="ghost" disabled={isSubmitting} onClick={handleSubmit(handleAddNewMember)}>
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
-        </Button>
-        <Button size="icon" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
-          <X className="h-4 w-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-};
-
-interface EditMemberRowProps {
-  member: TeamMember;
-  onSuccess: () => void;
-  onCancel: () => void;
-}
-
-const EditMemberRow: FC<EditMemberRowProps> = ({ member, onSuccess, onCancel }) => {
-    const { toast } = useToast();
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<MemberFormValues>({
-        resolver: zodResolver(memberSchema),
-        defaultValues: { name: member.name, role: member.role },
-    });
-
-    const handleUpdateMember: SubmitHandler<MemberFormValues> = async (data) => {
-        try {
-            await updateTeamMember(member.id, data);
-            toast({ title: 'Berhasil', description: 'Anggota berhasil diperbarui.' });
-            onSuccess();
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: error.message });
-        }
-    };
-
-    return (
-        <TableRow>
-            <TableCell>
-                <Input {...register('name')} autoFocus disabled={isSubmitting} />
-                {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
-            </TableCell>
-            <TableCell>
-                <Input {...register('role')} disabled={isSubmitting} />
-                {errors.role && <p className="text-sm text-red-500 mt-1">{errors.role.message}</p>}
-            </TableCell>
-            <TableCell className="text-right space-x-2">
-                <Button type="button" size="icon" variant="ghost" disabled={isSubmitting} onClick={handleSubmit(handleUpdateMember)}>
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-green-600" />}
-                </Button>
-                <Button type="button" size="icon" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
-                    <X className="h-4 w-4" />
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
-};
-
-
-// -- Main Page Component --
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  
-  // State for UI modes
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-  const [isAddingMember, setIsAddingMember] = useState(false);
-  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: defaultProfileContent
+    defaultValues: defaultProfileContent,
   });
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [profile, members] = await Promise.all([
-        getProfileContent(),
-        getTeamMembers()
-      ]);
+      const profile = await getProfileContent();
       profileForm.reset(profile);
-      setTeamMembers(members);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data dari server.' });
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Memuat Data',
+        description: 'Gagal mengambil data dari server.',
+      });
       profileForm.reset(defaultProfileContent);
     } finally {
       setLoading(false);
@@ -180,16 +55,6 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-  
-  const reloadTeamMembers = useCallback(async () => {
-    try {
-        const members = await getTeamMembers();
-        setTeamMembers(members);
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Gagal Memuat Ulang Anggota', description: 'Gagal memuat ulang daftar anggota tim.' });
-    }
-  }, [toast]);
-
 
   const onProfileSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setSavingProfile(true);
@@ -203,32 +68,9 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const confirmDelete = async () => {
-    if (!deletingMemberId) return;
-    try {
-      await deleteTeamMember(deletingMemberId);
-      toast({ title: 'Berhasil', description: 'Anggota berhasil dihapus.' });
-      await reloadTeamMembers();
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menghapus', description: error.message });
-    } finally {
-      setDeletingMemberId(null);
-    }
-  };
-  
-  const handleAddSuccess = () => {
-    setIsAddingMember(false);
-    reloadTeamMembers();
-  };
-
-  const handleEditSuccess = () => {
-    setEditingMemberId(null);
-    reloadTeamMembers();
-  };
-
   if (loading) {
     return (
-       <div className="space-y-8">
+      <div className="space-y-8">
         <h1 className="text-lg font-semibold md:text-2xl">Kelola Halaman Profil</h1>
         <Card>
           <CardHeader>
@@ -242,15 +84,6 @@ export default function ProfileSettingsPage() {
             <Skeleton className="h-10 w-48" />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Struktur Organisasi</CardTitle>
-            <CardDescription>Kelola anggota tim yang ditampilkan di halaman profil.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <Skeleton className="h-40 w-full" />
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -258,7 +91,7 @@ export default function ProfileSettingsPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-lg font-semibold md:text-2xl">Kelola Halaman Profil</h1>
-      
+
       {/* Profile Content Form */}
       <Card>
         <CardHeader>
@@ -275,12 +108,12 @@ export default function ProfileSettingsPage() {
             <div>
               <Label htmlFor="vision">Visi</Label>
               <Textarea id="vision" {...profileForm.register('vision')} className="mt-2" />
-               {profileForm.formState.errors.vision && <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.vision.message}</p>}
+              {profileForm.formState.errors.vision && <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.vision.message}</p>}
             </div>
             <div>
               <Label htmlFor="mission">Misi</Label>
               <Textarea id="mission" {...profileForm.register('mission')} className="mt-2" />
-               {profileForm.formState.errors.mission && <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.mission.message}</p>}
+              {profileForm.formState.errors.mission && <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.mission.message}</p>}
             </div>
             <Button type="submit" disabled={savingProfile}>
               {savingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -289,80 +122,6 @@ export default function ProfileSettingsPage() {
           </form>
         </CardContent>
       </Card>
-      
-      {/* Team Members Management */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Struktur Organisasi</CardTitle>
-                <CardDescription>Kelola anggota tim yang ditampilkan di halaman profil.</CardDescription>
-              </div>
-              {!isAddingMember && !editingMemberId && (
-                <Button size="sm" onClick={() => { setIsAddingMember(true); setEditingMemberId(null); } }>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Tambah Anggota
-                </Button>
-              )}
-          </div>
-        </CardHeader>
-        <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Peran</TableHead>
-                  <TableHead className="text-right w-[100px]">Tindakan</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isAddingMember && (
-                    <AddMemberForm onSuccess={handleAddSuccess} onCancel={() => setIsAddingMember(false)} />
-                )}
-
-                {teamMembers.map((member) => (
-                  editingMemberId === member.id ? (
-                      <EditMemberRow 
-                        key={member.id}
-                        member={member} 
-                        onSuccess={handleEditSuccess}
-                        onCancel={() => setEditingMemberId(null)}
-                      />
-                  ) : (
-                    <TableRow key={member.id}>
-                      <TableCell>{member.name}</TableCell>
-                      <TableCell>{member.role}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditingMemberId(member.id); setIsAddingMember(false); }} disabled={isAddingMember || !!editingMemberId}><Edit className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember || !!editingMemberId}><Trash2 className="h-4 w-4 text-red-600" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                ))}
-              </TableBody>
-            </Table>
-            {teamMembers.length === 0 && !isAddingMember && (
-              <p className="text-center text-muted-foreground py-4">Belum ada anggota tim.</p>
-            )}
-        </CardContent>
-      </Card>
-      
-      <AlertDialog open={!!deletingMemberId} onOpenChange={(open) => !open && setDeletingMemberId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
-            <AlertDialogDescription>
-                Apakah Anda yakin ingin menghapus anggota tim ini? Tindakan ini tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

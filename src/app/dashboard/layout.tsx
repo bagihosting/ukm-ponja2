@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 function UserNav() {
   const { user } = useAuth();
@@ -94,13 +95,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const navLinks = [
-    { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
-    { href: "/dashboard/articles", icon: Newspaper, label: "Articles", badge: 0 },
-    { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", badge: 0 },
-    { href: "/dashboard/profile", icon: User, label: "Profil", badge: 0 },
-    { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", badge: 0 },
-    { href: "/dashboard/reports", icon: LineChart, label: "Laporan", badge: 0 },
-    { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
+    { href: "/dashboard", icon: Home, label: "Dashboard", disabled: false },
+    { href: "/dashboard/articles", icon: Newspaper, label: "Articles", disabled: false },
+    { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
+    { href: "/dashboard/profile", icon: User, label: "Profil", disabled: false },
+    { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: true },
+    { href: "/dashboard/reports", icon: LineChart, label: "Laporan", disabled: true },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings", disabled: false },
   ];
 
   return (
@@ -115,11 +116,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {navLinks.map(({ href, icon: Icon, label, badge }) => (
-                <Link key={label} href={href} className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+              {navLinks.map(({ href, icon: Icon, label, disabled }) => (
+                <Link 
+                    key={label} 
+                    href={disabled ? "#" : href}
+                    className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                        disabled && "cursor-not-allowed opacity-50"
+                    )}
+                    aria-disabled={disabled}
+                    onClick={(e) => disabled && e.preventDefault()}
+                >
                   <Icon className="h-4 w-4" />
                   {label}
-                  {badge > 0 && <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">{badge}</Badge>}
                 </Link>
               ))}
             </nav>
@@ -144,8 +153,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <HeartPulse className="h-6 w-6" />
                   <span>UKM PONJA</span>
                 </Link>
-                {navLinks.map(({ href, icon: Icon, label }) => (
-                  <Link key={label} href={href} className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
+                {navLinks.map(({ href, icon: Icon, label, disabled }) => (
+                  <Link 
+                      key={label} 
+                      href={disabled ? "#" : href}
+                      className={cn(
+                          "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
+                          disabled && "cursor-not-allowed opacity-50"
+                      )}
+                      aria-disabled={disabled}
+                      onClick={(e) => disabled && e.preventDefault()}
+                  >
                     <Icon className="h-5 w-5" />
                     {label}
                   </Link>
