@@ -25,13 +25,6 @@ if (!db) {
 
 const galleryCollection = collection(db, 'galleryImages');
 
-interface GalleryImageFromFirestore {
-  id: string;
-  name: string;
-  url: string; 
-  createdAt: Timestamp;
-}
-
 export interface GalleryImage {
   id: string;
   name: string;
@@ -45,10 +38,10 @@ export interface GalleryImageInput {
 }
 
 // Helper to convert Firestore doc to a client-safe GalleryImage object
-function toGalleryImage(doc: any): GalleryImage {
-  const data = doc.data() as GalleryImageFromFirestore;
+function toGalleryImage(docSnap: any): GalleryImage {
+  const data = docSnap.data();
   return {
-    id: doc.id,
+    id: docSnap.id,
     name: data.name,
     url: data.url,
     // Convert Timestamp to ISO string for safe serialization

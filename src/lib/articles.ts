@@ -26,15 +26,6 @@ if (!db) {
 
 const articlesCollection = collection(db, 'articles');
 
-// This interface is now used internally for data from Firestore
-interface ArticleFromFirestore {
-  id: string;
-  title: string;
-  content: string;
-  imageUrl?: string;
-  createdAt: Timestamp; // Firestore Timestamp
-}
-
 // This is the interface that will be exposed to client components
 export interface Article {
   id: string;
@@ -58,10 +49,10 @@ export interface ArticleUpdateInput {
 }
 
 // Helper to convert Firestore doc to a client-safe Article object
-function toArticle(doc: any): Article {
-  const data = doc.data();
+function toArticle(docSnap: any): Article {
+  const data = docSnap.data();
   return {
-    id: doc.id,
+    id: docSnap.id,
     title: data.title,
     content: data.content,
     imageUrl: data.imageUrl,
@@ -85,7 +76,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     };
     
     // Only include imageUrl if it's a non-empty string
-    if (article.imageUrl) {
+    if (article.imageUrl && article.imageUrl.trim() !== '') {
         dataToAdd.imageUrl = article.imageUrl;
     }
     
