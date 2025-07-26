@@ -1,26 +1,31 @@
 
 'use server';
 
-import { User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { getProfileContent, type ProfileContent } from '@/lib/profile';
-import { cn } from '@/lib/utils';
 import React from 'react';
 
-export default async function ProfilePage() {
-  let profile: ProfileContent | null = null;
-  let error: string | null = null;
+// Fetch data on the server
+async function getProfileData() {
+    try {
+        const content = await getProfileContent();
+        return { content, error: null };
+    } catch (error: any) {
+        console.error("Gagal memuat data halaman profil:", error);
+        return { 
+            content: null,
+            error: "Gagal memuat data profil. Silakan coba lagi nanti." 
+        };
+    }
+}
 
-  try {
-    profile = await getProfileContent();
-  } catch (e: any) {
-    console.error("Failed to load profile data:", e);
-    // Set a user-friendly error message to be displayed in the UI.
-    error = "Gagal memuat data profil. Silakan coba lagi nanti.";
-  }
+export default async function ProfilePage() {
+  const { content, error } = await getProfileData();
+  
+  // Conditionally render based on whether there's content or an error
+  const profile: ProfileContent = content || { about: '', vision: '', mission: ''};
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -37,29 +42,26 @@ export default async function ProfilePage() {
             {error ? (
               <div className="text-center text-red-500 py-16">{error}</div>
             ) : (
-              <>
-                {/* About Us Section */}
                 <section id="about" className="mt-16">
                     <Card className="shadow-xl shadow-slate-200/50 border-slate-100">
                         <CardHeader>
                             <CardTitle className="text-2xl font-bold">Tentang Kami</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 text-muted-foreground text-base leading-relaxed">
-                            <p>{profile?.about || 'Deskripsi tentang UKM belum diisi.'}</p>
+                            <p>{profile.about || 'Deskripsi tentang UKM belum diisi.'}</p>
                             <div className="grid md:grid-cols-2 gap-6 pt-4">
                                 <div className="p-6 bg-slate-50 rounded-lg">
                                     <h3 className="font-bold text-foreground mb-2">Visi Kami</h3>
-                                    <p>{profile?.vision || 'Visi belum diisi.'}</p>
+                                    <p>{profile.vision || 'Visi belum diisi.'}</p>
                                 </div>
                                 <div className="p-6 bg-slate-50 rounded-lg">
                                     <h3 className="font-bold text-foreground mb-2">Misi Kami</h3>
-                                    <p>{profile?.mission || 'Misi belum diisi.'}</p>
+                                    <p>{profile.mission || 'Misi belum diisi.'}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 </section>
-              </>
             )}
         </div>
       </main>
