@@ -41,7 +41,7 @@ const generateImageFlow = ai.defineFlow(
     // 1. Generate the image using the AI model
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}`,
+      prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
