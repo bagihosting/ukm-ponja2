@@ -7,13 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Upload, Copy } from 'lucide-react';
 import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+interface UploadedImage {
+  url: string;
+  name: string;
+  date: Date;
+}
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,10 +33,10 @@ export default function GalleryPage() {
           title: 'File Terlalu Besar',
           description: 'Ukuran gambar tidak boleh melebihi 10MB.',
         });
+        event.target.value = ''; // Reset input file
         return;
       }
       setSelectedFile(file);
-      setUploadedImageUrl(null);
     }
   };
 
@@ -56,11 +63,27 @@ export default function GalleryPage() {
     try {
       const dataUri = await fileToDataUri(selectedFile);
       const publicUrl = await uploadImageToFreeImage(dataUri);
-      setUploadedImageUrl(publicUrl);
+      
+      const newImage: UploadedImage = {
+        url: publicUrl,
+        name: selectedFile.name,
+        date: new Date(),
+      };
+      
+      setUploadedImages(prevImages => [newImage, ...prevImages]);
+
       toast({
         title: 'Berhasil!',
-        description: 'Gambar berhasil diunggah.',
+        description: `Gambar "${selectedFile.name}" berhasil diunggah.`,
       });
+
+      setSelectedFile(null);
+      // Reset input file secara programmatic
+      const fileInput = document.getElementById('picture') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -72,9 +95,8 @@ export default function GalleryPage() {
     }
   };
   
-  const handleCopyUrl = () => {
-    if (!uploadedImageUrl) return;
-    navigator.clipboard.writeText(uploadedImageUrl).then(() => {
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url).then(() => {
       toast({
         title: 'Berhasil Disalin',
         description: 'URL gambar telah disalin ke clipboard.',
@@ -88,66 +110,85 @@ export default function GalleryPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Galeri Gambar</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Unggah Gambar Baru</CardTitle>
-          <CardDescription>Pilih gambar dari komputer Anda untuk diunggah ke hosting.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid w-full max-w-sm items-center gap-2">
-            <Label htmlFor="picture">Gambar</Label>
-            <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} />
-          </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="lg:col-span-1 h-fit">
+          <CardHeader>
+            <CardTitle>Unggah Gambar Baru</CardTitle>
+            <CardDescription>Pilih gambar dari komputer Anda untuk diunggah.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid w-full max-w-sm items-center gap-2">
+              <Label htmlFor="picture">Gambar</Label>
+              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
+            </div>
 
-          {selectedFile && (
-             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
-              </p>
-               <Button onClick={handleUpload} disabled={isUploading}>
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Mengunggah...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Unggah Gambar
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-          
-          {uploadedImageUrl && (
-            <div className="space-y-4 pt-4 border-t">
-               <h3 className="font-semibold">Hasil Unggahan:</h3>
-               <div className="aspect-video relative overflow-hidden rounded-md border max-w-lg">
-                <img
-                  src={uploadedImageUrl}
-                  alt="Gambar yang diunggah"
-                  className="w-full h-full object-contain"
-                />
+            {selectedFile && (
+               <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
+                </p>
+                 <Button onClick={handleUpload} disabled={isUploading}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Mengunggah...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Unggah Gambar
+                    </>
+                  )}
+                </Button>
               </div>
-              <div className="flex items-center gap-4">
-                  <div className="relative w-full max-w-lg">
-                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      readOnly
-                      value={uploadedImageUrl}
-                      className="w-full pl-10 bg-muted"
-                    />
-                  </div>
-                   <Button variant="outline" size="icon" onClick={handleCopyUrl}>
-                    <Copy className="h-4 w-4" />
-                    <span className="sr-only">Salin URL</span>
-                  </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Hasil Unggahan</CardTitle>
+            <CardDescription>Daftar gambar yang telah Anda unggah.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             {uploadedImages.length > 0 ? (
+                <div className="border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[80px]">Gambar</TableHead>
+                                <TableHead>Nama File</TableHead>
+                                <TableHead>Tanggal</TableHead>
+                                <TableHead className="text-right">Tindakan</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {uploadedImages.map((image) => (
+                                <TableRow key={image.url}>
+                                    <TableCell>
+                                        <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
+                                    </TableCell>
+                                    <TableCell className="font-medium truncate max-w-[200px]">{image.name}</TableCell>
+                                    <TableCell>{image.date.toLocaleDateString('id-ID')}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="outline" size="icon" onClick={() => handleCopyUrl(image.url)}>
+                                            <Copy className="h-4 w-4" />
+                                            <span className="sr-only">Salin URL</span>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+             ) : (
+                <div className="text-center text-muted-foreground py-8">
+                    Belum ada gambar yang diunggah.
+                </div>
+             )}
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }
