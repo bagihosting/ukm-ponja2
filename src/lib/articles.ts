@@ -2,8 +2,7 @@
 'use server';
 
 import { 
-  db,
-  auth
+  db
 } from './firebase'; 
 import { 
   collection, 
@@ -14,7 +13,6 @@ import {
   updateDoc, 
   deleteDoc, 
   serverTimestamp,
-  Timestamp,
   deleteField,
   query,
   orderBy
@@ -64,10 +62,6 @@ function toArticle(docSnap: any): Article {
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
-  if (!auth.currentUser) {
-    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menambahkan artikel.');
-  }
-
   try {
     const dataToAdd: { [key: string]: any } = {
       title: article.title,
@@ -75,7 +69,8 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
       createdAt: serverTimestamp(),
     };
     
-    if (article.imageUrl) {
+    // Only add imageUrl if it's a non-empty string
+    if (article.imageUrl && article.imageUrl.trim() !== '') {
         dataToAdd.imageUrl = article.imageUrl;
     }
     
@@ -119,16 +114,12 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
-   if (!auth.currentUser) {
-    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk memperbarui artikel.');
-  }
-
   try {
     const docRef = doc(db, 'articles', id);
     
-    // Create a mutable copy to work with
     const dataToUpdate: { [key: string]: any } = { ...article };
 
+    // If imageUrl is explicitly set to be removed (empty string), use deleteField
     if (article.imageUrl === '' || article.imageUrl === null || article.imageUrl === undefined) {
         dataToUpdate.imageUrl = deleteField();
     }
@@ -144,9 +135,6 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
-  if (!auth.currentUser) {
-    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menghapus artikel.');
-  }
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);

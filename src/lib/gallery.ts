@@ -2,8 +2,7 @@
 'use server';
 
 import { 
-  db,
-  auth
+  db
 } from './firebase'; 
 import { 
   collection, 
@@ -12,7 +11,6 @@ import {
   doc, 
   deleteDoc, 
   serverTimestamp,
-  Timestamp,
   query,
   orderBy
 } from 'firebase/firestore';
@@ -66,9 +64,6 @@ function fileToDataUri(file: File): Promise<string> {
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
-    if (!auth.currentUser) {
-        throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menyimpan gambar.');
-    }
     try {
         const docData = {
             ...imageData,
@@ -89,9 +84,6 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
  * @returns A promise that resolves with the metadata of the newly added image.
  */
 export const uploadGalleryImage = async (file: File): Promise<string> => {
-  if (!auth.currentUser) {
-    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk mengunggah gambar.');
-  }
   try {
     // 1. Convert file to data URI
     const dataUri = await fileToDataUri(file);
@@ -132,9 +124,6 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
-    if (!auth.currentUser) {
-        throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menghapus gambar.');
-    }
     try {
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);
