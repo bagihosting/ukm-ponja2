@@ -69,10 +69,9 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
                     <span>Diterbitkan pada {formattedDate}</span>
                 </div>
                 
-                <div 
-                    className="prose prose-lg max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: article.content.replace(/\n/g, '<br />') }}
-                />
+                <div className="prose prose-lg max-w-none dark:prose-invert">
+                    <p className="whitespace-pre-wrap">{article.content}</p>
+                </div>
             </article>
         </div>
       </main>
