@@ -15,6 +15,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { uploadImageToFreeImage } from './image-hosting';
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 
 
 if (!db) {
@@ -28,11 +29,13 @@ export interface GalleryImage {
   name: string;
   url: string;
   createdAt: string; // Changed to string for serialization
+  category: string;
 }
 
 export interface GalleryImageInput {
   name: string;
   url: string;
+  category?: string;
 }
 
 // Helper to convert Firestore doc to a client-safe GalleryImage object
@@ -42,6 +45,7 @@ function toGalleryImage(docSnap: any): GalleryImage {
     id: docSnap.id,
     name: data.name,
     url: data.url,
+    category: data.category || 'Lain-lain',
     // Convert Timestamp to ISO string for safe serialization
     createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
   };
@@ -65,8 +69,12 @@ function fileToDataUri(file: File): Promise<string> {
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
     try {
+        const category = imageData.category || await categorizeImage({ imageUrl: imageData.url });
+        
         const docData = {
-            ...imageData,
+            name: imageData.name,
+            url: imageData.url,
+            category: category,
             createdAt: serverTimestamp(),
         };
         const docRef = await addDoc(galleryCollection, docData);
@@ -90,11 +98,15 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
 
     // 2. Upload to external host (freeimage.host)
     const url = await uploadImageToFreeImage(dataUri);
+    
+    // 3. Categorize the image
+    const category = await categorizeImage({ imageUrl: url });
 
-    // 3. Save metadata to Firestore
+    // 4. Save metadata to Firestore
     return await addGalleryImageRecord({
         name: file.name,
         url: url,
+        category: category,
     });
   } catch (e: any) {
     console.error("Error uploading image and saving to Firestore: ", e);

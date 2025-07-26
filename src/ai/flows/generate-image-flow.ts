@@ -60,17 +60,11 @@ const generateImageFlow = ai.defineFlow(
       console.error('Error uploading image:', error);
       throw new Error('Gagal mengunggah gambar yang telah dibuat.');
     }
-
-    // 3. Save the image record to the gallery in Firestore
-    try {
-        const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-        await addGalleryImageRecord({ name: imageName, url: publicUrl });
-    } catch (error) {
-        console.error('Error saving image to gallery:', error);
-        // We will not throw an error here, as the image was successfully generated and uploaded.
-        // The user can still use the URL. We will just log the error.
-    }
     
+    // Note: Saving to gallery is now handled by the calling functions
+    // (e.g., in the gallery page or article page) to allow for more context.
+    // The `addGalleryImageRecord` function will handle categorization.
+
     return { imageUrl: publicUrl };
   }
 );

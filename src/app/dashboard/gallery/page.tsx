@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -91,7 +92,7 @@ export default function GalleryPage() {
       await uploadGalleryImage(selectedFile);
       toast({
         title: 'Berhasil!',
-        description: `Gambar "${selectedFile.name}" berhasil diunggah dan riwayat disimpan.`,
+        description: `Gambar "${selectedFile.name}" berhasil diunggah, dikategorikan, dan riwayat disimpan.`,
       });
       await fetchImages(); 
       setSelectedFile(null);
@@ -184,9 +185,11 @@ export default function GalleryPage() {
     }
     setIsSaving(true);
     try {
+        // Here we call addGalleryImageRecord directly because the image is already hosted
+        // The addGalleryImageRecord function will handle the categorization
         const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
         await addGalleryImageRecord({ name: imageName, url: generatedImageUrl });
-        toast({ title: 'Berhasil!', description: 'Gambar telah disimpan ke galeri Anda.' });
+        toast({ title: 'Berhasil!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
         await fetchImages();
         setIsAiModalOpen(false);
         resetAiModal();
@@ -211,36 +214,42 @@ export default function GalleryPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle>Unggah Gambar Baru</CardTitle>
-            <CardDescription>Unggah Gambar di fitur ini</CardDescription>
+            <CardTitle>Unggah atau Buat Gambar</CardTitle>
+            <CardDescription>Unggah gambar manual atau buat menggunakan AI. Setiap gambar akan dikategorikan secara otomatis.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid w-full max-w-sm items-center gap-2">
-              <Label htmlFor="picture">Gambar</Label>
-              <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
+            <div className="space-y-2">
+                <Label htmlFor="picture">Unggah Manual</Label>
+                <div className="grid w-full max-w-sm items-center gap-2">
+                <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
+                </div>
+                {selectedFile && (
+                <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                    File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
+                    </p>
+                    <Button onClick={handleUpload} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    {isUploading ? 'Mengunggah...' : 'Unggah & Kategorikan'}
+                    </Button>
+                </div>
+                )}
             </div>
-            {selectedFile && (
-               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
-                </p>
-                 <Button onClick={handleUpload} disabled={isUploading}>
-                  {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                  {isUploading ? 'Mengunggah...' : 'Unggah Gambar'}
+            
+            <div className="space-y-2">
+                <Label>Buat dengan AI</Label>
+                <Button variant="outline" onClick={() => setIsAiModalOpen(true)}>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Buat Gambar Baru dengan AI
                 </Button>
-              </div>
-            )}
-            <Button variant="outline" onClick={() => setIsAiModalOpen(true)}>
-              <Wand2 className="mr-2 h-4 w-4" />
-              Buat dengan AI
-            </Button>
+            </div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader>
             <CardTitle>Riwayat Gambar</CardTitle>
-            <CardDescription>Daftar gambar yang riwayatnya tersimpan.</CardDescription>
+            <CardDescription>Daftar gambar yang riwayatnya tersimpan, beserta kategorinya.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -260,7 +269,7 @@ export default function GalleryPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[80px]">Gambar</TableHead>
-                                <TableHead>Nama File</TableHead>
+                                <TableHead>Nama File & Kategori</TableHead>
                                 <TableHead className="text-right">Tindakan</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -270,7 +279,10 @@ export default function GalleryPage() {
                                     <TableCell>
                                         <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
                                     </TableCell>
-                                    <TableCell className="font-medium truncate max-w-[150px]">{image.name}</TableCell>
+                                    <TableCell>
+                                        <div className="font-medium truncate max-w-[150px]">{image.name}</div>
+                                        <Badge variant="secondary" className="mt-1">{image.category || 'Lain-lain'}</Badge>
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -327,7 +339,7 @@ export default function GalleryPage() {
           <DialogHeader>
             <DialogTitle>Buat Gambar dengan AI</DialogTitle>
             <DialogDescription>
-              Tulis deskripsi, buat gambar, lalu simpan ke galeri Anda.
+              Tulis deskripsi, buat gambar, lalu simpan ke galeri Anda. Gambar akan dikategorikan secara otomatis.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -382,7 +394,7 @@ export default function GalleryPage() {
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Menyimpan...
+                  Menyimpan & Kategorisasi...
                 </>
               ) : "Simpan ke Galeri"}
             </Button>
