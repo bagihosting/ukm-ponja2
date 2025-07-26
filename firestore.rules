@@ -2,34 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Fungsi ini memeriksa apakah permintaan datang dari pengguna yang sudah login.
-    // Dalam konteks aplikasi ini, pengguna yang login dianggap sebagai admin.
+  
+    // Helper function to check if the user is authenticated (admin)
     function isAdmin() {
-      return request.auth != null;
+      // For this application, we consider any signed-in user as an admin.
+      // For more granular control, you might check for a custom claim:
+      // return request.auth.token.admin == true;
+      return request.auth != null; 
     }
 
-    // Aturan untuk koleksi 'articles'
-    // Memperbolehkan siapa saja untuk membaca (read).
-    // Hanya mengizinkan admin untuk membuat, mengubah, dan menghapus (write).
+    // Rules for articles collection
+    // Allows anyone to read articles, but only admins to create, update, or delete.
     match /articles/{articleId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // Aturan untuk koleksi 'galleryImages'
-    // Memperbolehkan siapa saja untuk membaca (read).
-    // Hanya mengizinkan admin untuk membuat dan menghapus (create, delete).
+    
+    // Rules for gallery images collection
+    // Allows anyone to read gallery images, but only admins to manage the records.
     match /galleryImages/{imageId} {
       allow read: if true;
-      allow create, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    // Aturan default yang penting untuk keamanan:
-    // Menolak semua akses ke koleksi lain yang tidak didefinisikan secara eksplisit.
-    // Ini adalah jaring pengaman untuk mencegah akses yang tidak diinginkan di masa mendatang.
-    match /{document=**} {
-      allow read, write: if false;
+    // Rules for programs collection
+    // Allows anyone to read programs, but only admins to create, update, or delete.
+    match /programs/{programId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
