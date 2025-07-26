@@ -71,7 +71,8 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
  */
 export const updateProfileContent = async (content: ProfileContent): Promise<void> => {
   try {
-    await setDoc(profileDocRef, content, { merge: true }); // Use set with merge to create/update
+    // Use set with merge to create or update the document.
+    await setDoc(profileDocRef, content, { merge: true });
   } catch (e: any) {
     console.error("Error updating profile content: ", e);
     throw new Error('Gagal memperbarui konten profil.');
@@ -87,6 +88,8 @@ export const updateProfileContent = async (content: ProfileContent): Promise<voi
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
   try {
+    // Note: To order by role effectively, consider adding a numeric 'order' field
+    // if the default alphabetical sort on 'role' isn't sufficient.
     const q = query(teamMembersCollection, orderBy('role'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({

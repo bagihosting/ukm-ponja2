@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -65,6 +65,11 @@ export default function ProfileSettingsPage() {
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
+    defaultValues: {
+      about: '',
+      vision: '',
+      mission: ''
+    }
   });
   
   const addMemberForm = useForm<MemberFormValues>({
@@ -76,32 +81,32 @@ export default function ProfileSettingsPage() {
     resolver: zodResolver(editMemberSchema),
   });
 
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [profile, members] = await Promise.all([getProfileContent(), getTeamMembers()]);
-        if (profile) {
-          profileForm.reset(profile);
-        }
-        setTeamMembers(members);
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data profil dari server.' });
-      } finally {
-        setLoading(false);
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [profile, members] = await Promise.all([getProfileContent(), getTeamMembers()]);
+      if (profile) {
+        profileForm.reset(profile);
       }
+      setTeamMembers(members);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Gagal Memuat Data', description: 'Gagal mengambil data profil dari server.' });
+    } finally {
+      setLoading(false);
     }
-    loadData();
   }, [profileForm, toast]);
 
-  const onProfileSubmit = async (data: ProfileFormValues) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onProfileSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     setSavingProfile(true);
     try {
       await updateProfileContent(data);
       toast({ title: 'Berhasil', description: 'Konten profil berhasil diperbarui.' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
+      toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: `Terjadi kesalahan: ${error.message}` });
     } finally {
       setSavingProfile(false);
     }
@@ -110,12 +115,12 @@ export default function ProfileSettingsPage() {
   const handleAddNewMember: SubmitHandler<MemberFormValues> = async (data) => {
     try {
       const newMemberId = await addTeamMember(data);
-      setTeamMembers([...teamMembers, { id: newMemberId, ...data }]);
+      setTeamMembers(prev => [...prev, { id: newMemberId, ...data }]);
       toast({ title: 'Berhasil', description: 'Anggota baru berhasil ditambahkan.' });
       setIsAddingMember(false);
       addMemberForm.reset();
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menambah', description: error.message });
+      toast({ variant: 'destructive', title: 'Gagal Menambah', description: `Terjadi kesalahan: ${error.message}` });
     }
   };
 
@@ -127,7 +132,7 @@ export default function ProfileSettingsPage() {
       toast({ title: 'Berhasil', description: 'Anggota berhasil diperbarui.' });
       setIsEditingMember(null);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: error.message });
+      toast({ variant: 'destructive', title: 'Gagal Memperbarui', description: `Terjadi kesalahan: ${error.message}` });
     }
   };
   
@@ -139,7 +144,6 @@ export default function ProfileSettingsPage() {
 
   const cancelEditing = () => {
     setIsEditingMember(null);
-    editMemberForm.reset();
   };
 
   const handleDeleteMember = async () => {
@@ -149,7 +153,7 @@ export default function ProfileSettingsPage() {
       setTeamMembers(teamMembers.filter(m => m.id !== deletingMemberId));
       toast({ title: 'Berhasil', description: 'Anggota berhasil dihapus.' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Gagal Menghapus', description: error.message });
+      toast({ variant: 'destructive', title: 'Gagal Menghapus', description: `Terjadi kesalahan: ${error.message}` });
     } finally {
       setDeletingMemberId(null);
     }
@@ -324,5 +328,3 @@ export default function ProfileSettingsPage() {
     </div>
   );
 }
-
-    
