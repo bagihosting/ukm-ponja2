@@ -24,16 +24,35 @@ if (!db) {
 
 const galleryCollection = collection(db, 'galleryImages');
 
+interface GalleryImageFromFirestore {
+  id: string;
+  name: string;
+  url: string; 
+  createdAt: Timestamp;
+}
+
 export interface GalleryImage {
   id: string;
   name: string;
-  url: string; // URL from freeimage.host
-  createdAt: Timestamp;
+  url: string;
+  createdAt: string; // Changed to string for serialization
 }
 
 export interface GalleryImageInput {
   name: string;
   url: string;
+}
+
+// Helper to convert Firestore doc to a client-safe GalleryImage object
+function toGalleryImage(doc: any): GalleryImage {
+  const data = doc.data() as GalleryImageFromFirestore;
+  return {
+    id: doc.id,
+    name: data.name,
+    url: data.url,
+    // Convert Timestamp to ISO string for safe serialization
+    createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+  };
 }
 
 
@@ -99,10 +118,7 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   try {
     const q = query(galleryCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as GalleryImage));
+    return querySnapshot.docs.map(toGalleryImage);
   } catch (e: any) {
     console.error("Error getting documents: ", e);
     // On failure, return an empty array to prevent the page from crashing.

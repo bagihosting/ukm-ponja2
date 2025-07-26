@@ -1,4 +1,6 @@
 
+'use server';
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, ArrowLeft } from 'lucide-react';
@@ -26,7 +28,7 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
   }
   
   const formattedDate = article.createdAt 
-    ? new Date(article.createdAt.seconds * 1000).toLocaleDateString('id-ID', {
+    ? new Date(article.createdAt).toLocaleDateString('id-ID', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

@@ -40,9 +40,7 @@ export default function GalleryPage() {
     try {
       const fetchedImages = await getGalleryImages();
       const sortedImages = fetchedImages.sort((a, b) => {
-        const dateA = a.createdAt?.seconds ?? 0;
-        const dateB = b.createdAt?.seconds ?? 0;
-        return dateB - dateA;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
       setImages(sortedImages);
     } catch (error: any) {

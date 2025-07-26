@@ -25,13 +25,24 @@ if (!db) {
 
 const articlesCollection = collection(db, 'articles');
 
+// This interface is now used internally for data from Firestore
+interface ArticleFromFirestore {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  createdAt: Timestamp; // Firestore Timestamp
+}
+
+// This is the interface that will be exposed to client components
 export interface Article {
   id: string;
   title: string;
   content: string;
   imageUrl?: string;
-  createdAt: Timestamp;
+  createdAt: string; // Changed to string for serialization
 }
+
 
 export interface ArticleInput {
   title: string;
@@ -43,6 +54,19 @@ export interface ArticleUpdateInput {
   title?: string;
   content?: string;
   imageUrl?: string | FieldValue;
+}
+
+// Helper to convert Firestore doc to a client-safe Article object
+function toArticle(doc: any): Article {
+  const data = doc.data() as ArticleFromFirestore;
+  return {
+    id: doc.id,
+    title: data.title,
+    content: data.content,
+    imageUrl: data.imageUrl,
+    // Convert Timestamp to ISO string for safe serialization
+    createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+  };
 }
 
 // Create
@@ -70,10 +94,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 export const getArticles = async (): Promise<Article[]> => {
   try {
     const querySnapshot = await getDocs(articlesCollection);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Article));
+    return querySnapshot.docs.map(toArticle);
   } catch (e: any) {
     console.error("Error getting documents: ", e);
     throw new Error(`Gagal mengambil daftar artikel: ${e.message}`);
@@ -86,7 +107,7 @@ export const getArticle = async (id: string): Promise<Article | null> => {
     const docRef = doc(db, 'articles', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Article;
+      return toArticle(docSnap);
     } else {
       console.log("No such document!");
       return null;

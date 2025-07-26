@@ -11,7 +11,7 @@ async function fetchGalleryImages() {
   try {
     const images = await getGalleryImages();
     // Sorting on the server after fetching
-    return images.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+    return images.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     console.error("Gagal memuat gambar galeri:", error);
     return []; // Return empty array on error

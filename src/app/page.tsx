@@ -26,10 +26,10 @@ async function fetchData() {
     ]);
     
     const sortedImages = fetchedImages
-      .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
 
-    const sortedArticles = fetchedArticles.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+    const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
     return { galleryImages: sortedImages, articles: sortedArticles };
   } catch (error) {

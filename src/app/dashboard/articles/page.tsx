@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { getArticles, deleteArticle, type Article } from '@/lib/articles';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,7 +29,9 @@ export default function ArticlesPage() {
       try {
         setLoading(true);
         const fetchedArticles = await getArticles();
-        setArticles(fetchedArticles);
+        // Sort articles by date on the client-side
+        const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setArticles(sortedArticles);
       } catch (err: any) {
         setError('Gagal memuat artikel: ' + err.message);
         toast({
@@ -123,7 +124,7 @@ export default function ArticlesPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{article.title}</TableCell>
-                    <TableCell>{article.createdAt ? new Date(article.createdAt.seconds * 1000).toLocaleDateString('id-ID') : 'N/A'}</TableCell>
+                    <TableCell>{article.createdAt ? new Date(article.createdAt).toLocaleDateString('id-ID') : 'N/A'}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
