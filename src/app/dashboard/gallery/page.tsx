@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,14 +14,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface UploadedImage {
   url: string;
   name: string;
-  date: Date;
+  date: string; // Store date as ISO string for localStorage
 }
+
+const LOCAL_STORAGE_KEY = 'uploadedImagesGallery';
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const { toast } = useToast();
+
+  // Load images from localStorage on initial render
+  useEffect(() => {
+    try {
+      const storedImages = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedImages) {
+        setUploadedImages(JSON.parse(storedImages));
+      }
+    } catch (error) {
+      console.error("Failed to parse images from localStorage", error);
+    }
+  }, []);
+
+  // Save images to localStorage whenever the list changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(uploadedImages));
+    } catch (error) {
+      console.error("Failed to save images to localStorage", error);
+    }
+  }, [uploadedImages]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -67,7 +90,7 @@ export default function GalleryPage() {
       const newImage: UploadedImage = {
         url: publicUrl,
         name: selectedFile.name,
-        date: new Date(),
+        date: new Date().toISOString(),
       };
       
       setUploadedImages(prevImages => [newImage, ...prevImages]);
@@ -169,7 +192,7 @@ export default function GalleryPage() {
                                         <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
                                     </TableCell>
                                     <TableCell className="font-medium truncate max-w-[200px]">{image.name}</TableCell>
-                                    <TableCell>{image.date.toLocaleDateString('id-ID')}</TableCell>
+                                    <TableCell>{new Date(image.date).toLocaleDateString('id-ID')}</TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="outline" size="icon" onClick={() => handleCopyUrl(image.url)}>
                                             <Copy className="h-4 w-4" />
