@@ -1,0 +1,145 @@
+
+'use server';
+
+import { 
+  db
+} from './firebase'; 
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  getDoc, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  serverTimestamp,
+  deleteField,
+  query,
+  orderBy
+} from 'firebase/firestore';
+import type { ProgramCategory } from './constants';
+
+if (!db) {
+  throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
+}
+
+const programsCollection = collection(db, 'programs');
+
+
+export interface Program {
+  id: string;
+  name: string;
+  category: ProgramCategory;
+  description: string;
+  imageUrl?: string;
+  createdAt: string; 
+}
+
+export interface ProgramInput {
+  name: string;
+  category: ProgramCategory;
+  description: string;
+  imageUrl?: string;
+}
+
+export interface ProgramUpdateInput {
+  name?: string;
+  category?: ProgramCategory;
+  description?: string;
+  imageUrl?: string;
+}
+
+function toProgram(docSnap: any): Program {
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    name: data.name,
+    category: data.category,
+    description: data.description,
+    imageUrl: data.imageUrl,
+    createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+  };
+}
+
+// Create
+export async function addProgram(program: ProgramInput): Promise<string> {
+  try {
+    const dataToAdd: { [key: string]: any } = {
+      name: program.name,
+      category: program.category,
+      description: program.description,
+      createdAt: serverTimestamp(),
+    };
+    
+    if (program.imageUrl && program.imageUrl.trim() !== '') {
+        dataToAdd.imageUrl = program.imageUrl;
+    }
+    
+    const docRef = await addDoc(programsCollection, dataToAdd);
+    return docRef.id;
+  } catch (e: any) {
+    console.error("Error adding program: ", e);
+    throw new Error(`Gagal menambahkan program: ${e.message}`);
+  }
+};
+
+// Read all
+export async function getPrograms(): Promise<Program[]> {
+  try {
+    const q = query(programsCollection, orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(toProgram);
+  } catch (e: any) {
+    console.error("Error getting programs: ", e);
+    throw new Error(`Gagal mengambil daftar program: ${e.message}`);
+  }
+};
+
+// Read one
+export async function getProgram(id: string): Promise<Program | null> {
+  try {
+    const docRef = doc(db, 'programs', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return toProgram(docSnap);
+    } else {
+      console.log("No such program document!");
+      return null;
+    }
+  } catch (e: any)
+    {
+    console.error("Error getting program: ", e);
+    throw new Error(`Gagal mengambil data program: ${e.message}`);
+  }
+};
+
+// Update
+export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
+  try {
+    const docRef = doc(db, 'programs', id);
+    
+    const dataToUpdate: { [key: string]: any } = { ...program };
+
+    if (program.imageUrl === '' || program.imageUrl === null || program.imageUrl === undefined) {
+        dataToUpdate.imageUrl = deleteField();
+    }
+    
+    await updateDoc(docRef, dataToUpdate);
+
+  } catch (e: any) {
+    console.error("Error updating program: ", e);
+    throw new Error(`Gagal memperbarui program: ${e.message}`);
+  }
+};
+
+
+// Delete
+export async function deleteProgram(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'programs', id);
+    await deleteDoc(docRef);
+  } catch (e: any) {
+    console.error("Error deleting program: ", e);
+    throw new Error(`Gagal menghapus program: ${e.message}`);
+  }
+};

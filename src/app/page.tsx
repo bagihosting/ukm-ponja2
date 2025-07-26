@@ -4,14 +4,15 @@
 import Link from 'next/link';
 import { getArticles, type Article } from '@/lib/articles';
 import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { getPrograms, type Program } from '@/lib/programs';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AiDoctor } from '@/components/portals/ai-doctor';
 
 
@@ -24,9 +25,10 @@ function truncate(text: string, length: number) {
 
 async function fetchData() {
   try {
-    const [fetchedImages, fetchedArticles] = await Promise.all([
+    const [fetchedImages, fetchedArticles, fetchedPrograms] = await Promise.all([
       getGalleryImages(),
-      getArticles()
+      getArticles(),
+      getPrograms()
     ]);
     
     const sortedImages = fetchedImages
@@ -35,19 +37,22 @@ async function fetchData() {
 
     const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    return { galleryImages: sortedImages, articles: sortedArticles };
+    return { galleryImages: sortedImages, articles: sortedArticles, programs: fetchedPrograms };
   } catch (error) {
     console.error("Gagal memuat data portal:", error);
-    return { galleryImages: [], articles: [] };
+    return { galleryImages: [], articles: [], programs: [] };
   }
 }
 
 export default async function HomePage() {
-  const { galleryImages, articles } = await fetchData();
+  const { galleryImages, articles, programs } = await fetchData();
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const trendingArticles = articles.length > 1 ? articles.slice(1, 5) : [];
   const healthArticles = articles.length > 5 ? articles.slice(5) : [];
+
+  const essentialPrograms = programs.filter(p => p.category === 'UKM Esensial').slice(0, 5);
+  const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan').slice(0, 5);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -228,14 +233,49 @@ export default async function HomePage() {
                     Lihat program dan inisiatif yang sedang kami jalankan.
                 </p>
                 </div>
-                <Card className="shadow-lg">
+                {programs.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle>UKM Esensial</CardTitle>
+                        <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {essentialPrograms.map(program => (
+                          <div key={program.id} className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">{program.name}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                     <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle>UKM Pengembangan</CardTitle>
+                        <CardDescription>Program inovatif untuk kebutuhan spesifik.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                         {developmentPrograms.map(program => (
+                          <div key={program.id} className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-accent" />
+                            <span className="text-sm text-muted-foreground">{program.name}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card className="shadow-lg">
                     <CardContent className="p-8 text-center text-muted-foreground">
-                        <p>Fitur ini sedang dalam pengembangan.</p>
-                        <Button asChild variant="link">
-                            <Link href="/program-ukm">Lihat Selengkapnya</Link>
-                        </Button>
+                        <p>Belum ada program yang ditambahkan.</p>
                     </CardContent>
-                </Card>
+                  </Card>
+                )}
+                <div className="text-center">
+                  <Button asChild variant="link">
+                    <Link href="/program-ukm">Lihat Semua Program <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                </div>
             </section>
 
             <section id="reports" className="space-y-6">
@@ -262,4 +302,3 @@ export default async function HomePage() {
     </div>
   );
 }
-    
