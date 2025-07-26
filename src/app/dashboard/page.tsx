@@ -22,7 +22,7 @@ export default function DashboardPage() {
             <CardContent>
                 <div className="mt-4 overflow-hidden rounded-lg">
                     <img 
-                        src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDBjcG05cnFtd3NocXBpZ3V0b3JmZzJzMXAzZTJqenJrbmF2bXc5NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7btQ0NH6KlQOI7ew/giphy.gif"
+                        src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTBud2xmMmxmZmpyb2ZobWYwbWY2dWY3d2Zpdmw5bWtld3Exdnp1MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/L1dStwA5s23v2/giphy.gif"
                         alt="Welcome Animation"
                         className="w-full h-auto object-cover"
                     />
