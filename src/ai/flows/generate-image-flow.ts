@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { uploadImageFromDataUri } from '@/lib/storage';
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate an image from.'),
@@ -20,8 +19,7 @@ export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 const GenerateImageOutputSchema = z.object({
   imageUrl: z
     .string()
-    .url()
-    .describe('The URL of the generated image hosted on Firebase Storage.'),
+    .describe('The data URI of the generated image.'),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
@@ -51,12 +49,6 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
 
-    try {
-      const imageUrl = await uploadImageFromDataUri(imageDataUri);
-      return { imageUrl };
-    } catch (error) {
-      console.error('Error uploading image to Firebase Storage:', error);
-      throw new Error('Gagal mengunggah gambar ke Firebase Storage.');
-    }
+    return { imageUrl: imageDataUri };
   }
 );
