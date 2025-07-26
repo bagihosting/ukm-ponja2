@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Wand2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Wand2, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getProgram, updateProgram } from '@/lib/programs';
+import { uploadImageToFreeImage } from '@/lib/image-hosting';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
 import type { ProgramCategory } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,9 +29,20 @@ const programSchema = z.object({
   description: z.string().min(1, { message: 'Deskripsi tidak boleh kosong.' }),
   category: z.enum(PROGRAM_CATEGORIES, { required_error: 'Kategori harus dipilih.' }),
   imageUrl: z.string().url({ message: "URL tidak valid" }).or(z.literal("")),
+  personInChargeName: z.string().optional(),
+  personInChargePhotoUrl: z.string().url({ message: "URL tidak valid" }).or(z.literal("")).optional(),
 });
 
 type ProgramFormValues = z.infer<typeof programSchema>;
+
+function fileToDataUri(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 export default function EditProgramPage() {
   const router = useRouter();
@@ -42,6 +54,8 @@ export default function EditProgramPage() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [picPhotoFile, setPicPhotoFile] = useState<File | null>(null);
+  const [isUploadingPicPhoto, setIsUploadingPicPhoto] = useState(false);
 
   const {
     register,
@@ -56,6 +70,7 @@ export default function EditProgramPage() {
   });
 
   const imageUrl = watch('imageUrl');
+  const picPhotoUrl = watch('personInChargePhotoUrl');
 
   const fetchProgram = useCallback(async (programId: string) => {
     setPageLoading(true);
@@ -67,6 +82,8 @@ export default function EditProgramPage() {
           description: fetchedProgram.description,
           category: fetchedProgram.category,
           imageUrl: fetchedProgram.imageUrl || '',
+          personInChargeName: fetchedProgram.personInChargeName || '',
+          personInChargePhotoUrl: fetchedProgram.personInChargePhotoUrl || '',
         });
       } else {
         toast({ variant: 'destructive', title: 'Error', description: 'Program tidak ditemukan.' });
@@ -93,6 +110,8 @@ export default function EditProgramPage() {
         description: data.description,
         category: data.category,
         imageUrl: data.imageUrl,
+        personInChargeName: data.personInChargeName,
+        personInChargePhotoUrl: data.personInChargePhotoUrl
       });
       toast({
         title: 'Berhasil!',
@@ -134,6 +153,29 @@ export default function EditProgramPage() {
       });
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+  
+  const handlePicPhotoUpload = async () => {
+    if (!picPhotoFile) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Pilih file foto terlebih dahulu.' });
+      return;
+    }
+    setIsUploadingPicPhoto(true);
+    try {
+      const dataUri = await fileToDataUri(picPhotoFile);
+      const url = await uploadImageToFreeImage(dataUri);
+      setValue('personInChargePhotoUrl', url, { shouldValidate: true });
+      toast({ title: 'Berhasil!', description: 'Foto penanggung jawab berhasil diunggah.' });
+      setPicPhotoFile(null);
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Gagal Mengunggah Foto',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsUploadingPicPhoto(false);
     }
   };
   
@@ -240,6 +282,42 @@ export default function EditProgramPage() {
                     />
                     {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader>
+                <CardTitle>Penanggung Jawab</CardTitle>
+                <CardDescription>Informasi penanggung jawab program (opsional).</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="personInChargeName">Nama Penanggung Jawab</Label>
+                  <Input
+                    id="personInChargeName"
+                    type="text"
+                    className="w-full"
+                    {...register('personInChargeName')}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="pic-photo">Foto Penanggung Jawab</Label>
+                   <Input 
+                      id="pic-photo" 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => setPicPhotoFile(e.target.files?.[0] || null)}
+                      disabled={isUploadingPicPhoto || isSubmitting}
+                    />
+                    {picPhotoFile && (
+                       <Button type="button" size="sm" onClick={handlePicPhotoUpload} disabled={isUploadingPicPhoto || isSubmitting}>
+                        {isUploadingPicPhoto ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                        Unggah Foto
+                      </Button>
+                    )}
+                  <ImagePreview imageUrl={picPhotoUrl} />
+                  {errors.personInChargePhotoUrl && <p className="text-sm text-red-500">{errors.personInChargePhotoUrl.message}</p>}
                 </div>
               </CardContent>
             </Card>

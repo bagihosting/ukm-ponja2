@@ -5,9 +5,11 @@ import { getPrograms, type Program } from '@/lib/programs';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, UserCircle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 async function fetchPrograms() {
   try {
@@ -27,7 +29,7 @@ export default async function ProgramsPage() {
     <ul className="space-y-6">
       {programList.map(program => (
         <li key={program.id}>
-            <Card className="overflow-hidden shadow-md">
+            <Card className="overflow-hidden shadow-md flex flex-col h-full">
                 <div className="grid md:grid-cols-3">
                     {program.imageUrl && (
                         <div className="md:col-span-1">
@@ -36,13 +38,29 @@ export default async function ProgramsPage() {
                             </AspectRatio>
                         </div>
                     )}
-                    <div className={program.imageUrl ? "md:col-span-2" : "md:col-span-3"}>
+                    <div className={program.imageUrl ? "md:col-span-2 flex flex-col" : "md:col-span-3 flex flex-col"}>
                         <CardHeader>
                             <CardTitle>{program.name}</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-grow">
                             <p className="text-muted-foreground">{program.description}</p>
                         </CardContent>
+                        {program.personInChargeName && (
+                          <CardFooter>
+                              <div className="flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarImage src={program.personInChargePhotoUrl} alt={program.personInChargeName} />
+                                    <AvatarFallback>
+                                        <UserCircle className="h-5 w-5"/>
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="text-sm font-semibold">{program.personInChargeName}</p>
+                                    <p className="text-xs text-muted-foreground">Penanggung Jawab</p>
+                                </div>
+                              </div>
+                          </CardFooter>
+                        )}
                     </div>
                 </div>
             </Card>
@@ -70,13 +88,13 @@ export default async function ProgramsPage() {
                   <AccordionItem value="esensial">
                     <AccordionTrigger className="text-2xl font-semibold">UKM Esensial</AccordionTrigger>
                     <AccordionContent className="pt-4">
-                      {renderProgramList(essentialPrograms)}
+                      {essentialPrograms.length > 0 ? renderProgramList(essentialPrograms) : <p className="text-muted-foreground text-center py-4">Belum ada program UKM Esensial.</p>}
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="pengembangan">
                     <AccordionTrigger className="text-2xl font-semibold">UKM Pengembangan</AccordionTrigger>
                     <AccordionContent className="pt-4">
-                      {renderProgramList(developmentPrograms)}
+                      {developmentPrograms.length > 0 ? renderProgramList(developmentPrograms) : <p className="text-muted-foreground text-center py-4">Belum ada program UKM Pengembangan.</p>}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

@@ -32,6 +32,8 @@ export interface Program {
   category: ProgramCategory;
   description: string;
   imageUrl?: string;
+  personInChargeName?: string;
+  personInChargePhotoUrl?: string;
   createdAt: string; 
 }
 
@@ -40,6 +42,8 @@ export interface ProgramInput {
   category: ProgramCategory;
   description: string;
   imageUrl?: string;
+  personInChargeName?: string;
+  personInChargePhotoUrl?: string;
 }
 
 export interface ProgramUpdateInput {
@@ -47,6 +51,8 @@ export interface ProgramUpdateInput {
   category?: ProgramCategory;
   description?: string;
   imageUrl?: string;
+  personInChargeName?: string;
+  personInChargePhotoUrl?: string;
 }
 
 function toProgram(docSnap: any): Program {
@@ -57,6 +63,8 @@ function toProgram(docSnap: any): Program {
     category: data.category,
     description: data.description,
     imageUrl: data.imageUrl,
+    personInChargeName: data.personInChargeName,
+    personInChargePhotoUrl: data.personInChargePhotoUrl,
     createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
   };
 }
@@ -73,6 +81,12 @@ export async function addProgram(program: ProgramInput): Promise<string> {
     
     if (program.imageUrl && program.imageUrl.trim() !== '') {
         dataToAdd.imageUrl = program.imageUrl;
+    }
+    if (program.personInChargeName && program.personInChargeName.trim() !== '') {
+        dataToAdd.personInChargeName = program.personInChargeName;
+    }
+    if (program.personInChargePhotoUrl && program.personInChargePhotoUrl.trim() !== '') {
+        dataToAdd.personInChargePhotoUrl = program.personInChargePhotoUrl;
     }
     
     const docRef = await addDoc(programsCollection, dataToAdd);
@@ -118,10 +132,25 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
   try {
     const docRef = doc(db, 'programs', id);
     
-    const dataToUpdate: { [key: string]: any } = { ...program };
+    const dataToUpdate: { [key: string]: any } = {};
 
-    if (program.imageUrl === '' || program.imageUrl === null || program.imageUrl === undefined) {
+    // Assign only the fields that are not undefined
+    Object.keys(program).forEach(keyStr => {
+      const key = keyStr as keyof ProgramUpdateInput;
+      if (program[key] !== undefined) {
+        (dataToUpdate as any)[key] = program[key];
+      }
+    });
+
+    // Handle deletion of optional fields
+    if (program.imageUrl === '') {
         dataToUpdate.imageUrl = deleteField();
+    }
+    if (program.personInChargeName === '') {
+        dataToUpdate.personInChargeName = deleteField();
+    }
+    if (program.personInChargePhotoUrl === '') {
+        dataToUpdate.personInChargePhotoUrl = deleteField();
     }
     
     await updateDoc(docRef, dataToUpdate);
