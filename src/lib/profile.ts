@@ -13,8 +13,8 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  orderBy,
-  query
+  query,
+  orderBy
 } from 'firebase/firestore';
 import type { ProfileContent } from './constants';
 import { defaultProfileContent } from './constants';
@@ -39,7 +39,7 @@ const profileDocRef = doc(profileCollection, 'main'); // Use a known ID 'main'
 
 /**
  * Retrieves the main profile content from Firestore.
- * If the document doesn't exist, it creates it with default content and returns it.
+ * If the document doesn't exist, it returns the default (empty) content without writing to the DB.
  * @returns A promise that resolves with the profile content.
  */
 export const getProfileContent = async (): Promise<ProfileContent> => {
@@ -48,28 +48,26 @@ export const getProfileContent = async (): Promise<ProfileContent> => {
     if (docSnap.exists()) {
       return docSnap.data() as ProfileContent;
     } else {
-      // Document does not exist, create it with default content.
-      await setDoc(profileDocRef, defaultProfileContent);
+      // Document does not exist, return default content.
+      // The document will be created by an admin from the dashboard.
       return defaultProfileContent;
     }
   } catch (e: any) {
-    console.error("Error getting or creating profile content: ", e);
-    // In case of error, returning default content can be a fallback,
-    // though throwing an error is better to signal a problem.
-    throw new Error('Gagal mengambil atau membuat konten profil.');
+    console.error("Error getting profile content: ", e);
+    throw new Error('Gagal mengambil konten profil.');
   }
 };
 
 
 /**
- * Creates or updates the main profile content in Firestore using set with merge.
- * This should only be called by an authenticated admin user.
+ * Creates or updates the main profile content in Firestore.
+ * This should only be called by an authenticated admin user from the dashboard.
  * @param content The profile content to save.
  */
 export const updateProfileContent = async (content: Partial<ProfileContent>): Promise<void> => {
   try {
     // setDoc with merge: true will create the document if it doesn't exist,
-    // or update the fields if it does. This is perfect for our use case.
+    // or update the fields if it does. This is robust for our use case.
     await setDoc(profileDocRef, content, { merge: true });
   } catch (e: any) {
     console.error("Error updating profile content: ", e);
@@ -81,32 +79,21 @@ export const updateProfileContent = async (content: Partial<ProfileContent>): Pr
 // --- Team Members Management ---
 
 /**
- * Retrieves all team members from Firestore, ordered by role.
- * Note: A composite index might be required in Firestore for this to work.
+ * Retrieves all team members from Firestore.
+ * This version removes server-side ordering to prevent Firestore index errors.
+ * Sorting should be handled on the client-side if needed.
  * @returns A promise that resolves with an array of team members.
  */
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
   try {
-    const q = query(teamMembersCollection, orderBy("role"));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(teamMembersCollection);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     } as TeamMember));
-  } catch (e: any)
-    {
+  } catch (e: any) {
     console.error("Error getting team members: ", e);
-    // Fallback to fetching without ordering if index is missing
-    try {
-        const querySnapshot = await getDocs(teamMembersCollection);
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as TeamMember));
-    } catch (fallbackError: any) {
-        console.error("Fallback fetch also failed:", fallbackError);
-        throw new Error('Gagal mengambil daftar anggota tim.');
-    }
+    throw new Error('Gagal mengambil daftar anggota tim.');
   }
 };
 

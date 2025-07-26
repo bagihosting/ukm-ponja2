@@ -86,15 +86,15 @@ export default async function ProfilePage() {
                             <CardTitle className="text-2xl font-bold">Tentang Kami</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 text-muted-foreground text-base leading-relaxed">
-                            <p>{profile?.about}</p>
+                            <p>{profile?.about || 'Deskripsi tentang UKM belum diisi.'}</p>
                             <div className="grid md:grid-cols-2 gap-6 pt-4">
                                 <div className="p-6 bg-slate-50 rounded-lg">
                                     <h3 className="font-bold text-foreground mb-2">Visi Kami</h3>
-                                    <p>{profile?.vision}</p>
+                                    <p>{profile?.vision || 'Visi belum diisi.'}</p>
                                 </div>
                                 <div className="p-6 bg-slate-50 rounded-lg">
                                     <h3 className="font-bold text-foreground mb-2">Misi Kami</h3>
-                                    <p>{profile?.mission}</p>
+                                    <p>{profile?.mission || 'Misi belum diisi.'}</p>
                                 </div>
                             </div>
                         </CardContent>

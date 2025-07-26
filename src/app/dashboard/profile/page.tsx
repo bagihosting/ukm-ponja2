@@ -60,12 +60,10 @@ interface AddMemberFormProps {
 
 const AddMemberForm: FC<AddMemberFormProps> = ({ onSuccess, onCancel }) => {
   const { toast } = useToast();
-  const form = useForm<MemberFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
     defaultValues: { name: '', role: '' },
   });
-
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const handleAddNewMember: SubmitHandler<MemberFormValues> = async (data) => {
     try {
@@ -107,12 +105,10 @@ interface EditMemberRowProps {
 
 const EditMemberRow: FC<EditMemberRowProps> = ({ member, onSuccess, onCancel }) => {
     const { toast } = useToast();
-    const form = useForm<MemberFormValues>({
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<MemberFormValues>({
         resolver: zodResolver(memberSchema),
         defaultValues: { name: member.name, role: member.role },
     });
-
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = form;
 
     const handleUpdateMember: SubmitHandler<MemberFormValues> = async (data) => {
         try {
