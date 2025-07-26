@@ -1,11 +1,35 @@
 
-import Link from 'next/link';
-import { HeartPulse } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { User, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 
+const teamMembers = [
+  { name: 'Rani Kirana', role: 'Pembina' },
+  { name: 'Dr. John Doe', role: 'Penasihat Medis' },
+  { name: 'Ahmad Subarjo', role: 'Ketua Umum' },
+  { name: 'Siti Aminah', role: 'Sekretaris' },
+  { name: 'Budi Santoso', role: 'Bendahara' },
+  { name: 'Dewi Lestari', role: 'Koordinator Acara' },
+  { name: 'Eko Prasetyo', role: 'Koordinator Lapangan' },
+];
+
+const MemberCard = ({ name, role }: { name: string, role: string }) => (
+  <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <CardContent className="p-6 flex flex-col items-center gap-4">
+      <Avatar className="w-24 h-24">
+        <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+          {name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <p className="font-bold text-lg">{name}</p>
+        <p className="text-sm text-muted-foreground">{role}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default function ProfilePage() {
   return (
@@ -20,19 +44,60 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <Card className="mt-12">
-                <CardHeader>
-                    <CardTitle>Tentang Kami</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-muted-foreground">
-                    <p>
-                        Konten untuk profil UKM akan ditampilkan di sini. Anda dapat mengedit halaman ini di `src/app/profil/page.tsx` untuk menambahkan informasi tentang visi, misi, sejarah, dan struktur organisasi UKM Anda.
+            {/* About Us Section */}
+            <section id="about" className="mt-16">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="text-2xl">Tentang Kami</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-muted-foreground text-base leading-relaxed">
+                        <p>
+                            Unit Kegiatan Mahasiswa Pondok Lanjut Usia (UKM PONJA) adalah sebuah organisasi mahasiswa yang berdedikasi untuk memberikan kontribusi positif kepada masyarakat, khususnya para lansia. Kami percaya bahwa setiap individu, tanpa memandang usia, berhak mendapatkan kualitas hidup yang baik, perhatian, dan kebahagiaan.
+                        </p>
+                        <p>
+                           <strong>Visi kami</strong> adalah menjadi wadah bagi mahasiswa untuk mengembangkan kepedulian sosial dan menjadi pelopor dalam upaya peningkatan kesejahteraan lansia. <strong>Misi kami</strong> adalah menyelenggarakan kegiatan-kegiatan yang bermanfaat seperti pemeriksaan kesehatan rutin, senam bersama, penyuluhan, serta kegiatan rekreasi untuk menjaga kesehatan fisik dan mental para lansia.
+                        </p>
+                         <p>
+                           UKM PONJA didirikan atas dasar semangat gotong royong dan kepedulian. Kami bekerja sama dengan berbagai pihak, termasuk tenaga medis profesional dan panti werdha, untuk memastikan program kami berjalan efektif dan tepat sasaran.
+                        </p>
+                    </CardContent>
+                </Card>
+            </section>
+
+             {/* Organization Structure Section */}
+            <section id="structure" className="mt-16">
+                 <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center mb-12">
+                    <h2 className="font-bold text-3xl leading-tight md:text-4xl">Struktur Organisasi</h2>
+                    <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+                        Tim yang berdedikasi di balik layar UKM PONJA.
                     </p>
-                    <p>
-                        Ini adalah halaman statis, artinya kontennya langsung ditulis di dalam kode. Untuk konten yang lebih dinamis, Anda bisa membuat fitur "Profil" di dasbor admin dan mengambil datanya dari Firestore, mirip seperti cara kerja halaman Artikel dan Galeri.
-                    </p>
-                </CardContent>
-            </Card>
+                </div>
+
+                <div className="space-y-12 flex flex-col items-center">
+                    {/* Top Level */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
+                       <MemberCard name="Rani Kirana" role="Pembina" />
+                       <MemberCard name="Dr. John Doe" role="Penasihat Medis" />
+                    </div>
+
+                    {/* Mid Level */}
+                    <div className="w-full border-t pt-12">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 justify-center">
+                            <MemberCard name="Ahmad Subarjo" role="Ketua Umum" />
+                            <MemberCard name="Siti Aminah" role="Sekretaris" />
+                            <MemberCard name="Budi Santoso" role="Bendahara" />
+                        </div>
+                    </div>
+                    
+                    {/* Bottom Level */}
+                    <div className="w-full border-t pt-12">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 justify-center max-w-3xl mx-auto">
+                            <MemberCard name="Dewi Lestari" role="Koordinator Acara" />
+                            <MemberCard name="Eko Prasetyo" role="Koordinator Lapangan" />
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
       </main>
       <PortalFooter />
