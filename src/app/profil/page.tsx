@@ -102,7 +102,7 @@ export default async function ProfilePage() {
                   )}
                   
                   {/* Connecting Line */}
-                  <div className="w-px h-12 md:h-20 bg-slate-300"></div>
+                  {pembina.length > 0 && ketua && <div className="w-px h-12 md:h-20 bg-slate-300"></div>}
 
                   {/* Ketua Umum */}
                   {ketua && (
@@ -114,10 +114,10 @@ export default async function ProfilePage() {
                   )}
                   
                   {/* Connecting Lines */}
-                   <div className="relative w-full h-12 md:h-20">
+                   {ketua && pengurusInti.length > 0 && <div className="relative w-full h-12 md:h-20">
                         <div className="absolute top-0 left-1/2 w-px h-full bg-slate-300"></div>
-                        {pengurusInti.length > 0 && <div className="absolute bottom-0 left-[25%] md:left-[35%] w-[50%] md:w-[30%] h-px bg-slate-300"></div>}
-                    </div>
+                        <div className="absolute bottom-0 left-[25%] md:left-[35%] w-[50%] md:w-[30%] h-px bg-slate-300"></div>
+                    </div>}
 
                   {/* Pengurus Inti */}
                   {pengurusInti.length > 0 && (
@@ -132,7 +132,7 @@ export default async function ProfilePage() {
                   )}
                   
                   {/* Connecting Line */}
-                  {koordinator.length > 0 && <div className="w-px h-12 md:h-20 bg-slate-300"></div>}
+                  {pengurusInti.length > 0 && koordinator.length > 0 && <div className="w-px h-12 md:h-20 bg-slate-300"></div>}
 
                   {/* Koordinator */}
                    {koordinator.length > 0 && (
@@ -143,6 +143,12 @@ export default async function ProfilePage() {
                               </OrgChartNode>
                           ))}
                        </OrgChartLevel>
+                   )}
+
+                   {teamMembers.length === 0 && (
+                     <div className="text-center text-muted-foreground py-16">
+                        Struktur organisasi belum diatur.
+                     </div>
                    )}
                 </div>
             </section>

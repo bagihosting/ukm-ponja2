@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -156,10 +156,29 @@ export default function ProfileSettingsPage() {
 
   if (loading) {
     return (
-       <div className="space-y-4">
-        <Skeleton className="h-10 w-1/4" />
-        <Card><CardContent className="p-6"><Skeleton className="h-64 w-full" /></CardContent></Card>
-        <Card><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
+       <div className="space-y-8">
+        <h1 className="text-lg font-semibold md:text-2xl">Kelola Halaman Profil</h1>
+        <Card>
+          <CardHeader>
+            <CardTitle>Konten "Tentang Kami"</CardTitle>
+            <CardDescription>Ubah deskripsi, visi, dan misi yang ditampilkan di halaman profil publik.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-10 w-48" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Struktur Organisasi</CardTitle>
+            <CardDescription>Kelola anggota tim yang ditampilkan di halaman profil.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <Skeleton className="h-40 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -263,8 +282,8 @@ export default function ProfileSettingsPage() {
                       <TableCell>{member.name}</TableCell>
                       <TableCell>{member.role}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="icon" variant="ghost" onClick={() => startEditing(member)}><Edit className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => startEditing(member)} disabled={isAddingMember}><Edit className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => setDeletingMemberId(member.id)} disabled={isAddingMember}><Trash2 className="h-4 w-4 text-red-600" /></Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -296,5 +315,3 @@ export default function ProfileSettingsPage() {
     </div>
   );
 }
-
-    
