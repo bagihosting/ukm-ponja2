@@ -97,6 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard", icon: Home, label: "Dashboard", badge: 0 },
     { href: "/dashboard/articles", icon: Newspaper, label: "Articles", badge: 0 },
     { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", badge: 0 },
+    { href: "/dashboard/profile", icon: User, label: "Profil", badge: 0 },
     { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", badge: 0 },
     { href: "/dashboard/reports", icon: LineChart, label: "Laporan", badge: 0 },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", badge: 0 },
