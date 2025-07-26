@@ -4,27 +4,31 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Fungsi ini memeriksa apakah permintaan datang dari pengguna yang sudah login.
-    // NOTE: Aturan ini untuk sementara dilonggarkan untuk mengatasi masalah
-    //       autentikasi di server-side actions.
+    // Dalam konteks aplikasi ini, pengguna yang login dianggap sebagai admin.
     function isAdmin() {
-      // return request.auth != null; // Aturan yang ketat
-      return true; // Aturan yang dilonggarkan untuk sementara
+      return request.auth != null;
     }
 
     // Aturan untuk koleksi 'articles'
     // Memperbolehkan siapa saja untuk membaca (read).
-    // Untuk sementara, mengizinkan siapa saja untuk menulis data.
+    // Hanya mengizinkan admin untuk membuat, mengubah, dan menghapus (write).
     match /articles/{articleId} {
       allow read: if true;
-      allow write: if isAdmin(); 
+      allow write: if isAdmin();
     }
 
     // Aturan untuk koleksi 'galleryImages'
     // Memperbolehkan siapa saja untuk membaca (read).
-    // Untuk sementara, mengizinkan siapa saja untuk menulis data.
+    // Hanya mengizinkan admin untuk membuat dan menghapus (create, delete).
     match /galleryImages/{imageId} {
       allow read: if true;
       allow create, delete: if isAdmin();
+    }
+
+    // Aturan default yang penting untuk keamanan:
+    // Menolak semua akses ke koleksi lain yang tidak didefinisikan secara eksplisit.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
