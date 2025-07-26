@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Download } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -21,20 +21,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
   content: z.string().min(1, { message: 'Konten tidak boleh kosong.' }),
-  imageUrl: z.string().url({ message: 'URL gambar tidak valid.' }).or(z.literal('')),
+  imageUrl: z.string(),
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
-
-const isValidUrl = (url: string): boolean => {
-  if (!url) return false;
-  try {
-    const newUrl = new URL(url);
-    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:';
-  } catch (e) {
-    return false;
-  }
-};
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -206,7 +196,7 @@ export default function EditArticlePage() {
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
 
-                  {imageUrl && isValidUrl(imageUrl) && (
+                  {imageUrl && (
                     <div className="space-y-2">
                       <div className="aspect-video relative">
                         <Image
@@ -214,8 +204,15 @@ export default function EditArticlePage() {
                           alt="Pratinjau Gambar"
                           fill
                           className="object-cover rounded-md"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       </div>
+                       <a href={imageUrl} download target="_blank" rel="noopener noreferrer" className="inline-block w-full">
+                        <Button variant="secondary" className="w-full">
+                          <Download className="mr-2 h-4 w-4" />
+                          Unduh Gambar
+                        </Button>
+                      </a>
                     </div>
                   )}
                 </div>

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, Sparkles, Download, Wand2 } from 'lucide-react';
+import { Loader2, Download, Wand2, Image as ImageIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,7 +132,7 @@ export default function ImageGeneratorPage() {
                     className="object-contain"
                   />
                 </div>
-                <a href={generatedImageUrl} download="generated-image.png" className="inline-block w-full">
+                <a href={generatedImageUrl} download="generated-image.png" target="_blank" rel="noopener noreferrer" className="inline-block w-full">
                   <Button variant="secondary" className="w-full">
                     <Download className="mr-2 h-4 w-4" />
                     Unduh Gambar
