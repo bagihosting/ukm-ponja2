@@ -2,7 +2,8 @@
 'use server';
 
 import { 
-  db
+  db,
+  auth
 } from './firebase'; 
 import { 
   collection, 
@@ -58,7 +59,7 @@ export interface ArticleUpdateInput {
 
 // Helper to convert Firestore doc to a client-safe Article object
 function toArticle(doc: any): Article {
-  const data = doc.data() as ArticleFromFirestore;
+  const data = doc.data();
   return {
     id: doc.id,
     title: data.title,
@@ -71,6 +72,10 @@ function toArticle(doc: any): Article {
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
+  if (!auth.currentUser) {
+    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menambahkan artikel.');
+  }
+
   try {
     // Start with the base data
     const dataToAdd: { [key: string]: any } = {
@@ -123,6 +128,10 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
+   if (!auth.currentUser) {
+    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk memperbarui artikel.');
+  }
+
   try {
     const docRef = doc(db, 'articles', id);
     
@@ -144,6 +153,9 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
+  if (!auth.currentUser) {
+    throw new Error('7 PERMISSION_DENIED: Autentikasi diperlukan untuk menghapus artikel.');
+  }
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
