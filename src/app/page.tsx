@@ -32,21 +32,35 @@ async function fetchArticles() {
 }
 
 function PortalNavbar() {
+    const navLinks = [
+      { href: "/", label: "Home" },
+      { href: "/profil", label: "Profil" },
+      { href: "/program-ukm", label: "Program UKM" },
+      { href: "/galeri", label: "Galeri" },
+      { href: "/laporan", label: "Laporan" },
+    ];
+
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center">
-                <div className="mr-4 flex">
-                    <Link href="/" className="flex items-center space-x-2">
+                <div className="mr-4 hidden md:flex">
+                    <Link href="/" className="mr-6 flex items-center space-x-2">
                         <HeartPulse className="h-6 w-6 text-primary" />
-                        <span className="font-bold">UKM PONJA</span>
+                        <span className="hidden font-bold sm:inline-block">UKM PONJA</span>
                     </Link>
-                </div>
-                <div className="flex flex-1 items-center justify-end space-x-2">
-                    <nav className="flex items-center">
-                       <Link href="/login">
-                           <Button variant="ghost">Admin Login</Button>
-                       </Link>
+                    <nav className="flex items-center space-x-6 text-sm font-medium">
+                        {navLinks.map(({ href, label }) => (
+                            <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                {label}
+                            </Link>
+                        ))}
                     </nav>
+                </div>
+                {/* Mobile Menu can be added here */}
+                <div className="flex flex-1 items-center justify-end space-x-2">
+                    <Link href="/login">
+                        <Button variant="ghost">Admin Login</Button>
+                    </Link>
                 </div>
             </div>
         </header>
@@ -148,7 +162,7 @@ export default async function HomePage() {
                     </CardContent>
                     <div className="p-4 pt-0 mt-auto">
                        <Button variant="outline" className="w-full" asChild>
-                         <Link href="#">Baca Selengkapnya</Link>
+                         <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
                        </Button>
                     </div>
                   </Card>
@@ -170,7 +184,10 @@ export default async function HomePage() {
                 </div>
                 <Card className="shadow-lg">
                     <CardContent className="p-8 text-center text-muted-foreground">
-                        Fitur ini sedang dalam pengembangan.
+                        <p>Fitur ini sedang dalam pengembangan.</p>
+                        <Button asChild variant="link">
+                            <Link href="/program-ukm">Lihat Selengkapnya</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </section>
@@ -184,7 +201,10 @@ export default async function HomePage() {
                 </div>
                 <Card className="shadow-lg">
                     <CardContent className="p-8 text-center text-muted-foreground">
-                        Fitur ini sedang dalam pengembangan.
+                        <p>Fitur ini sedang dalam pengembangan.</p>
+                        <Button asChild variant="link">
+                            <Link href="/laporan">Lihat Selengkapnya</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </section>
