@@ -8,7 +8,7 @@ import { signOut } from 'firebase/auth';
 import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2, Newspaper, Image as ImageIcon, Briefcase } from 'lucide-react';
 
 import { auth } from '@/lib/firebase';
-import { useAuth } from '@/context/auth-context';
+import { AuthProvider, useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,7 +76,7 @@ function UserNav() {
   );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -181,4 +181,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     </div>
   );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </AuthProvider>
+  )
 }
