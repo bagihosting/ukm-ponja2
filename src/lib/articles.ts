@@ -121,14 +121,23 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
   try {
     const docRef = doc(db, 'articles', id);
     
-    const dataToUpdate: { [key: string]: any } = { ...article };
+    const dataToUpdate: { [key: string]: any } = {};
 
-    // If imageUrl is explicitly set to be removed (empty string), use deleteField
-    if (article.imageUrl === '' || article.imageUrl === null || article.imageUrl === undefined) {
-        dataToUpdate.imageUrl = deleteField();
+    // Only add defined fields to the update object
+    if (article.title !== undefined) dataToUpdate.title = article.title;
+    if (article.content !== undefined) dataToUpdate.content = article.content;
+
+    // Handle imageUrl separately for deletion
+    if (article.imageUrl === '' || article.imageUrl === null) {
+      dataToUpdate.imageUrl = deleteField();
+    } else if (article.imageUrl) {
+      dataToUpdate.imageUrl = article.imageUrl;
     }
     
-    await updateDoc(docRef, dataToUpdate);
+    // Only update if there's something to update
+    if (Object.keys(dataToUpdate).length > 0) {
+      await updateDoc(docRef, dataToUpdate);
+    }
 
   } catch (e: any) {
     console.error("Error updating document: ", e);

@@ -50,9 +50,9 @@ export interface ProgramUpdateInput {
   name?: string;
   category?: ProgramCategory;
   description?: string;
-  imageUrl?: string;
-  personInChargeName?: string;
-  personInChargePhotoUrl?: string;
+  imageUrl?: string | null; // Allow null for deletion
+  personInChargeName?: string | null;
+  personInChargePhotoUrl?: string | null;
 }
 
 function toProgram(docSnap: any): Program {
@@ -134,26 +134,33 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
     
     const dataToUpdate: { [key: string]: any } = {};
 
-    // Assign only the fields that are not undefined
-    Object.keys(program).forEach(keyStr => {
-      const key = keyStr as keyof ProgramUpdateInput;
-      if (program[key] !== undefined) {
-        (dataToUpdate as any)[key] = program[key];
-      }
-    });
-
-    // Handle deletion of optional fields
-    if (program.imageUrl === '') {
+    // Assign only defined, non-null fields to the update object
+    if (program.name !== undefined) dataToUpdate.name = program.name;
+    if (program.category !== undefined) dataToUpdate.category = program.category;
+    if (program.description !== undefined) dataToUpdate.description = program.description;
+    
+    // Handle optional fields that can be added, updated, or deleted
+    if (program.imageUrl === null || program.imageUrl === '') {
         dataToUpdate.imageUrl = deleteField();
+    } else if (program.imageUrl) {
+        dataToUpdate.imageUrl = program.imageUrl;
     }
-    if (program.personInChargeName === '') {
+
+    if (program.personInChargeName === null || program.personInChargeName === '') {
         dataToUpdate.personInChargeName = deleteField();
+    } else if (program.personInChargeName) {
+        dataToUpdate.personInChargeName = program.personInChargeName;
     }
-    if (program.personInChargePhotoUrl === '') {
+
+    if (program.personInChargePhotoUrl === null || program.personInChargePhotoUrl === '') {
         dataToUpdate.personInChargePhotoUrl = deleteField();
+    } else if (program.personInChargePhotoUrl) {
+        dataToUpdate.personInChargePhotoUrl = program.personInChargePhotoUrl;
     }
     
-    await updateDoc(docRef, dataToUpdate);
+    if (Object.keys(dataToUpdate).length > 0) {
+      await updateDoc(docRef, dataToUpdate);
+    }
 
   } catch (e: any) {
     console.error("Error updating program: ", e);

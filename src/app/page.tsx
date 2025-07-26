@@ -241,12 +241,14 @@ export default async function HomePage() {
                         <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        {essentialPrograms.map(program => (
+                        {essentialPrograms.length > 0 ? essentialPrograms.map(program => (
                           <div key={program.id} className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">{program.name}</span>
                           </div>
-                        ))}
+                        )) : (
+                          <p className="text-sm text-muted-foreground">Belum ada program.</p>
+                        )}
                       </CardContent>
                     </Card>
                      <Card className="shadow-lg">
@@ -255,12 +257,14 @@ export default async function HomePage() {
                         <CardDescription>Program inovatif untuk kebutuhan spesifik.</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                         {developmentPrograms.map(program => (
+                         {developmentPrograms.length > 0 ? developmentPrograms.map(program => (
                           <div key={program.id} className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-accent" />
                             <span className="text-sm text-muted-foreground">{program.name}</span>
                           </div>
-                        ))}
+                        )) : (
+                            <p className="text-sm text-muted-foreground">Belum ada program.</p>
+                        )}
                       </CardContent>
                     </Card>
                   </div>

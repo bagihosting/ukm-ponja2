@@ -9,21 +9,26 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Admin = { id: string; email: string; role: string };
 
-// Mock data for admin accounts
 const initialAdmins: Admin[] = [
-  { id: '1', email: 'rahmantirta99@gmail.com', role: 'Admin' }
+  { id: '1', email: 'rahmantirta99@gmail.com', role: 'Super Admin' }
 ];
 
 export default function SettingsPage() {
   const [admins, setAdmins] = useState(initialAdmins);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const handleDelete = (id: string) => {
+    // For now, prevent deleting the super admin for demo purposes
+    if (id === '1') {
+      alert("Tidak dapat menghapus Super Admin.");
+      return;
+    }
     setAdmins(admins.filter(admin => admin.id !== id));
   };
   
@@ -45,6 +50,19 @@ export default function SettingsPage() {
     setEditingAdmin(null);
   };
 
+  const handleInviteAdmin = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const email = formData.get('email') as string;
+      if (email) {
+          // In a real app, you would send an invitation link
+          // For now, we just add it to the list
+          setAdmins([...admins, { id: Date.now().toString(), email, role: 'Admin' }]);
+          setIsInviteOpen(false);
+      }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -59,12 +77,18 @@ export default function SettingsPage() {
           <CardContent>
             <div className="grid gap-6">
               <Card>
-                 <CardHeader>
-                  <CardTitle>Admin yang Ada</CardTitle>
-                   <CardDescription>Daftar pengguna dengan akses admin.</CardDescription>
+                 <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Admin yang Ada</CardTitle>
+                        <CardDescription>Daftar pengguna dengan akses admin.</CardDescription>
+                    </div>
+                    <Button size="sm" onClick={() => setIsInviteOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Undang Admin
+                    </Button>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="w-full whitespace-nowrap">
+                  <ScrollArea className="w-full whitespace-nowrap border rounded-md">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -88,7 +112,13 @@ export default function SettingsPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleEditClick(admin)}>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(admin.id)}>Hapus</DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-red-600" 
+                                    onClick={() => handleDelete(admin.id)}
+                                    disabled={admin.role === 'Super Admin'}
+                                    >
+                                    Hapus
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -104,6 +134,7 @@ export default function SettingsPage() {
         </Card>
       </div>
       
+      {/* Edit Admin Dialog */}
       <Dialog open={!!editingAdmin} onOpenChange={(isOpen) => !isOpen && setEditingAdmin(null)}>
         <DialogContent>
           <DialogHeader>
@@ -126,6 +157,30 @@ export default function SettingsPage() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Admin Dialog */}
+       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Undang Admin Baru</DialogTitle>
+            <DialogDescription>Kirim undangan ke pengguna baru untuk menjadi admin.</DialogDescription>
+          </DialogHeader>
+            <form onSubmit={handleInviteAdmin}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">Alamat Email</Label>
+                  <Input id="invite-email" name="email" type="email" placeholder="nama@contoh.com" required/>
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">Batal</Button>
+                </DialogClose>
+                <Button type="submit">Kirim Undangan</Button>
+              </DialogFooter>
+            </form>
         </DialogContent>
       </Dialog>
     </>
