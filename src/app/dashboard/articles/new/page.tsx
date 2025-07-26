@@ -172,12 +172,6 @@ export default function NewArticlePage() {
                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                         </div>
-                         <a href={imageUrl} download target="_blank" rel="noopener noreferrer" className="inline-block w-full">
-                          <Button variant="secondary" className="w-full">
-                            <Download className="mr-2 h-4 w-4" />
-                            Unduh Gambar
-                          </Button>
-                        </a>
                     </div>
                   )}
                 </div>
