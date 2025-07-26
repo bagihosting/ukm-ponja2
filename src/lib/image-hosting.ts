@@ -1,8 +1,6 @@
 
 'use server';
 
-import FormData from 'form-data';
-
 const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
 const FREEIMAGE_API_URL = 'https://freeimage.host/api/1/upload';
 
@@ -18,16 +16,19 @@ export async function uploadImageToFreeImage(dataUri: string): Promise<string> {
   if (!base64Data) {
     throw new Error('Data URI tidak valid atau tidak berisi konten base64.');
   }
-
+  
+  const imageBuffer = Buffer.from(base64Data, 'base64');
+  
   try {
-    const form = new FormData();
-    form.append('key', FREEIMAGE_API_KEY);
-    form.append('source', base64Data);
-    form.append('format', 'json');
+    const formData = new FormData();
+    formData.append('key', FREEIMAGE_API_KEY);
+    // 'source' is the field name for the image data for freeimage.host
+    formData.append('source', new Blob([imageBuffer]), 'image.png');
+    formData.append('format', 'json');
 
     const response = await fetch(FREEIMAGE_API_URL, {
       method: 'POST',
-      body: form,
+      body: formData,
     });
 
     if (!response.ok) {
