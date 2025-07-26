@@ -1,40 +1,41 @@
-rules_version = '2';
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper function to check for authenticated users
+    // Helper function to check if a user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Articles: Public can read, only admins can write
+    // Rules for articles
     match /articles/{articleId} {
       allow read: if true;
       allow write: if isAuthenticated();
     }
-    
-    // Programs: Public can read, only admins can write
-    match /programs/{programId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
 
-    // Gallery Images: Public can read, only admins can write
+    // Rules for gallery images
     match /galleryImages/{imageId} {
       allow read: if true;
       allow write: if isAuthenticated();
     }
     
-    // SEO Settings: Public can read, only admins can write
-    match /settings/seo {
+    // Rules for programs
+    match /programs/{programId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Rules for settings
+    // This allows public read access to any document in the settings collection
+    // while restricting write access to authenticated users.
+    match /settings/{settingId} {
       allow read: if true;
       allow write: if isAuthenticated();
     }
 
-    // Users: Disallow client-side modification of user data
+    // Lock down user data to prevent unauthorized access
     match /users/{userId} {
-      allow read, write: if false;
+      allow read, write: if request.auth.uid == userId;
     }
   }
 }
