@@ -68,9 +68,9 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
       createdAt: new Timestamp(new Date().getTime() / 1000, 0) // Approximate timestamp
     } as GalleryImage;
 
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error uploading image and saving to Firestore: ", e);
-    throw new Error("Gagal mengunggah gambar dan menyimpan riwayat.");
+    throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
   }
 };
 
@@ -84,15 +84,16 @@ export const uploadGalleryImage = async (file: File): Promise<GalleryImage> => {
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   try {
     // Server-side ordering is removed to prevent index-not-found errors.
+    // If you create the index, you can uncomment the line below and remove client-side sorting.
     // const q = query(galleryCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(galleryCollection);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     } as GalleryImage));
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting documents: ", e);
-    throw new Error("Gagal mengambil daftar gambar dari Firebase.");
+    throw new Error(`Gagal mengambil daftar gambar dari Firebase: ${e.message}`);
   }
 };
 
@@ -108,6 +109,6 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
 
     } catch (e: any) {
         console.error("Error deleting image metadata: ", e);
-        throw new Error("Gagal menghapus riwayat gambar dari Firebase.");
+        throw new Error(`Gagal menghapus riwayat gambar dari Firebase: ${e.message}`);
     }
 };

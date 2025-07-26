@@ -58,9 +58,9 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     
     const docRef = await addDoc(articlesCollection, dataToAdd);
     return docRef.id;
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error adding document: ", e);
-    throw new Error("Gagal menambahkan artikel");
+    throw new Error(`Gagal menambahkan artikel: ${e.message}`);
   }
 };
 
@@ -72,9 +72,9 @@ export const getArticles = async (): Promise<Article[]> => {
       id: doc.id,
       ...doc.data()
     } as Article));
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting documents: ", e);
-    throw new Error("Gagal mengambil daftar artikel");
+    throw new Error(`Gagal mengambil daftar artikel: ${e.message}`);
   }
 };
 
@@ -89,9 +89,9 @@ export const getArticle = async (id: string): Promise<Article | null> => {
       console.log("No such document!");
       return null;
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting document: ", e);
-    throw new Error("Gagal mengambil data artikel");
+    throw new Error(`Gagal mengambil data artikel: ${e.message}`);
   }
 };
 
@@ -117,9 +117,9 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     if (Object.keys(dataToUpdate).length > 0) {
       await updateDoc(docRef, dataToUpdate);
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error updating document: ", e);
-    throw new Error("Gagal memperbarui artikel");
+    throw new Error(`Gagal memperbarui artikel: ${e.message}`);
   }
 };
 
@@ -129,8 +129,8 @@ export const deleteArticle = async (id: string): Promise<void> => {
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error deleting document: ", e);
-    throw new Error("Gagal menghapus artikel");
+    throw new Error(`Gagal menghapus artikel: ${e.message}`);
   }
 };

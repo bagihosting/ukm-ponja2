@@ -19,12 +19,14 @@ export default function GalleryPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
   const { toast } = useToast();
 
   const fetchImages = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const fetchedImages = await getGalleryImages();
       // Sort on the client-side as a temporary fix
@@ -34,12 +36,13 @@ export default function GalleryPage() {
         return dateB - dateA;
       });
       setImages(sortedImages);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch images:", error);
+      setError(error.message);
       toast({
         variant: 'destructive',
-        title: 'Gagal Memuat',
-        description: 'Tidak dapat memuat daftar gambar dari database.',
+        title: 'Gagal Memuat Gambar',
+        description: error.message,
       });
     } finally {
       setIsLoading(false);
@@ -86,7 +89,7 @@ export default function GalleryPage() {
       });
       
       // Refresh the list from Firestore to show the new image
-      fetchImages(); 
+      await fetchImages(); 
 
       setSelectedFile(null);
       const fileInput = document.getElementById('picture') as HTMLInputElement;
@@ -193,6 +196,11 @@ export default function GalleryPage() {
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
+                </div>
+            ) : error ? (
+                <div className="text-center text-red-500 py-8">
+                    <p className="font-semibold">Gagal memuat riwayat gambar.</p>
+                    <p className="text-sm mt-1">{error}</p>
                 </div>
             ) : images.length > 0 ? (
                 <div className="border rounded-md">
