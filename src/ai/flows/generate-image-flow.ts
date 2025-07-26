@@ -1,14 +1,15 @@
 
 'use server';
 /**
- * @fileOverview A flow for generating images from a text prompt.
+ * @fileOverview A flow for generating images from a text prompt and uploading them.
  *
- * - generateImage - A function that generates an image based on a text prompt.
+ * - generateImage - A function that generates an image and returns its public URL.
  * - GenerateImageInput - The input type for the generateImage function.
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
 import { ai } from '@/ai/genkit';
+import { uploadImageToFreeImage } from '@/lib/image-hosting';
 import { z } from 'genkit';
 
 const GenerateImageInputSchema = z.object({
@@ -19,7 +20,7 @@ export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 const GenerateImageOutputSchema = z.object({
   imageUrl: z
     .string()
-    .describe('The data URI of the generated image.'),
+    .describe('The public URL of the generated and hosted image.'),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
@@ -36,6 +37,7 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async ({ prompt }) => {
+    // 1. Generate the image using the AI model
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}`,
@@ -49,6 +51,13 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
 
-    return { imageUrl: imageDataUri };
+    // 2. Upload the generated image to the external hosting service
+    try {
+      const publicUrl = await uploadImageToFreeImage(imageDataUri);
+      return { imageUrl: publicUrl };
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw new Error('Gagal mengunggah gambar yang telah dibuat.');
+    }
   }
 );
