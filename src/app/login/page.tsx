@@ -44,7 +44,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       if (!auth) {
-        throw new Error("Konfigurasi Firebase tidak ditemukan. Aplikasi tidak dapat berfungsi.");
+        throw new Error("Konfigurasi Firebase tidak ditemukan. Pastikan berkas .env Anda sudah benar dan aplikasi telah di-restart.");
       }
       await signInWithEmailAndPassword(auth, values.email, values.password);
       // Redirect is handled by the effect hook, but we can push here as well for faster navigation
@@ -52,33 +52,35 @@ export default function LoginPage() {
     } catch (error: any) {
       let errorMessage = 'Terjadi kesalahan tak terduga. Silakan coba lagi.';
       
-      switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          errorMessage = 'Email atau kata sandi salah. Silakan coba lagi.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Format email tidak valid.';
-          break;
-        case 'auth/user-disabled':
-          errorMessage = 'Akun pengguna ini telah dinonaktifkan.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
-          break;
-        case 'auth/configuration-not-found':
-        case 'auth/invalid-api-key':
-        case 'auth/app-deleted':
-        case 'auth/project-not-found':
-           errorMessage = "Kesalahan Konfigurasi Firebase. Harap periksa kredensial Anda di berkas .env.";
-           break;
-        default:
-           if (error.message.includes("Firebase")) {
-            errorMessage = `Terjadi kesalahan pada Firebase: ${error.message}`;
-           }
-           console.error("Login Error:", error);
-           break;
+      // Handle custom error for missing auth
+      if (error.message.includes("Konfigurasi Firebase tidak ditemukan")) {
+        errorMessage = error.message;
+      } else {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            errorMessage = 'Email atau kata sandi salah. Silakan coba lagi.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Format email tidak valid.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'Akun pengguna ini telah dinonaktifkan.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+            break;
+          default:
+             if (error.message.includes("Firebase")) {
+              errorMessage = `Terjadi kesalahan pada Firebase. Periksa konsol untuk detail.`;
+             }
+             console.error("Login Error:", error);
+             break;
+        }
       }
 
       toast({
@@ -144,8 +146,8 @@ export default function LoginPage() {
                 Sign In
               </Button>
                {!auth && (
-                <p className="text-center text-sm text-destructive">
-                  Konfigurasi Firebase tidak ditemukan. Aplikasi tidak dapat berfungsi.
+                <p className="mt-4 text-center text-sm text-destructive">
+                  Kesalahan Konfigurasi: Kredensial Firebase tidak ditemukan. Periksa berkas .env Anda.
                 </p>
               )}
             </form>

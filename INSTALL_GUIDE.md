@@ -53,10 +53,14 @@ npm install
 
 ## 3. Konfigurasi Lingkungan (Environment)
 
-Aplikasi ini memerlukan kredensial dari Firebase dan Google AI (untuk fitur Genkit) agar dapat berfungsi.
+**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan kredensial dari Firebase dan Google AI agar dapat berfungsi. Tanpa ini, fitur penyimpanan data dan AI tidak akan berjalan.
 
 1.  **Buat Berkas `.env`**:
-    Salin konten dari berkas `.env` yang sudah ada (atau buat berkas baru jika tidak ada) dan pastikan berkas tersebut bernama `.env`.
+    Di dalam direktori utama proyek Anda, buat sebuah berkas baru bernama `.env`.
+    ```bash
+    touch .env
+    ```
+    Salin konten dari berkas `.env.example` (jika ada) atau gunakan templat di bawah.
 
 2.  **Isi Kredensial Firebase**:
     Buka berkas `.env` dan isi variabel berikut dengan kredensial dari proyek Firebase Anda:
@@ -72,11 +76,13 @@ Aplikasi ini memerlukan kredensial dari Firebase dan Google AI (untuk fitur Genk
     Anda dapat menemukan nilai-nilai ini di **Firebase Console** -> **Project Settings** -> **General** -> **Your apps** -> **Firebase SDK snippet** -> **Config**.
 
 3.  **Isi Kunci API Google AI**:
-    Tambahkan kunci API untuk Google AI ke dalam berkas `.env`. Kunci ini diperlukan untuk fitur pembuatan gambar AI.
+    Tambahkan kunci API untuk Google AI ke dalam berkas `.env`. Kunci ini diperlukan untuk fitur pembuatan gambar dan AI Dokter.
     ```
     GEMINI_API_KEY="AIza..."
     ```
     Anda bisa mendapatkan kunci ini dari [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+Pastikan berkas `.env` ini ada di server tempat Anda menjalankan aplikasi.
 
 ## 4. Konfigurasi Firebase Authentication
 

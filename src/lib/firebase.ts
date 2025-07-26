@@ -19,22 +19,34 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-try {
-  if (getApps().length) {
-    app = getApp();
-  } else {
-    app = initializeApp(firebaseConfig);
+// Memeriksa apakah semua variabel environment Firebase yang diperlukan sudah ada.
+const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
+
+if (allConfigPresent) {
+  try {
+    if (getApps().length) {
+      app = getApp();
+    } else {
+      app = initializeApp(firebaseConfig);
+    }
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch (error: any) {
+    console.error("Firebase initialization error:", error.message);
+    // Set to dummy objects to avoid breaking the app if initialization fails
+    app = null as any;
+    auth = null as any;
+    db = null as any;
+    storage = null as any;
   }
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-} catch (error: any) {
-  console.error("Firebase initialization error:", error.message);
-  // Set to dummy objects to avoid breaking the app
-  app = null as any;
-  auth = null as any;
-  db = null as any;
-  storage = null as any;
+} else {
+   console.error("Firebase configuration is incomplete. Please check your .env file.");
+   // Set to dummy objects to avoid breaking the app
+   app = null as any;
+   auth = null as any;
+   db = null as any;
+   storage = null as any;
 }
 
 

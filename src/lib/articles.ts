@@ -20,7 +20,7 @@ import {
 
 
 if (!db) {
-  throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
+  console.error("Firebase has not been initialized. Make sure your .env file is set up correctly. Articles functions will not work.");
 }
 
 const articlesCollection = collection(db, 'articles');
@@ -62,6 +62,7 @@ function toArticle(docSnap: any): Article {
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
+  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat menambahkan artikel.");
   try {
     const dataToAdd: { [key: string]: any } = {
       title: article.title,
@@ -85,6 +86,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
+  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat mengambil artikel.");
   try {
     const q = query(articlesCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
@@ -97,6 +99,7 @@ export const getArticles = async (): Promise<Article[]> => {
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
+  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat mengambil artikel.");
   try {
     const docRef = doc(db, 'articles', id);
     const docSnap = await getDoc(docRef);
@@ -114,6 +117,7 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
+  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat memperbarui artikel.");
   try {
     const docRef = doc(db, 'articles', id);
     
@@ -135,6 +139,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
+  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat menghapus artikel.");
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
