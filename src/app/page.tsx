@@ -4,12 +4,15 @@
 import Link from 'next/link';
 import { getArticles, type Article } from '@/lib/articles';
 import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight } from 'lucide-react';
+
 
 function truncate(text: string, length: number) {
     if (!text || text.length <= length) {
@@ -40,6 +43,10 @@ async function fetchData() {
 
 export default async function HomePage() {
   const { galleryImages, articles } = await fetchData();
+
+  const headlineArticle = articles.length > 0 ? articles[0] : null;
+  const trendingArticles = articles.length > 1 ? articles.slice(1, 5) : [];
+  const healthArticles = articles.length > 5 ? articles.slice(5) : [];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -86,49 +93,123 @@ export default async function HomePage() {
             </div>
           </section>
 
-
           {/* Articles Section */}
-          <section id="articles" className="py-12 space-y-8">
-            <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-              <h2 className="font-bold text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Artikel Terbaru</h2>
-              <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                Baca berita dan pembaruan terkini dari kegiatan kami.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {articles.length > 0 ? (
-                articles.map(article => (
-                  <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <AspectRatio ratio={4 / 3} className="bg-muted">
-                      {article.imageUrl ? (
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
+          <section id="articles" className="py-12 space-y-12">
+            
+            {/* Headline News */}
+            {headlineArticle && (
+              <div>
+                <h2 className="font-bold text-3xl md:text-4xl mb-6">Headline News</h2>
+                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div className="grid md:grid-cols-2">
+                    <AspectRatio ratio={16/9}>
+                       <img
+                          src={headlineArticle.imageUrl || 'https://placehold.co/600x400.png'}
+                          alt={headlineArticle.title}
                           className="w-full h-full object-cover"
+                          data-ai-hint="news article"
                         />
-                      ) : (
-                         <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">Gambar tidak tersedia</div>
-                      )}
                     </AspectRatio>
-                    <CardHeader>
-                      <CardTitle className="text-lg leading-tight">{truncate(article.title, 50)}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <p className="text-sm text-muted-foreground">
-                        {truncate(article.content, 100)}
-                      </p>
-                    </CardContent>
-                    <div className="p-4 pt-0 mt-auto">
-                       <Button variant="outline" className="w-full" asChild>
-                         <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
-                       </Button>
+                    <div className="flex flex-col justify-center p-6">
+                      <CardHeader>
+                        <CardTitle className="text-3xl">{headlineArticle.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                         <p className="text-base text-muted-foreground">
+                          {truncate(headlineArticle.content, 150)}
+                        </p>
+                      </CardContent>
+                      <CardFooter>
+                        <Button asChild>
+                          <Link href={`/artikel/${headlineArticle.id}`}>
+                            Baca Selengkapnya <ArrowRight className="ml-2 h-4 w-4"/>
+                          </Link>
+                        </Button>
+                      </CardFooter>
                     </div>
-                  </Card>
-                ))
-              ) : (
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Trending News */}
+            {trendingArticles.length > 0 && (
+              <div>
+                <h2 className="font-bold text-3xl md:text-4xl mb-6">Berita Trending</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {trendingArticles.map(article => (
+                     <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <AspectRatio ratio={16 / 9} className="bg-muted">
+                        {article.imageUrl ? (
+                            <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
+                        )}
+                        </AspectRatio>
+                        <CardHeader>
+                          <CardTitle className="text-xl leading-tight">{truncate(article.title, 60)}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                          <p className="text-sm text-muted-foreground">
+                            {truncate(article.content, 100)}
+                          </p>
+                        </CardContent>
+                        <CardFooter>
+                           <Button variant="outline" className="w-full" asChild>
+                             <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
+                           </Button>
+                        </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Health Information */}
+            {healthArticles.length > 0 && (
+              <div>
+                <h2 className="font-bold text-3xl md:text-4xl mb-6">Informasi Kesehatan</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {healthArticles.map(article => (
+                     <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <AspectRatio ratio={4 / 3} className="bg-muted">
+                        {article.imageUrl ? (
+                            <img
+                            src={article.imageUrl}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground" data-ai-hint="placeholder image">Gambar tidak tersedia</div>
+                        )}
+                        </AspectRatio>
+                        <CardHeader>
+                          <CardTitle className="text-lg leading-tight">{truncate(article.title, 50)}</CardTitle>
+                        </CardHeader>
+                         <CardContent className="flex-grow">
+                          <p className="text-sm text-muted-foreground">
+                            {truncate(article.content, 80)}
+                          </p>
+                        </CardContent>
+                        <CardFooter>
+                           <Button variant="outline" className="w-full" asChild>
+                             <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
+                           </Button>
+                        </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {articles.length === 0 && (
                 <p className="col-span-full text-center text-muted-foreground py-8">Belum ada artikel yang dipublikasikan.</p>
-              )}
-            </div>
+            )}
+
           </section>
           
           {/* Programs & Reports Section */}
