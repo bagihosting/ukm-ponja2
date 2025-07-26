@@ -105,7 +105,7 @@ export default async function HomePage() {
             {/* Headline News */}
             {headlineArticle && (
               <div>
-                <h2 className="font-bold text-3xl md:text-4xl mb-6">Headline News</h2>
+                <h2 className="font-bold text-3xl md:text-4xl mb-6">Artikel Terbaru</h2>
                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="grid md:grid-cols-2">
                     <AspectRatio ratio={16/9}>
@@ -262,3 +262,4 @@ export default async function HomePage() {
     </div>
   );
 }
+    
