@@ -49,7 +49,7 @@ function toArticle(docSnap: any): Article {
     title: data.title,
     content: data.content,
     imageUrl: data.imageUrl,
-    // Convert Timestamp to ISO string for safe serialization
+    // Convert Timestamp to ISO string for safe serialization, with a fallback
     createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
   };
 }
@@ -143,7 +143,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     if (article.title !== undefined) dataToUpdate.title = article.title;
     if (article.content !== undefined) dataToUpdate.content = article.content;
 
-    // Handle imageUrl separately for deletion
+    // Handle imageUrl separately for deletion. Use deleteField() for robust removal.
     if (article.imageUrl === '' || article.imageUrl === null) {
       dataToUpdate.imageUrl = deleteField();
     } else if (article.imageUrl) {

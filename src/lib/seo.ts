@@ -10,19 +10,21 @@ export interface SEOData {
   keywords: string;
 }
 
+const SEO_DOC_PATH = 'settings/seo';
+
 /**
  * Retrieves SEO settings from Firestore.
- * @returns A promise that resolves with the SEO data, or null if it doesn't exist.
+ * @returns A promise that resolves with the SEO data, or null if it doesn't exist or on error.
  */
 export async function getSEOSettings(): Promise<SEOData | null> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. SEO settings will not be available.");
+    console.warn("Firebase is not initialized. SEO settings will not be available.");
     return null;
   }
   
   try {
-    const seoSettingsRef = doc(db, 'settings', 'seo');
+    const seoSettingsRef = doc(db, SEO_DOC_PATH);
     const docSnap = await getDoc(seoSettingsRef);
     if (docSnap.exists()) {
       return docSnap.data() as SEOData;
@@ -36,20 +38,19 @@ export async function getSEOSettings(): Promise<SEOData | null> {
 }
 
 /**
- * Updates SEO settings in Firestore.
+ * Updates SEO settings in Firestore. Creates the document if it doesn't exist.
  * @param data - The SEO data to save.
  */
 export async function updateSEOSettings(data: SEOData): Promise<void> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. SEO settings cannot be updated.");
+    console.error("Firebase is not initialized. SEO settings cannot be updated.");
     throw new Error("Layanan database tidak tersedia.");
   }
   
   try {
-    const seoSettingsRef = doc(db, 'settings', 'seo');
-    // Use setDoc with merge:true to create the document if it doesn't exist,
-    // or update it if it does.
+    const seoSettingsRef = doc(db, SEO_DOC_PATH);
+    // Use setDoc with merge:true to create or update the document.
     await setDoc(seoSettingsRef, data, { merge: true });
   } catch (error: any) {
     console.error("Error updating SEO settings: ", error);

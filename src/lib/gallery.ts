@@ -40,7 +40,7 @@ function toGalleryImage(docSnap: any): GalleryImage {
     name: data.name,
     url: data.url,
     category: data.category || 'Lain-lain',
-    // Convert Timestamp to ISO string for safe serialization
+    // Convert Timestamp to ISO string for safe serialization, with a fallback
     createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
   };
 }
@@ -59,7 +59,6 @@ function fileToDataUri(file: File): Promise<string> {
 /**
  * Adds a new gallery image record to Firestore.
  * This function is now simpler and only handles saving data.
- * The categorization logic has been moved to the calling components.
  * @param imageData The data for the new image record, including the category.
  * @returns The ID of the newly created document.
  */
@@ -101,16 +100,13 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
   }
   
   try {
-    // 1. Convert file to data URI
-    const dataUri = await fileToDataUri(file);
-
-    // 2. Upload to external host (freeimage.host)
-    const url = await uploadImageToFreeImage(dataUri);
+    // 1. Upload to external host (freeimage.host) using the File object directly
+    const url = await uploadImageToFreeImage(file);
     
-    // 3. Categorize the image
+    // 2. Categorize the image using its public URL
     const category = await categorizeImage({ imageUrl: url });
 
-    // 4. Save metadata to Firestore
+    // 3. Save metadata to Firestore
     return await addGalleryImageRecord({
         name: file.name,
         url: url,

@@ -80,6 +80,7 @@ export async function addProgram(program: ProgramInput): Promise<string> {
       createdAt: serverTimestamp(),
     };
     
+    // Add optional fields only if they have a valid, non-empty value
     if (program.imageUrl && program.imageUrl.trim() !== '') {
         dataToAdd.imageUrl = program.imageUrl;
     }
@@ -159,7 +160,7 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
     if (program.category !== undefined) dataToUpdate.category = program.category;
     if (program.description !== undefined) dataToUpdate.description = program.description;
     
-    // Handle optional fields that can be added, updated, or deleted
+    // Robustly handle optional fields that can be added, updated, or deleted
     if (program.imageUrl === null || program.imageUrl === '') {
         dataToUpdate.imageUrl = deleteField();
     } else if (program.imageUrl) {
