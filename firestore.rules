@@ -4,50 +4,48 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if a user is authenticated.
-    // In a real-world scenario, you might also check for a 'role' claim.
-    function isAdmin() {
+    // == Helper Functions ==
+    // Checks if the user is authenticated.
+    function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Rules for the 'articles' collection
-    match /articles/{articleId} {
-      // Anyone can read the list of articles or a single article.
-      allow get, list: if true;
-      // Only authenticated admins can create, update, or delete articles.
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // Rules for the 'programs' collection
-    match /programs/{programId} {
-      // Anyone can read the list of programs or a single program.
-      allow get, list: if true;
-      // Only authenticated admins can create, update, or delete programs.
-      allow create, update, delete: if isAdmin();
+    // Checks if the authenticated user is an admin by looking up their role in the 'users' collection.
+    // This is a secure way to manage roles.
+    function isAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Admin', 'Super Admin'];
     }
 
-    // Rules for the 'galleryImages' collection
-    match /galleryImages/{imageId} {
-      // Anyone can read the list of gallery images or a single image record.
-      allow get, list: if true;
-      // Only authenticated admins can create, update, or delete gallery image records.
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // Rules for the 'settings' collection
-    match /settings/{settingId} {
-      // Anyone can read settings documents (like SEO).
-      allow get, list: if true;
-      // Only authenticated admins can write to settings.
+    // == Collection Rules ==
+
+    // Articles: Public can read, only admins can write.
+    match /articles/{articleId} {
+      allow read: if true;
       allow write: if isAdmin();
     }
     
-    // Rules for the 'users' collection
+    // Programs: Public can read, only admins can write.
+    match /programs/{programId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Gallery Images: Public can read, only admins can write.
+    match /galleryImages/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Settings (for SEO): Public can read, only admins can write.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users collection: Only admins can list/view user data.
+    // No one can write to prevent privilege escalation from the client.
     match /users/{userId} {
-       // Only admins can read user data. No one can list all users from the client.
-      allow get: if isAdmin();
-      // Writing to the users collection should be handled by server-side logic or functions, not directly from the client.
-      allow list, write: if false;
+      allow read, write: if isAdmin();
     }
   }
 }
