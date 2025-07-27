@@ -3,7 +3,7 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
-import { uploadImageToFreeImage } from './image-hosting';
+import { uploadImageToCloudinary } from './image-hosting';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { revalidatePath } from 'next/cache';
 
@@ -56,6 +56,7 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
     
     // Revalidate the public gallery page to show the new image
     revalidatePath('/galeri');
+    revalidatePath('/dashboard/gallery');
 
     return docRef.id;
   } catch (error: any) {
@@ -69,15 +70,15 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
 
 
 /**
- * Uploads an image file to freeimage.host and saves its metadata to Firestore.
+ * Uploads an image file to Cloudinary and saves its metadata to Firestore.
  * This function orchestrates the entire upload process, including categorization.
  * @param file The image file to upload.
  * @returns A promise that resolves with the metadata of the newly added image.
  */
 export const uploadGalleryImage = async (file: File): Promise<string> => {
   try {
-    // 1. Upload to external host (freeimage.host) using the File object directly
-    const url = await uploadImageToFreeImage(file);
+    // 1. Upload to external host (Cloudinary) using the File object directly
+    const url = await uploadImageToCloudinary(file);
     
     // 2. Categorize the image using its public URL
     const category = await categorizeImage({ imageUrl: url });
@@ -88,9 +89,6 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
         url: url,
         category: category,
     });
-    
-    // Revalidate gallery page
-    revalidatePath('/galeri');
     
     return recordId;
 
@@ -132,6 +130,7 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
     
     // Revalidate the public gallery page after deleting an image
     revalidatePath('/galeri');
+    revalidatePath('/dashboard/gallery');
 
   } catch (error: any)
 {

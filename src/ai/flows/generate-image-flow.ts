@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { uploadImageToCloudinary } from '@/lib/image-hosting';
 
 
 const GenerateImageInputSchema = z.object({
@@ -51,7 +51,7 @@ const generateImageFlow = ai.defineFlow(
     }
     
     // 2. Upload the generated image data URI to get a public URL
-    const publicUrl = await uploadImageToFreeImage(imageDataUri);
+    const publicUrl = await uploadImageToCloudinary(imageDataUri);
 
     // 3. Return the public URL
     return { publicUrl };

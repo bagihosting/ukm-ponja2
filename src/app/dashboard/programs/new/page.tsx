@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addProgram, getProgram, updateProgram } from '@/lib/programs';
-import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { uploadImageToCloudinary } from '@/lib/image-hosting';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
 import { addGalleryImageRecord } from '@/lib/gallery';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
@@ -142,7 +142,7 @@ export default function NewProgramPage() {
     }
     setIsUploadingPicPhoto(true);
     try {
-      const url = await uploadImageToFreeImage(picPhotoFile);
+      const url = await uploadImageToCloudinary(picPhotoFile);
       setValue('personInChargePhotoUrl', url, { shouldValidate: true });
       toast({ title: 'Berhasil!', description: 'Foto penanggung jawab berhasil diunggah.' });
       setPicPhotoFile(null);

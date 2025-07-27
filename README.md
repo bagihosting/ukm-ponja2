@@ -53,7 +53,7 @@ npm install
 
 ## 3. Konfigurasi Lingkungan (Environment)
 
-**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan dua set kredensial: satu untuk **klien** (berprefik `NEXT_PUBLIC_`) dan satu untuk **server** (berprefik `FIREBASE_ADMIN_`). Tanpa ini, fitur-fitur penting seperti login, penyimpanan data, dan AI tidak akan berjalan.
+**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan beberapa set kredensial. Tanpa ini, fitur-fitur penting seperti login, penyimpanan data, dan AI tidak akan berjalan.
 
 1.  **Buat Berkas `.env`**:
     Di dalam direktori utama proyek Anda, buat sebuah berkas baru bernama `.env`.
@@ -79,11 +79,19 @@ npm install
     # Kunci privat yang sudah di-encode ke Base64 (lihat instruksi di bawah)
     FIREBASE_ADMIN_PRIVATE_KEY_BASE64="LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5..."
 
-    # --- Kunci API Google AI ---
+    # --- Kunci API Google AI (Rahasia) ---
     GEMINI_API_KEY="AIza..."
+
+    # --- Konfigurasi Cloudinary (Hosting Gambar) ---
+    # Nama Cloud Anda, dapat dilihat di dasbor Cloudinary
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="nama-cloud-anda"
+    # Kunci API, dapat dilihat di dasbor Cloudinary (JANGAN DIBAGIKAN)
+    CLOUDINARY_API_KEY="12345..."
+    # Rahasia API, dapat dilihat di dasbor Cloudinary (JANGAN DIBAGIKAN)
+    CLOUDINARY_API_SECRET="abcde..."
     ```
 
-### 3.1. Mendapatkan Kredensial Klien (NEXT_PUBLIC_*)
+### 3.1. Mendapatkan Kredensial Klien Firebase (NEXT_PUBLIC_*)
 
 Nilai-nilai ini aman untuk diekspos di browser.
 1. Buka **Firebase Console**.
@@ -92,39 +100,43 @@ Nilai-nilai ini aman untuk diekspos di browser.
 4. Di bagian **Firebase SDK snippet**, pilih **Config**.
 5. Salin nilai-nilai yang sesuai ke dalam variabel `NEXT_PUBLIC_*` di berkas `.env` Anda.
 
-### 3.2. Mendapatkan Kredensial Admin Server (FIREBASE_ADMIN_*)
+### 3.2. Mendapatkan Kredensial Admin Server Firebase (FIREBASE_ADMIN_*)
 
 Nilai-nilai ini **SANGAT RAHASIA** dan hanya boleh digunakan di server. **JANGAN PERNAH** membagikannya di sisi klien.
 
 1.  **Unduh Kunci Privat**:
     *   Buka **Firebase Console** -> **Project settings**.
     *   Navigasi ke tab **Service accounts**.
-    *   Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh secara otomatis (misalnya, `proyek-anda-firebase-adminsdk.json`).
+    *   Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh.
 
 2.  **Isi `FIREBASE_ADMIN_CLIENT_EMAIL`**:
-    *   Buka file JSON yang baru saja diunduh.
-    *   Salin nilai dari `"client_email"` dan tempelkan ke `FIREBASE_ADMIN_CLIENT_EMAIL` di file `.env` Anda.
+    *   Buka file JSON yang baru saja diunduh dan salin nilai dari `"client_email"`.
 
 3.  **Encode dan Isi `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`**:
-    *   Kunci privat mengandung karakter khusus yang sulit disimpan langsung di `.env`. Solusinya adalah mengubahnya menjadi format **Base64**.
-    *   Buka terminal Anda dan jalankan perintah berikut, ganti `path/to/your/keyfile.json` dengan path sebenarnya ke file JSON yang Anda unduh:
+    *   Ubah kunci privat menjadi format **Base64** untuk keamanan. Jalankan perintah ini di terminal:
         ```bash
-        # Perintah ini akan membaca file JSON, mengekstrak nilai "private_key", dan meng-encode-nya ke Base64
+        # Ganti path/to/your/keyfile.json dengan path file JSON Anda
         cat path/to/your/keyfile.json | jq -r .private_key | base64 | tr -d '\n'
         ```
         *Jika Anda tidak memiliki `jq`, instal dengan: `sudo apt-get install jq`*
-    *   **Salin seluruh output** dari perintah di atas (ini adalah satu baris teks yang panjang).
-    *   Tempelkan ke `FIREBASE_ADMIN_PRIVATE_KEY_BASE64` di file `.env` Anda.
+    *   **Salin seluruh output** dan tempelkan ke `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`.
 
 ### 3.3. Mendapatkan Kunci API Google AI (GEMINI_API_KEY)
 
-Kunci ini diperlukan untuk fitur AI seperti Tanya Dokter dan pembuatan gambar.
 1. Buka [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Buat kunci API baru dan salin nilainya ke `GEMINI_API_KEY` di berkas `.env` Anda.
+2. Buat kunci API baru dan salin nilainya ke `GEMINI_API_KEY`.
+
+### 3.4. Mendapatkan Kredensial Cloudinary
+
+Layanan ini digunakan untuk meng-host semua gambar yang diunggah.
+1. Buat akun di [Cloudinary](https://cloudinary.com/).
+2. Buka **Dashboard** Anda.
+3. Salin nilai-nilai berikut ke dalam berkas `.env`:
+    *   `Cloud Name` -> `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+    *   `API Key` -> `CLOUDINARY_API_KEY`
+    *   `API Secret` -> `CLOUDINARY_API_SECRET`
 
 ## 4. Konfigurasi Firebase Authentication
-
-Agar fitur login berfungsi, Anda harus mengaktifkan metode **Email/Password** di Firebase Authentication.
 
 1.  Buka **Firebase Console**.
 2.  Navigasi ke **Authentication** -> **Sign-in method**.
@@ -144,11 +156,9 @@ Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`.
 
 ## 6. Menjalankan Aplikasi di Latar Belakang dengan PM2 (Opsional)
 
-Untuk menjalankan aplikasi secara persisten di latar belakang (misalnya di server produksi), disarankan menggunakan manajer proses seperti `pm2`.
+Untuk menjalankan aplikasi secara persisten di server produksi, gunakan manajer proses seperti `pm2`.
 
 ### 6.1. Instalasi PM2
-
-Jalankan perintah berikut untuk menginstal PM2 secara global:
 
 ```bash
 sudo npm install pm2 -g
@@ -157,56 +167,29 @@ sudo npm install pm2 -g
 ### 6.2. Menjalankan Aplikasi dengan PM2
 
 1.  **Build Aplikasi untuk Produksi**:
-    Sebelum menjalankan dengan PM2, Anda harus membuat build produksi dari aplikasi Next.js Anda.
-
     ```bash
     npm run build
     ```
 
 2.  **Jalankan Aplikasi**:
-    Gunakan PM2 untuk menjalankan skrip `start` dari `package.json`. Perintah ini akan menjalankan aplikasi di latar belakang dan memberinya nama `ukm-ponja-app`.
-
     ```bash
     pm2 start npm --name "ukm-ponja-app" -- run start
     ```
-    Aplikasi Anda sekarang berjalan di port 3002 di latar belakang.
 
 ### 6.3. Mengelola Aplikasi dengan PM2
 
-Berikut adalah beberapa perintah dasar untuk mengelola aplikasi Anda dengan PM2:
-
--   **Melihat status semua aplikasi**:
-    ```bash
-    pm2 list
-    ```
-
--   **Melihat log aplikasi**:
-    ```bash
-    pm2 logs ukm-ponja-app
-    ```
-
--   **Menghentikan aplikasi**:
-    ```bash
-    pm2 stop ukm-ponja-app
-    ```
-
--   **Memulai ulang aplikasi**:
-    ```bash
-    pm2 restart ukm-ponja-app
-    ```
+-   **Melihat status**: `pm2 list`
+-   **Melihat log**: `pm2 logs ukm-ponja-app`
+-   **Menghentikan**: `pm2 stop ukm-ponja-app`
+-   **Memulai ulang**: `pm2 restart ukm-ponja-app`
 
 ### 6.4. Menjalankan PM2 saat Startup
-
-Agar PM2 secara otomatis memulai ulang aplikasi Anda setelah server reboot, jalankan perintah berikut:
 
 ```bash
 pm2 startup
 ```
-
-PM2 akan memberikan Anda sebuah perintah untuk dijalankan. Salin dan jalankan perintah tersebut (biasanya memerlukan `sudo`). Setelah itu, simpan daftar proses Anda saat ini:
-
+Jalankan perintah yang diberikan oleh PM2, lalu simpan daftar proses Anda:
 ```bash
 pm2 save
 ```
-
-Sekarang, aplikasi Anda akan otomatis berjalan setiap kali server dinyalakan.
+Aplikasi Anda sekarang akan otomatis berjalan setiap kali server dinyalakan.

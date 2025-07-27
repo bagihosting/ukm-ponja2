@@ -1,63 +1,86 @@
 
 'use server';
 
-const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
-const FREEIMAGE_API_URL = 'https://freeimage.host/api/1/upload';
+import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
+
+// Configure Cloudinary with credentials from environment variables
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+        secure: true,
+    });
+} else {
+    console.warn(
+      'Cloudinary configuration is missing. Image uploads will fail. ' +
+      'Please check your .env file for CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.'
+    );
+}
 
 /**
- * Mengunggah gambar ke layanan freeimage.host.
- * Fungsi ini dapat menerima gambar dalam format data URI atau sebagai objek File.
- * @param source - Gambar yang akan diunggah, bisa berupa string data URI atau objek File.
- * @returns URL publik dari gambar yang diunggah.
- * @throws Akan melempar error jika unggahan gagal atau respons dari API tidak valid.
+ * Converts a file or Blob into a Base64 data URI.
+ * @param file The File or Blob object to convert.
+ * @returns A promise that resolves with the data URI string.
  */
-export async function uploadImageToFreeImage(source: string | File): Promise<string> {
-  let imageBlob: Blob;
-  let fileName = 'image.png';
+async function toDataURI(file: File | Blob): Promise<string> {
+  const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    // This is a browser API, so this check prevents server-side errors
+    if (typeof window !== 'undefined') {
+        reader.readAsDataURL(file);
+    } else {
+        // This part won't be executed in the browser, it's for type safety
+        reject(new Error("FileReader is not available in this environment."));
+    }
+  });
+}
 
-  if (typeof source === 'string') {
-    // Handle data URI
-    if (!source.startsWith('data:image/')) {
-        throw new Error('Invalid data URI format. Expected "data:image/...".');
-    }
-    const base64Data = source.split(',')[1];
-    if (!base64Data) {
-      throw new Error('Data URI tidak valid atau tidak berisi konten base64.');
-    }
-    const imageBuffer = Buffer.from(base64Data, 'base64');
-    imageBlob = new Blob([imageBuffer]);
-  } else {
-    // Handle File object
-    imageBlob = source;
-    fileName = source.name;
+/**
+ * Uploads an image to Cloudinary.
+ * This function can accept an image as a data URI string or a File object.
+ * @param source The image source, which can be a data URI string or a File object.
+ * @returns The secure URL of the uploaded image.
+ * @throws Will throw an error if the upload fails or the API response is invalid.
+ */
+export async function uploadImageToCloudinary(source: string | File): Promise<string> {
+  // Ensure Cloudinary is configured before attempting to upload
+  if (!cloudinary.config().api_key) {
+      throw new Error('Cloudinary is not configured. Cannot upload image.');
   }
-  
-  try {
-    const formData = new FormData();
-    formData.append('key', FREEIMAGE_API_KEY);
-    // 'source' is the field name for the image data for freeimage.host
-    formData.append('source', imageBlob, fileName);
-    formData.append('format', 'json');
 
-    const response = await fetch(FREEIMAGE_API_URL, {
-      method: 'POST',
-      body: formData,
+  try {
+    let fileToUpload: string;
+
+    // If the source is a File object, convert it to a data URI first.
+    // This is necessary because this server action can be called from client components.
+    if (source instanceof File) {
+        const buffer = await source.arrayBuffer();
+        const base64String = Buffer.from(buffer).toString('base64');
+        const mimeType = source.type;
+        fileToUpload = `data:${mimeType};base64,${base64String}`;
+    } else if (typeof source === 'string' && source.startsWith('data:image')) {
+        fileToUpload = source;
+    } else {
+        throw new Error('Invalid image source. Must be a data URI or a File object.');
+    }
+    
+    const result: UploadApiResponse = await cloudinary.uploader.upload(fileToUpload, {
+      folder: 'ukm-ponja-app', // Optional: organize uploads into a specific folder
+      resource_type: 'image',
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gagal mengunggah gambar: ${response.statusText} - ${errorText}`);
-    }
-
-    const result = await response.json();
-
-    if (result.status_code === 200 && result.image?.url) {
-      return result.image.url;
+    if (result && result.secure_url) {
+      return result.secure_url;
     } else {
-      throw new Error(`Respons API tidak valid: ${JSON.stringify(result)}`);
+      throw new Error(`Cloudinary API response was invalid: ${JSON.stringify(result)}`);
     }
   } catch (error: any) {
-    console.error('Error saat mengunggah ke freeimage.host:', error);
-    throw new Error(`Gagal mengunggah gambar ke hosting: ${error.message}`);
+    console.error('Error uploading to Cloudinary:', error);
+    // Provide a more user-friendly error message
+    const errorMessage = error.message || 'An unknown error occurred during the upload.';
+    throw new Error(`Failed to upload image to Cloudinary: ${errorMessage}`);
   }
 }
