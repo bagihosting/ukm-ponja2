@@ -55,14 +55,14 @@ export default async function HomePage() {
   const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan').slice(0, 5);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <PortalNavbar />
       <main className="flex-1">
-        <div className="container relative space-y-12">
+        <div className="container px-4 md:px-6 space-y-16 md:space-y-24">
           
           {/* Slider Section */}
           {galleryImages.length > 0 && (
-            <section className="pt-8" aria-label="Galeri Kegiatan Terbaru">
+            <section className="pt-8 md:pt-12" aria-label="Galeri Kegiatan Terbaru">
                 <Carousel 
                     opts={{
                     align: "start",
@@ -83,32 +83,32 @@ export default async function HomePage() {
                         </CarouselItem>
                     ))}
                     </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex" />
-                    <CarouselNext className="hidden sm:flex" />
+                    <CarouselPrevious className="hidden sm:flex left-[-50px]" />
+                    <CarouselNext className="hidden sm:flex right-[-50px]" />
                 </Carousel>
             </section>
           )}
 
           {/* Intro Section */}
-          <section className="py-12 text-center" aria-labelledby="intro-heading">
-            <div className="mx-auto max-w-3xl">
-                <h1 id="intro-heading" className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl">Selamat Datang di UKM PONJA</h1>
-                <p className="mt-6 text-lg leading-8 text-muted-foreground">
+          <section className="py-8 md:py-12 text-center" aria-labelledby="intro-heading">
+            <div className="mx-auto max-w-4xl">
+                <h1 id="intro-heading" className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">Selamat Datang di UKM PONJA</h1>
+                <p className="mt-6 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
                     Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
                 </p>
             </div>
           </section>
 
           {/* AI Doctor Section */}
-          <section id="ai-doctor" className="py-12" aria-label="Konsultasi dengan AI Dokter">
+          <section id="ai-doctor" className="py-8 md:py-12 max-w-4xl mx-auto" aria-label="Konsultasi dengan AI Dokter">
             <AiDoctor />
           </section>
 
           {/* Articles Section */}
-          <section id="articles" className="py-12 space-y-16" aria-labelledby="articles-heading">
-             <div className="text-center">
-                 <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">Artikel & Berita Kesehatan</h2>
-                 <p className="mt-4 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">Ikuti berita terbaru dan dapatkan informasi kesehatan terpercaya dari kami.</p>
+          <section id="articles" className="py-8 md:py-12 space-y-12" aria-labelledby="articles-heading">
+             <div className="text-center max-w-4xl mx-auto">
+                 <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Artikel & Berita Kesehatan</h2>
+                 <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Ikuti berita terbaru dan dapatkan informasi kesehatan terpercaya dari kami.</p>
             </div>
             
             {/* Headline News */}
@@ -116,17 +116,17 @@ export default async function HomePage() {
               <div>
                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="grid md:grid-cols-2">
-                    <div className="order-last md:order-first flex flex-col justify-center p-6 md:p-8">
-                      <CardHeader>
-                         <Badge variant="secondary" className="w-fit mb-4">Artikel Terbaru</Badge>
-                        <CardTitle className="text-3xl font-bold">{headlineArticle.title}</CardTitle>
+                    <div className="order-last md:order-first flex flex-col justify-center p-6 lg:p-8">
+                      <CardHeader className="p-0 mb-4">
+                         <Badge variant="secondary" className="w-fit mb-2">Artikel Terbaru</Badge>
+                        <CardTitle className="text-2xl font-bold leading-tight md:text-3xl">{headlineArticle.title}</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                         <p className="text-base text-muted-foreground leading-relaxed">
+                      <CardContent className="p-0">
+                         <p className="text-sm text-muted-foreground leading-relaxed md:text-base">
                           {truncate(headlineArticle.content, 180)}
                         </p>
                       </CardContent>
-                      <CardFooter>
+                      <CardFooter className="p-0 mt-6">
                         <Button asChild>
                           <Link href={`/artikel/${headlineArticle.id}`}>
                             Baca Selengkapnya <ArrowRight className="ml-2 h-4 w-4"/>
@@ -134,7 +134,7 @@ export default async function HomePage() {
                         </Button>
                       </CardFooter>
                     </div>
-                     <AspectRatio ratio={16/9}>
+                     <AspectRatio ratio={4/3} className="md:ratio-auto">
                        <img
                           src={headlineArticle.imageUrl || 'https://placehold.co/600x400.png'}
                           alt={headlineArticle.title}
@@ -149,23 +149,23 @@ export default async function HomePage() {
 
             {/* Trending News */}
             {trendingArticles.length > 0 && (
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center">Berita Trending</h3>
+              <div className="space-y-8">
+                <h3 className="text-2xl md:text-3xl font-bold text-center">Berita Trending</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {trendingArticles.map(article => (
-                     <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <Link href={`/artikel/${article.id}`} aria-label={`Baca artikel: ${article.title}`}>
+                     <Card key={article.id} className="group flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <Link href={`/artikel/${article.id}`} aria-label={`Baca artikel: ${article.title}`} className="block overflow-hidden">
                             <AspectRatio ratio={16 / 9} className="bg-muted">
                                 <img
                                 src={article.imageUrl || 'https://placehold.co/400x225.png'}
                                 alt={article.title}
-                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 data-ai-hint="news placeholder"
                                 />
                             </AspectRatio>
                         </Link>
                         <CardHeader className="flex-grow p-4">
-                          <h4 className="text-lg font-semibold leading-tight mb-2">
+                          <h4 className="text-md font-semibold leading-tight mb-2 sm:text-lg">
                             <Link href={`/artikel/${article.id}`} className="hover:underline">
                                 {truncate(article.title, 60)}
                             </Link>
@@ -176,40 +176,6 @@ export default async function HomePage() {
                             })}
                           </p>
                         </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Health Information */}
-            {healthArticles.length > 0 && (
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center">Informasi Kesehatan Lainnya</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {healthArticles.map(article => (
-                     <Card key={article.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <AspectRatio ratio={4 / 3} className="bg-muted">
-                            <img
-                            src={article.imageUrl || 'https://placehold.co/400x300.png'}
-                            alt={article.title}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            data-ai-hint="health information"
-                            />
-                        </AspectRatio>
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base font-semibold leading-tight">{truncate(article.title, 50)}</CardTitle>
-                        </CardHeader>
-                         <CardContent className="flex-grow px-4 pb-4">
-                          <p className="text-sm text-muted-foreground">
-                            {truncate(article.content, 80)}
-                          </p>
-                        </CardContent>
-                        <CardFooter className="p-4 bg-muted/50">
-                           <Button variant="outline" className="w-full" asChild>
-                             <Link href={`/artikel/${article.id}`}>Baca Selengkapnya</Link>
-                           </Button>
-                        </CardFooter>
                     </Card>
                   ))}
                 </div>
@@ -227,12 +193,12 @@ export default async function HomePage() {
           </section>
           
           {/* Programs & Reports Section */}
-          <section id="programs-reports" className="py-12" aria-labelledby="programs-reports-title">
-             <div className="text-center">
-                 <h2 id="programs-reports-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">Program & Laporan</h2>
-                 <p className="mt-4 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">Jelajahi inisiatif dan akses laporan publik dari kegiatan kami.</p>
+          <section id="programs-reports" className="py-8 md:py-12" aria-labelledby="programs-reports-title">
+             <div className="text-center max-w-4xl mx-auto">
+                 <h2 id="programs-reports-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Program & Laporan</h2>
+                 <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi inisiatif dan akses laporan publik dari kegiatan kami.</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 mt-12">
+            <div className="grid lg:grid-cols-2 gap-8 mt-12">
                 <div id="programs" className="space-y-6">
                     {programs.length > 0 ? (
                     <div className="grid sm:grid-cols-2 gap-6">
@@ -283,18 +249,18 @@ export default async function HomePage() {
                     </div>
                 </div>
 
-                <div id="reports" className="space-y-6">
-                    <Card className="shadow-lg h-full flex flex-col justify-between">
+                <div id="reports" className="flex">
+                    <Card className="shadow-lg w-full flex flex-col justify-between">
                          <CardHeader>
                              <CardTitle>Laporan Publik</CardTitle>
                              <CardDescription>Akses laporan dan dokumen publik dari kegiatan kami.</CardDescription>
                          </CardHeader>
-                        <CardContent className="text-center text-muted-foreground flex-grow flex items-center justify-center">
-                            <p>Fitur ini sedang dalam pengembangan.</p>
+                        <CardContent className="text-center text-muted-foreground flex-grow flex flex-col items-center justify-center">
+                            <p className="font-medium">Fitur ini sedang dalam pengembangan.</p>
                         </CardContent>
                          <CardFooter className="justify-center">
                             <Button asChild variant="secondary">
-                                <Link href="/laporan">Lihat Laporan</Link>
+                                <Link href="/laporan">Lihat Halaman Laporan</Link>
                             </Button>
                          </CardFooter>
                     </Card>
