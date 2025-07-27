@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Settings, LogOut } from 'lucide-react';
+import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Settings, LogOut, TrendingUp } from 'lucide-react';
 
 import { getClientAuth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -79,6 +79,7 @@ const navLinks = [
   { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
   { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
   { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
+  { href: "/dashboard/seo", icon: TrendingUp, label: "SEO", disabled: false },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
 ];
 

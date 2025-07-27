@@ -1,199 +1,168 @@
+
 'use client';
 
-import Link from 'next/link';
-import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
-import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Settings, LogOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 
-import { getClientAuth } from '@/lib/firebase';
-import { useAuth } from '@/context/auth-context';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { getSEOSettings, updateSEOSettings } from '@/lib/seo';
+import { Skeleton } from '@/components/ui/skeleton';
 
-function UserNav() {
-  const { user } = useAuth();
-  const router = useRouter();
+const seoSchema = z.object({
+  title: z.string().min(1, { message: 'Judul situs tidak boleh kosong.' }),
+  description: z.string().min(1, { message: 'Deskripsi situs tidak boleh kosong.' }),
+  keywords: z.string().min(1, { message: 'Kata kunci tidak boleh kosong.' }),
+});
+
+type SEOFormValues = z.infer<typeof seoSchema>;
+
+export default function SEOPage() {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleLogout = async () => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<SEOFormValues>({
+    resolver: zodResolver(seoSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      keywords: '',
+    },
+  });
+
+  useEffect(() => {
+    async function fetchSeoData() {
+      setIsLoading(true);
+      try {
+        const seoData = await getSEOSettings();
+        if (seoData) {
+          reset(seoData);
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Gagal Memuat',
+          description: 'Gagal memuat pengaturan SEO.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchSeoData();
+  }, [reset, toast]);
+
+  const onSubmit = async (data: SEOFormValues) => {
     try {
-      const auth = getClientAuth();
-      await signOut(auth);
-      router.push('/login');
+      await updateSEOSettings(data);
       toast({
-        title: 'Logout',
-        description: 'Anda telah berhasil keluar.',
+        title: 'Berhasil!',
+        description: 'Pengaturan SEO telah berhasil diperbarui.',
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Gagal Logout',
-        description: error.message,
+        title: 'Gagal Menyimpan',
+        description: `Terjadi kesalahan: ${error.message}`,
       });
     }
   };
   
-  const getInitials = (email: string | null | undefined) => {
-    if (!email) return 'AD';
-    return email.substring(0, 2).toUpperCase();
-  };
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" className="rounded-full">
-           <Avatar>
-            <AvatarImage src={user?.photoURL ?? undefined} />
-            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
-          </Avatar>
-          <span className="sr-only">Toggle user menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <Link href="/dashboard/settings" passHref>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Pengaturan</span>
-          </DropdownMenuItem>
-        </Link>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Keluar</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-const navLinks = [
-  { href: "/dashboard", icon: HeartPulse, label: "Dashboard", disabled: false },
-  { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
-  { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
-  { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
-  { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
-];
-
-function SidebarNav() {
-    const pathname = usePathname();
+  if (isLoading) {
     return (
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-            {navLinks.map(({ href, icon: Icon, label, disabled }) => (
-            <Link 
-                key={label} 
-                href={disabled ? "#" : href}
-                className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    pathname === href && "bg-muted text-primary",
-                    disabled && "cursor-not-allowed opacity-50"
-                )}
-                aria-disabled={disabled}
-                onClick={(e) => disabled && e.preventDefault()}
-            >
-                <Icon className="h-4 w-4" />
-                {label}
-            </Link>
-            ))}
-        </nav>
+        <div className="space-y-4">
+            <h1 className="text-lg font-semibold md:text-2xl">SEO</h1>
+             <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-8">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-20 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="flex justify-end">
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     )
-}
-
-function MobileSheet() {
-    const pathname = usePathname();
-    return (
-        <Sheet>
-            <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0">
-                <SheetHeader className="p-4 border-b">
-                    <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
-                    <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
-                        <HeartPulse className="h-6 w-6" />
-                        <span className="text-lg">UKM PONJA</span>
-                    </Link>
-                </SheetHeader>
-                <nav className="grid items-start p-4 text-base font-medium">
-                    {navLinks.map(({ href, icon: Icon, label, disabled }) => (
-                    <Link 
-                        key={label} 
-                        href={disabled ? "#" : href}
-                        className={cn(
-                            "flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
-                            pathname === href && "bg-muted text-foreground",
-                            disabled && "cursor-not-allowed opacity-50"
-                        )}
-                        aria-disabled={disabled}
-                        onClick={(e) => disabled && e.preventDefault()}
-                    >
-                        <Icon className="h-5 w-5" />
-                        {label}
-                    </Link>
-                    ))}
-                </nav>
-            </SheetContent>
-        </Sheet>
-    )
-}
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
-        <div className="flex h-16 items-center border-b px-6">
-            <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
-              <HeartPulse className="h-6 w-6" />
-              <span>UKM PONJA</span>
-            </Link>
-        </div>
-        <div className="flex-1 overflow-auto py-4">
-            <SidebarNav />
-        </div>
-      </aside>
-      <div className="flex flex-col sm:ml-60">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
-          <MobileSheet />
-          <div className="flex-1">
-            {/* Header content can go here */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <h1 className="text-lg font-semibold md:text-2xl">SEO</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Pengaturan SEO</CardTitle>
+          <CardDescription>
+            Kelola judul, deskripsi, dan kata kunci untuk optimasi mesin pencari (SEO) situs Anda.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <div className="space-y-2">
+            <Label htmlFor="title">Judul Situs</Label>
+            <Input
+              id="title"
+              {...register('title')}
+              disabled={isSubmitting}
+              placeholder="Contoh: UKM PONJA - Puskesmas Pondok Jagung"
+            />
+            {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
           </div>
-          <UserNav />
-        </header>
-        <main className="flex-1 p-4 sm:p-6">
-          {children}
-        </main>
-        <footer className="mt-auto border-t bg-background px-4 py-4 sm:px-6">
-            <p className="text-center text-sm text-muted-foreground">
-                Dibangun dengan ❤️ oleh Rani Kirana.
-            </p>
-        </footer>
-      </div>
-    </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Deskripsi Situs</Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              disabled={isSubmitting}
+              className="min-h-24"
+              placeholder="Contoh: Website resmi Upaya Kesehatan Masyarakat (UKM) Puskesmas Pondok Jagung, menyediakan informasi kesehatan, program, dan berita terbaru."
+            />
+            {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="keywords">Kata Kunci (dipisahkan koma)</Label>
+            <Input
+              id="keywords"
+              {...register('keywords')}
+              disabled={isSubmitting}
+              placeholder="kesehatan, puskesmas, pondok jagung, ukm, ponja, tangerang selatan"
+            />
+             {errors.keywords && <p className="text-sm text-red-500">{errors.keywords.message}</p>}
+          </div>
+          
+           <div className="flex justify-end">
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Simpan Perubahan
+                </Button>
+            </div>
+        </CardContent>
+      </Card>
+    </form>
   );
 }
