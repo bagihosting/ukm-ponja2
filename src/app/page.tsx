@@ -11,7 +11,6 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AiDoctor } from '@/components/portals/ai-doctor';
-import { reportLinks } from '@/lib/reports-data';
 
 
 function truncate(text: string, length: number) {
@@ -41,7 +40,6 @@ async function fetchData() {
 
 export default async function HomePage() {
   const { articles, programs } = await fetchData();
-  const graphicReport = reportLinks.find(r => r.slug === 'laporan-grafik');
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
@@ -167,89 +165,59 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Programs & Reports Section */}
-        <section id="programs-reports" className="py-8 md:py-12" aria-labelledby="programs-reports-title">
+        {/* Programs Section */}
+        <section id="programs" className="py-8 md:py-12" aria-labelledby="programs-title">
             <div className="text-center max-w-4xl mx-auto">
-                <h2 id="programs-reports-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Program & Laporan</h2>
-                <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi inisiatif dan akses laporan publik dari kegiatan kami.</p>
+                <h2 id="programs-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Program Unggulan Kami</h2>
+                <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi inisiatif dan program unggulan dari kegiatan kami.</p>
           </div>
-          <div className="grid lg:grid-cols-2 gap-8 mt-12">
-              <div id="programs" className="space-y-6">
-                  {programs.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 gap-6">
-                      <Card className="shadow-lg h-full flex flex-col">
-                      <CardHeader>
-                          <CardTitle>UKM Esensial</CardTitle>
-                          <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2 flex-grow">
-                          {essentialPrograms.length > 0 ? essentialPrograms.map(program => (
-                          <div key={program.id} className="flex items-start gap-3">
-                              <CheckCircle2 className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                              <span className="text-sm text-muted-foreground">{program.name}</span>
-                          </div>
-                          )) : (
-                          <p className="text-sm text-muted-foreground">Belum ada program.</p>
-                          )}
-                      </CardContent>
-                      </Card>
-                      <Card className="shadow-lg h-full flex flex-col">
-                      <CardHeader>
-                          <CardTitle>UKM Pengembangan</CardTitle>
-                          <CardDescription>Inisiatif inovatif untuk kebutuhan spesifik.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-2 flex-grow">
-                          {developmentPrograms.length > 0 ? developmentPrograms.map(program => (
-                          <div key={program.id} className="flex items-start gap-3">
-                              <CheckCircle2 className="h-4 w-4 text-accent mt-1 flex-shrink-0" />
-                              <span className="text-sm text-muted-foreground">{program.name}</span>
-                          </div>
-                          )) : (
-                              <p className="text-sm text-muted-foreground">Belum ada program.</p>
-                          )}
-                      </CardContent>
-                      </Card>
-                  </div>
-                  ) : (
-                  <Card className="shadow-lg">
-                      <CardContent className="p-8 text-center text-muted-foreground">
-                          <p>Belum ada program yang ditambahkan.</p>
-                      </CardContent>
+          <div className="mt-12">
+              {programs.length > 0 ? (
+              <div className="grid sm:grid-cols-2 gap-6">
+                  <Card className="shadow-lg h-full flex flex-col">
+                  <CardHeader>
+                      <CardTitle>UKM Esensial</CardTitle>
+                      <CardDescription>Program inti untuk kesehatan masyarakat.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 flex-grow">
+                      {essentialPrograms.length > 0 ? essentialPrograms.map(program => (
+                      <div key={program.id} className="flex items-start gap-3">
+                          <CheckCircle2 className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                          <span className="text-sm text-muted-foreground">{program.name}</span>
+                      </div>
+                      )) : (
+                      <p className="text-sm text-muted-foreground">Belum ada program.</p>
+                      )}
+                  </CardContent>
                   </Card>
-                  )}
-                  <div className="text-center pt-4">
-                  <Button asChild>
-                      <Link href="/program-ukm">Lihat Semua Program <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
-                  </div>
+                  <Card className="shadow-lg h-full flex flex-col">
+                  <CardHeader>
+                      <CardTitle>UKM Pengembangan</CardTitle>
+                      <CardDescription>Inisiatif inovatif untuk kebutuhan spesifik.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 flex-grow">
+                      {developmentPrograms.length > 0 ? developmentPrograms.map(program => (
+                      <div key={program.id} className="flex items-start gap-3">
+                          <CheckCircle2 className="h-4 w-4 text-accent mt-1 flex-shrink-0" />
+                          <span className="text-sm text-muted-foreground">{program.name}</span>
+                      </div>
+                      )) : (
+                          <p className="text-sm text-muted-foreground">Belum ada program.</p>
+                      )}
+                  </CardContent>
+                  </Card>
               </div>
-
-              <div id="reports" className="flex">
-                <Card className="shadow-lg w-full flex flex-col">
-                    <CardHeader>
-                        <CardTitle>Grafik Target Tahunan</CardTitle>
-                        <CardDescription>Visualisasi data untuk memantau performa program UKM.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex items-center justify-center p-2">
-                        {graphicReport ? (
-                            <iframe
-                                src={graphicReport.embedUrl}
-                                className="h-full w-full border-0 min-h-[400px]"
-                                allow="fullscreen"
-                                title={graphicReport.title}
-                            ></iframe>
-                        ) : (
-                            <div className="text-center text-muted-foreground p-8">
-                                Laporan grafik tidak dikonfigurasi.
-                            </div>
-                        )}
-                    </CardContent>
-                    <CardFooter className="justify-center p-4">
-                    <Button asChild variant="secondary">
-                        <Link href="/laporan">Lihat Semua Laporan</Link>
-                    </Button>
-                    </CardFooter>
-                </Card>
+              ) : (
+              <Card className="shadow-lg">
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                      <p>Belum ada program yang ditambahkan.</p>
+                  </CardContent>
+              </Card>
+              )}
+              <div className="text-center pt-8">
+              <Button asChild>
+                  <Link href="/program-ukm">Lihat Semua Program <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
               </div>
           </div>
         </section>
