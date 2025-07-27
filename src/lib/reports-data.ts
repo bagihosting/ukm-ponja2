@@ -11,7 +11,7 @@ export const reportLinks = [
     slug: "laporan-grafik",
     title: "Laporan Grafik",
     url: "https://docs.google.com/spreadsheets/d/17WWQvrkT5Nazx4-7eZQ566K-KfQt_PRmCJN1Zfi9xNw/edit?usp=sharing",
-    embedUrl: "https://docs.google.com/spreadsheets/d/17WWQvrkT5Nazx4-7eZQ566K-KfQt_PRmCJN1Zfi9xNw/edit?rm=minimal",
+    embedUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ5A_f34R9i-3z1KkPqZFGocM2sXz4b-i4fQo9j2jR8D8Q4sL3g7B_j1o1X8Y2H3bF9v5vW/pubchart?oid=661340878&format=interactive",
     description: "Visualisasi data dan grafik untuk memantau performa program UKM."
   },
   {
