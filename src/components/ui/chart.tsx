@@ -1,365 +1,199 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import * as RechartsPrimitive from "recharts"
+import Link from 'next/link';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Settings, LogOut } from 'lucide-react';
 
-import { cn } from "@/lib/utils"
+import { getClientAuth } from '@/lib/firebase';
+import { useAuth } from '@/context/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const
+function UserNav() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
 
-export type ChartConfig = {
-  [k in string]: {
-    label?: React.ReactNode
-    icon?: React.ComponentType
-  } & (
-    | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  )
-}
-
-type ChartContextProps = {
-  config: ChartConfig
-}
-
-const ChartContext = React.createContext<ChartContextProps | null>(null)
-
-function useChart() {
-  const context = React.useContext(ChartContext)
-
-  if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />")
-  }
-
-  return context
-}
-
-const ChartContainer = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    config: ChartConfig
-    children: React.ComponentProps<
-      typeof RechartsPrimitive.ResponsiveContainer
-    >["children"]
-  }
->(({ id, className, children, config, ...props }, ref) => {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+  const handleLogout = async () => {
+    try {
+      const auth = getClientAuth();
+      await signOut(auth);
+      router.push('/login');
+      toast({
+        title: 'Logout',
+        description: 'Anda telah berhasil keluar.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Logout',
+        description: error.message,
+      });
+    }
+  };
+  
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return 'AD';
+    return email.substring(0, 2).toUpperCase();
+  };
 
   return (
-    <ChartContext.Provider value={{ config }}>
-      <div
-        data-chart={chartId}
-        ref={ref}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
-          className
-        )}
-        {...props}
-      >
-        <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
-      </div>
-    </ChartContext.Provider>
-  )
-})
-ChartContainer.displayName = "Chart"
-
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme || config.color
-  )
-
-  if (!colorConfig.length) {
-    return null
-  }
-
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" size="icon" className="rounded-full">
+           <Avatar>
+            <AvatarImage src={user?.photoURL ?? undefined} />
+            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
+          </Avatar>
+          <span className="sr-only">Toggle user menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <Link href="/dashboard/settings" passHref>
+          <DropdownMenuItem>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Pengaturan</span>
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Keluar</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+const navLinks = [
+  { href: "/dashboard", icon: HeartPulse, label: "Dashboard", disabled: false },
+  { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
+  { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
+  { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
+  { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
+];
 
-const ChartTooltipContent = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<"div"> & {
-      hideLabel?: boolean
-      hideIndicator?: boolean
-      indicator?: "line" | "dot" | "dashed"
-      nameKey?: string
-      labelKey?: string
-    }
->(
-  (
-    {
-      active,
-      payload,
-      className,
-      indicator = "dot",
-      hideLabel = false,
-      hideIndicator = false,
-      label,
-      labelFormatter,
-      labelClassName,
-      formatter,
-      color,
-      nameKey,
-      labelKey,
-    },
-    ref
-  ) => {
-    const { config } = useChart()
-
-    const tooltipLabel = React.useMemo(() => {
-      if (hideLabel || !payload?.length) {
-        return null
-      }
-
-      const [item] = payload
-      const key = `${labelKey || item.dataKey || item.name || "value"}`
-      const itemConfig = getPayloadConfigFromPayload(config, item, key)
-      const value =
-        !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
-          : itemConfig?.label
-
-      if (labelFormatter) {
-        return (
-          <div className={cn("font-medium", labelClassName)}>
-            {labelFormatter(value, payload)}
-          </div>
-        )
-      }
-
-      if (!value) {
-        return null
-      }
-
-      return <div className={cn("font-medium", labelClassName)}>{value}</div>
-    }, [
-      label,
-      labelFormatter,
-      payload,
-      hideLabel,
-      labelClassName,
-      config,
-      labelKey,
-    ])
-
-    if (!active || !payload?.length) {
-      return null
-    }
-
-    const nestLabel = payload.length === 1 && indicator !== "dot"
-
+function SidebarNav() {
+    const pathname = usePathname();
     return (
-      <div
-        ref={ref}
-        className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
-          className
-        )}
-      >
-        {!nestLabel ? tooltipLabel : null}
-        <div className="grid gap-1.5">
-          {payload.map((item, index) => {
-            const key = `${nameKey || item.name || item.dataKey || "value"}`
-            const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || item.payload.fill || item.color
-
-            return (
-              <div
-                key={item.dataKey}
+        <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+            {navLinks.map(({ href, icon: Icon, label, disabled }) => (
+            <Link 
+                key={label} 
+                href={disabled ? "#" : href}
                 className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
-                  indicator === "dot" && "items-center"
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                    pathname === href && "bg-muted text-primary",
+                    disabled && "cursor-not-allowed opacity-50"
                 )}
-              >
-                {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
-                ) : (
-                  <>
-                    {itemConfig?.icon ? (
-                      <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            "shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            }
-                          )}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
-                      )
-                    )}
-                    <div
-                      className={cn(
-                        "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center"
-                      )}
-                    >
-                      <div className="grid gap-1.5">
-                        {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">
-                          {itemConfig?.label || item.name}
-                        </span>
-                      </div>
-                      {item.value && (
-                        <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-)
-ChartTooltipContent.displayName = "ChartTooltip"
-
-const ChartLegend = RechartsPrimitive.Legend
-
-const ChartLegendContent = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
-      hideIcon?: boolean
-      nameKey?: string
-    }
->(
-  (
-    { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
-    ref
-  ) => {
-    const { config } = useChart()
-
-    if (!payload?.length) {
-      return null
-    }
-
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "flex items-center justify-center gap-4",
-          verticalAlign === "top" ? "pb-3" : "pt-3",
-          className
-        )}
-      >
-        {payload.map((item) => {
-          const key = `${nameKey || item.dataKey || "value"}`
-          const itemConfig = getPayloadConfigFromPayload(config, item, key)
-
-          return (
-            <div
-              key={item.value}
-              className={cn(
-                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
-              )}
+                aria-disabled={disabled}
+                onClick={(e) => disabled && e.preventDefault()}
             >
-              {itemConfig?.icon && !hideIcon ? (
-                <itemConfig.icon />
-              ) : (
-                <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
-                  style={{
-                    backgroundColor: item.color,
-                  }}
-                />
-              )}
-              {itemConfig?.label}
-            </div>
-          )
-        })}
-      </div>
+                <Icon className="h-4 w-4" />
+                {label}
+            </Link>
+            ))}
+        </nav>
     )
-  }
-)
-ChartLegendContent.displayName = "ChartLegend"
-
-// Helper to extract item config from a payload.
-function getPayloadConfigFromPayload(
-  config: ChartConfig,
-  payload: unknown,
-  key: string
-) {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined
-  }
-
-  const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined
-
-  let configLabelKey: string = key
-
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
-  }
-
-  return configLabelKey in config
-    ? config[configLabelKey]
-    : config[key as keyof typeof config]
 }
 
-export {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  ChartStyle,
+function MobileSheet() {
+    const pathname = usePathname();
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex flex-col p-0">
+                <SheetHeader className="p-4 border-b">
+                    <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
+                    <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
+                        <HeartPulse className="h-6 w-6" />
+                        <span className="text-lg">UKM PONJA</span>
+                    </Link>
+                </SheetHeader>
+                <nav className="grid items-start p-4 text-base font-medium">
+                    {navLinks.map(({ href, icon: Icon, label, disabled }) => (
+                    <Link 
+                        key={label} 
+                        href={disabled ? "#" : href}
+                        className={cn(
+                            "flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
+                            pathname === href && "bg-muted text-foreground",
+                            disabled && "cursor-not-allowed opacity-50"
+                        )}
+                        aria-disabled={disabled}
+                        onClick={(e) => disabled && e.preventDefault()}
+                    >
+                        <Icon className="h-5 w-5" />
+                        {label}
+                    </Link>
+                    ))}
+                </nav>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
+        <div className="flex h-16 items-center border-b px-6">
+            <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
+              <HeartPulse className="h-6 w-6" />
+              <span>UKM PONJA</span>
+            </Link>
+        </div>
+        <div className="flex-1 overflow-auto py-4">
+            <SidebarNav />
+        </div>
+      </aside>
+      <div className="flex flex-col sm:ml-60">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+          <MobileSheet />
+          <div className="flex-1">
+            {/* Header content can go here */}
+          </div>
+          <UserNav />
+        </header>
+        <main className="flex-1 p-4 sm:p-6">
+          {children}
+        </main>
+        <footer className="mt-auto border-t bg-background px-4 py-4 sm:px-6">
+            <p className="text-center text-sm text-muted-foreground">
+                Dibangun dengan ❤️ oleh Rani Kirana.
+            </p>
+        </footer>
+      </div>
+    </div>
+  );
 }

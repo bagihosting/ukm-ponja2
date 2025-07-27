@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Search, LineChart, Settings, LogOut } from 'lucide-react';
+import { HeartPulse, Menu, Loader2, Newspaper, Image as ImageIcon, Briefcase, Settings, LogOut } from 'lucide-react';
 
 import { getClientAuth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
@@ -79,8 +79,6 @@ const navLinks = [
   { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
   { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
   { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
-  { href: "/dashboard/seo", icon: Search, label: "SEO", disabled: false },
-  { href: "/dashboard/reports", icon: LineChart, label: "Laporan", disabled: true },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
 ];
 
@@ -118,15 +116,15 @@ function MobileSheet() {
                 <span className="sr-only">Toggle navigation menu</span>
             </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-                <SheetHeader>
+            <SheetContent side="left" className="flex flex-col p-0">
+                <SheetHeader className="p-4 border-b">
                     <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
                     <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
                         <HeartPulse className="h-6 w-6" />
                         <span className="text-lg">UKM PONJA</span>
                     </Link>
                 </SheetHeader>
-                <nav className="grid items-start px-4 text-base font-medium">
+                <nav className="grid items-start p-4 text-base font-medium">
                     {navLinks.map(({ href, icon: Icon, label, disabled }) => (
                     <Link 
                         key={label} 
