@@ -9,16 +9,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wand2 } from 'lucide-react';
 import { generateImage } from '@/ai/flows/generate-image-flow';
-import { addGalleryImageRecord } from '@/lib/gallery';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { uploadImageToCloudinary } from '@/lib/image-hosting';
-
 
 interface AiImageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImageReady: (url: string) => void;
+  // This callback is now more generic. It can signify completion or pass a URL.
+  // In the gallery page, it just signals completion. In the articles/programs page, it passes the URL.
+  onImageReady: (url?: string) => void; 
   promptSuggestion?: string;
 }
 
@@ -55,28 +54,25 @@ export function AiImageDialog({
     setGeneratedDataUri(null);
 
     try {
-      // 1. Generate image and get back the data URI
+      // 1. Generate image from AI and get back the data URI
       const { dataUri } = await generateImage({ prompt });
       
       if (!dataUri) {
          throw new Error('AI tidak mengembalikan data gambar.');
       }
 
+      // Show the preview immediately
       setGeneratedDataUri(dataUri);
 
-      // 2. Upload to Cloudinary to get public URL
-      const publicUrl = await uploadImageToCloudinary(dataUri);
-
-      // 3. Categorize the image using its public URL
-      const category = await categorizeImage({ imageUrl: publicUrl });
+      // Create a file name for the gallery record
       const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-      
-      // 4. Save to gallery history
-      await addGalleryImageRecord({ name: imageName, url: publicUrl, category });
-      
-      toast({ title: 'Berhasil!', description: 'Gambar dibuat, diunggah, dan disimpan ke galeri.' });
 
-      // 5. Pass the final public URL to the parent component
+      // 2. Use the centralized function to handle upload, categorization, and db record creation
+      const publicUrl = await uploadImageAndCreateGalleryRecord(dataUri, imageName);
+      
+      toast({ title: 'Berhasil!', description: 'Gambar dibuat dan disimpan ke galeri.' });
+
+      // 3. Pass the final public URL to the parent component
       onImageReady(publicUrl);
 
     } catch (error: any) {

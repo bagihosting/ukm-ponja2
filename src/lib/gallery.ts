@@ -69,32 +69,38 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
 
 
 /**
- * Uploads an image file to Cloudinary and saves its metadata to Firestore.
- * This function orchestrates the entire upload process, including categorization.
- * @param file The image file to upload.
- * @returns A promise that resolves with the metadata of the newly added image.
+ * Orchestrates the entire process of uploading an image, categorizing it,
+ * and saving a record to the gallery in Firestore.
+ * This centralized function ensures consistency for all image uploads.
+ * @param source The image source, which can be a data URI string or a File object.
+ * @param fileName The name to be used for the image file record.
+ * @returns A promise that resolves with the public URL of the uploaded image.
  */
-export const uploadGalleryImage = async (file: File): Promise<string> => {
+export const uploadImageAndCreateGalleryRecord = async (source: string | File, fileName: string): Promise<string> => {
   try {
-    // 1. Upload to external host (Cloudinary) using the File object directly
-    const url = await uploadImageToCloudinary(file);
+    // 1. Upload to external host (Cloudinary)
+    const publicUrl = await uploadImageToCloudinary(source);
     
-    // 2. Categorize the image using its public URL
-    const category = await categorizeImage({ imageUrl: url });
+    // 2. Categorize the image using its new public URL
+    const category = await categorizeImage({ imageUrl: publicUrl });
 
-    // 3. Save metadata to Firestore (this will also revalidate the path)
-    const recordId = await addGalleryImageRecord({
-        name: file.name,
-        url: url,
+    // 3. Save metadata record to Firestore (this also revalidates paths)
+    await addGalleryImageRecord({
+        name: fileName,
+        url: publicUrl,
         category: category,
     });
     
-    return recordId;
+    // 4. Return the public URL for the client to use
+    return publicUrl;
 
   } catch (e: any) {
+    console.error(`Error in uploadImageAndCreateGalleryRecord: ${e.message}`);
+    // Re-throw a more user-friendly error
     throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
   }
 };
+
 
 /**
  * Retrieves all images from the 'galleryImages' collection in Firestore.

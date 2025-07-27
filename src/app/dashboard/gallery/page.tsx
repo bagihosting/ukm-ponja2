@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
+import { getGalleryImages, deleteGalleryImage, uploadImageAndCreateGalleryRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -83,15 +83,21 @@ export default function GalleryPage() {
 
     setIsUploading(true);
     try {
-      await uploadGalleryImage(selectedFile);
+      // Use the centralized function
+      await uploadImageAndCreateGalleryRecord(selectedFile, selectedFile.name);
+      
       toast({
         title: 'Berhasil!',
-        description: `Gambar "${selectedFile.name}" berhasil diunggah, dikategorikan, dan riwayat disimpan.`,
+        description: `Gambar "${selectedFile.name}" berhasil diunggah dan disimpan.`,
       });
-      await fetchImages(); 
+      
+      await fetchImages(); // Refresh the list
+      
+      // Reset the file input
       setSelectedFile(null);
       const fileInput = document.getElementById('picture') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
+
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -138,9 +144,10 @@ export default function GalleryPage() {
     }
   };
 
-  const handleImageReady = async () => {
+  // Called from AiImageDialog when an AI image is successfully generated and stored.
+  const handleAiImageReady = async () => {
     setIsAiModalOpen(false); 
-    await fetchImages(); 
+    await fetchImages(); // Refresh the gallery list
   };
 
 
@@ -154,7 +161,7 @@ export default function GalleryPage() {
         <Card className="lg:w-1/2 flex-shrink-0">
           <CardHeader>
             <CardTitle>Unggah atau Buat Gambar</CardTitle>
-            <CardDescription>Unggah gambar manual atau buat menggunakan AI. Setiap gambar akan dikategorikan secara otomatis.</CardDescription>
+            <CardDescription>Unggah gambar manual atau buat menggunakan AI. Setiap gambar akan disimpan ke riwayat galeri secara otomatis.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -169,7 +176,7 @@ export default function GalleryPage() {
                     </p>
                     <Button onClick={handleUpload} disabled={isUploading}>
                     {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                    {isUploading ? 'Mengunggah...' : 'Unggah & Kategorikan'}
+                    {isUploading ? 'Mengunggah...' : 'Unggah & Simpan'}
                     </Button>
                 </div>
                 )}
@@ -276,7 +283,7 @@ export default function GalleryPage() {
       <AiImageDialog 
         open={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
-        onImageReady={handleImageReady}
+        onImageReady={handleAiImageReady}
       />
     </div>
   );

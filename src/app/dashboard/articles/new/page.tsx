@@ -100,8 +100,10 @@ export default function NewArticlePage() {
     }
   };
 
-  const handleImageReady = (url: string) => {
-    setValue('imageUrl', url, { shouldValidate: true });
+  const handleAiImageReady = (url?: string) => {
+    if (url) {
+      setValue('imageUrl', url, { shouldValidate: true });
+    }
     setIsAiModalOpen(false);
   };
   
@@ -251,7 +253,7 @@ export default function NewArticlePage() {
       <AiImageDialog 
         open={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
-        onImageReady={handleImageReady}
+        onImageReady={handleAiImageReady}
         promptSuggestion='Contoh: "Stetoskop di atas meja dokter dengan latar belakang kabur"'
       />
     </>
