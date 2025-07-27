@@ -135,7 +135,7 @@ export default function ArticlesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/articles/edit/${article.id}`)}>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/articles/new?id=${article.id}`)}>
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />

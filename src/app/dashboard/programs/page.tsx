@@ -14,7 +14,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { getPrograms, deleteProgram, type Program } from '@/lib/programs';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ProgramsPage() {
@@ -113,7 +112,7 @@ export default function ProgramsPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => router.push(`/dashboard/programs/edit/${program.id}`)}>
+                    <DropdownMenuItem onClick={() => router.push(`/dashboard/programs/new?id=${program.id}`)}>
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

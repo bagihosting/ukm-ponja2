@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,11 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { addArticle } from '@/lib/articles';
+import { addArticle, getArticle, updateArticle } from '@/lib/articles';
 import { addGalleryImageRecord } from '@/lib/gallery';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ImagePreview } from '@/components/portals/image-preview';
 
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
@@ -28,35 +29,22 @@ const articleSchema = z.object({
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
 
-function ImagePreview({ imageUrl }: { imageUrl: string | null | undefined; }) {
-  if (!imageUrl) {
-    return null;
-  }
-  return (
-    <div className="space-y-2">
-      <AspectRatio ratio={16 / 9} className="relative overflow-hidden rounded-md bg-muted">
-        <img
-          key={imageUrl}
-          src={imageUrl}
-          alt="Pratinjau Gambar"
-          className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-      </AspectRatio>
-    </div>
-  );
-}
-
 export default function NewArticlePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const articleId = searchParams.get('id');
+  const isEditMode = Boolean(articleId);
+
   const { toast } = useToast();
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -69,18 +57,41 @@ export default function NewArticlePage() {
 
   const imageUrl = watch('imageUrl');
 
+  const fetchArticle = useCallback(async (id: string) => {
+    setIsLoading(true);
+    try {
+      const article = await getArticle(id);
+      if (article) {
+        reset(article);
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: 'Artikel tidak ditemukan.' });
+        router.push('/dashboard/articles');
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', title: 'Gagal Memuat', description: 'Gagal memuat data artikel.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [reset, router, toast]);
+
+  useEffect(() => {
+    if (isEditMode && articleId) {
+        fetchArticle(articleId);
+    }
+  }, [isEditMode, articleId, fetchArticle]);
+
+
   const onSubmit = async (data: ArticleFormValues) => {
     try {
-      await addArticle({
-        title: data.title,
-        content: data.content,
-        imageUrl: data.imageUrl,
-      });
-      toast({
-        title: 'Berhasil!',
-        description: 'Artikel baru telah berhasil ditambahkan.',
-      });
+      if (isEditMode && articleId) {
+        await updateArticle(articleId, data);
+        toast({ title: 'Berhasil!', description: 'Artikel telah berhasil diperbarui.' });
+      } else {
+        await addArticle(data);
+        toast({ title: 'Berhasil!', description: 'Artikel baru telah berhasil ditambahkan.' });
+      }
       router.push('/dashboard/articles');
+      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -107,6 +118,25 @@ export default function NewArticlePage() {
     }
   };
 
+  if (isLoading) {
+     return (
+      <div className="space-y-4 p-4 md:p-0">
+        <div className="flex items-center gap-4 mb-4">
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-7 w-48" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
+            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
+                <Skeleton className="h-64 w-full" />
+            </div>
+             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                <Skeleton className="h-48 w-full" />
+            </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -122,7 +152,7 @@ export default function NewArticlePage() {
             <span className="sr-only">Kembali</span>
           </Button>
           <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
-            Buat Artikel Baru
+            {isEditMode ? 'Edit Artikel' : 'Buat Artikel Baru'}
           </h1>
           <div className="hidden items-center gap-2 md:ml-auto md:flex">
             <Button
@@ -135,7 +165,7 @@ export default function NewArticlePage() {
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Simpan Artikel
+              {isEditMode ? 'Simpan Perubahan' : 'Simpan Artikel'}
             </Button>
           </div>
         </div>
@@ -145,7 +175,7 @@ export default function NewArticlePage() {
               <CardHeader>
                 <CardTitle>Detail Artikel</CardTitle>
                 <CardDescription>
-                  Isi judul dan konten untuk artikel Anda.
+                  {isEditMode ? 'Perbarui judul dan konten untuk artikel Anda.' : 'Isi judul dan konten untuk artikel Anda.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -157,6 +187,7 @@ export default function NewArticlePage() {
                       type="text"
                       className="w-full"
                       {...register('title')}
+                      disabled={isSubmitting}
                     />
                     {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
                   </div>
@@ -166,6 +197,7 @@ export default function NewArticlePage() {
                       id="content"
                       className="min-h-32"
                       {...register('content')}
+                      disabled={isSubmitting}
                     />
                     {errors.content && <p className="text-sm text-red-500">{errors.content.message}</p>}
                   </div>
@@ -177,7 +209,7 @@ export default function NewArticlePage() {
             <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Gambar Artikel</CardTitle>
-                <CardDescription>
+                 <CardDescription>
                   Tempelkan URL atau buat gambar baru.
                 </CardDescription>
               </CardHeader>
@@ -193,12 +225,13 @@ export default function NewArticlePage() {
                         className="w-full pl-10"
                         placeholder="https://..."
                         {...register('imageUrl')}
+                        disabled={isSubmitting}
                       />
                     </div>
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
                   <ImagePreview imageUrl={imageUrl} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)} disabled={isSubmitting}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Buat dengan AI
                   </Button>
@@ -213,7 +246,7 @@ export default function NewArticlePage() {
           </Button>
           <Button type="submit" size="sm" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Simpan Artikel
+            {isEditMode ? 'Simpan Perubahan' : 'Simpan Artikel'}
           </Button>
         </div>
       </form>

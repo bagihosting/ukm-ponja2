@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,14 +14,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { addProgram } from '@/lib/programs';
+import { addProgram, getProgram, updateProgram } from '@/lib/programs';
 import { uploadImageToFreeImage } from '@/lib/image-hosting';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
 import { addGalleryImageRecord } from '@/lib/gallery';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ImagePreview } from '@/components/portals/image-preview';
 
 const programSchema = z.object({
   name: z.string().min(1, { message: 'Nama program tidak boleh kosong.' }),
@@ -34,31 +35,17 @@ const programSchema = z.object({
 
 type ProgramFormValues = z.infer<typeof programSchema>;
 
-function ImagePreview({ imageUrl }: { imageUrl: string | null | undefined; }) {
-  if (!imageUrl) {
-    return null;
-  }
-  return (
-    <div className="space-y-2">
-      <AspectRatio ratio={16 / 9} className="relative overflow-hidden rounded-md bg-muted">
-        <img
-          key={imageUrl}
-          src={imageUrl}
-          alt="Pratinjau Gambar"
-          className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-      </AspectRatio>
-    </div>
-  );
-}
-
 export default function NewProgramPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const programId = searchParams.get('id');
+  const isEditMode = Boolean(programId);
+
   const { toast } = useToast();
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [picPhotoFile, setPicPhotoFile] = useState<File | null>(null);
   const [isUploadingPicPhoto, setIsUploadingPicPhoto] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
 
   const {
     register,
@@ -66,6 +53,7 @@ export default function NewProgramPage() {
     watch,
     setValue,
     control,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -81,21 +69,41 @@ export default function NewProgramPage() {
   const imageUrl = watch('imageUrl');
   const picPhotoUrl = watch('personInChargePhotoUrl');
 
+  const fetchProgram = useCallback(async (id: string) => {
+    setIsLoading(true);
+    try {
+      const program = await getProgram(id);
+      if (program) {
+        reset(program);
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: 'Program tidak ditemukan.' });
+        router.push('/dashboard/programs');
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', title: 'Gagal Memuat', description: 'Gagal memuat data program.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reset, router, toast]);
+
+  useEffect(() => {
+    if (isEditMode && programId) {
+      fetchProgram(programId);
+    }
+  }, [isEditMode, programId, fetchProgram]);
+
+
   const onSubmit = async (data: ProgramFormValues) => {
     try {
-      await addProgram({
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        imageUrl: data.imageUrl,
-        personInChargeName: data.personInChargeName,
-        personInChargePhotoUrl: data.personInChargePhotoUrl,
-      });
-      toast({
-        title: 'Berhasil!',
-        description: 'Program baru telah berhasil ditambahkan.',
-      });
+      if (isEditMode && programId) {
+        await updateProgram(programId, data);
+        toast({ title: 'Berhasil!', description: 'Program telah berhasil diperbarui.' });
+      } else {
+        await addProgram(data);
+        toast({ title: 'Berhasil!', description: 'Program baru telah berhasil ditambahkan.' });
+      }
       router.push('/dashboard/programs');
+      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -144,6 +152,25 @@ export default function NewProgramPage() {
     }
   };
 
+  if (isLoading) {
+     return (
+      <div className="space-y-4 p-4 md:p-0">
+        <div className="flex items-center gap-4 mb-4">
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-7 w-48" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
+            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
+                <Skeleton className="h-64 w-full" />
+            </div>
+             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                <Skeleton className="h-48 w-full" />
+            </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -159,7 +186,7 @@ export default function NewProgramPage() {
             <span className="sr-only">Kembali</span>
           </Button>
           <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
-            Buat Program Baru
+            {isEditMode ? 'Edit Program' : 'Buat Program Baru'}
           </h1>
           <div className="hidden items-center gap-2 md:ml-auto md:flex">
             <Button
@@ -172,7 +199,7 @@ export default function NewProgramPage() {
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Simpan Program
+              {isEditMode ? 'Simpan Perubahan' : 'Simpan Program'}
             </Button>
           </div>
         </div>
@@ -182,7 +209,7 @@ export default function NewProgramPage() {
               <CardHeader>
                 <CardTitle>Detail Program</CardTitle>
                 <CardDescription>
-                  Isi detail untuk program UKM Anda.
+                  {isEditMode ? 'Perbarui detail untuk program UKM Anda.' : 'Isi detail untuk program UKM Anda.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -194,6 +221,7 @@ export default function NewProgramPage() {
                       type="text"
                       className="w-full"
                       {...register('name')}
+                      disabled={isSubmitting}
                     />
                     {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
                   </div>
@@ -203,7 +231,7 @@ export default function NewProgramPage() {
                         control={control}
                         name="category"
                         render={({ field }) => (
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                             <SelectTrigger>
                               <SelectValue placeholder="Pilih Kategori" />
                             </SelectTrigger>
@@ -223,6 +251,7 @@ export default function NewProgramPage() {
                       id="description"
                       className="min-h-32"
                       {...register('description')}
+                      disabled={isSubmitting}
                     />
                     {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
                   </div>
@@ -242,6 +271,7 @@ export default function NewProgramPage() {
                     type="text"
                     className="w-full"
                     {...register('personInChargeName')}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="grid gap-3">
@@ -251,10 +281,10 @@ export default function NewProgramPage() {
                       type="file" 
                       accept="image/*"
                       onChange={(e) => setPicPhotoFile(e.target.files?.[0] || null)}
-                      disabled={isUploadingPicPhoto}
+                      disabled={isUploadingPicPhoto || isSubmitting}
                     />
                     {picPhotoFile && (
-                       <Button type="button" size="sm" onClick={handlePicPhotoUpload} disabled={isUploadingPicPhoto}>
+                       <Button type="button" size="sm" onClick={handlePicPhotoUpload} disabled={isUploadingPicPhoto || isSubmitting}>
                         {isUploadingPicPhoto ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                         Unggah Foto
                       </Button>
@@ -285,12 +315,13 @@ export default function NewProgramPage() {
                         className="w-full pl-10"
                         placeholder="https://..."
                         {...register('imageUrl')}
+                        disabled={isSubmitting}
                       />
                     </div>
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
                   <ImagePreview imageUrl={imageUrl} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)} disabled={isSubmitting}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Buat dengan AI
                   </Button>
@@ -305,7 +336,7 @@ export default function NewProgramPage() {
           </Button>
           <Button type="submit" size="sm" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Simpan Program
+            {isEditMode ? 'Simpan Perubahan' : 'Simpan Program'}
           </Button>
         </div>
       </form>
