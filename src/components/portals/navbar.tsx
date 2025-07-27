@@ -72,12 +72,29 @@ export function PortalNavbar() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                {/* Mobile Menu & Logo */}
-                <div className="flex items-center md:hidden">
-                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <div className="container flex h-14 items-center justify-between">
+                
+                {/* Desktop Navigation */}
+                <div className="hidden flex-1 items-center gap-6 md:flex">
+                    <Link href="/" className="flex items-center space-x-2">
+                        <HeartPulse className="h-6 w-6 text-primary" />
+                        <span className="font-bold sm:inline-block">UKM PONJA</span>
+                    </Link>
+                    <nav className="flex items-center space-x-6 text-sm font-medium">
+                        {navLinks.map(({ href, label }) => (
+                            <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                {label}
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+
+                {/* Mobile Navigation */}
+                <div className="flex w-full items-center justify-between md:hidden">
+                    {/* Left: Menu Trigger */}
+                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="md:hidden">
+                            <Button variant="ghost" size="icon">
                                 <Menu className="h-6 w-6" />
                                 <span className="sr-only">Buka Menu</span>
                             </Button>
@@ -109,34 +126,20 @@ export function PortalNavbar() {
                             </div>
                         </SheetContent>
                     </Sheet>
-                </div>
-                 <Link href="/" className="flex items-center space-x-2 md:hidden mx-auto">
-                    <HeartPulse className="h-6 w-6 text-primary" />
-                    <span className="font-bold">UKM PONJA</span>
-                </Link>
+                    
+                    {/* Center: Logo */}
+                    <Link href="/" className="flex items-center space-x-2">
+                        <HeartPulse className="h-6 w-6 text-primary" />
+                        <span className="font-bold">UKM PONJA</span>
+                    </Link>
 
-                {/* Desktop Menu */}
-                <div className="hidden flex-1 items-center justify-between md:flex">
-                    <div className="flex items-center gap-6">
-                         <Link href="/" className="flex items-center space-x-2">
-                            <HeartPulse className="h-6 w-6 text-primary" />
-                            <span className="font-bold sm:inline-block">UKM PONJA</span>
-                        </Link>
-                        <nav className="flex items-center space-x-6 text-sm font-medium">
-                            {navLinks.map(({ href, label }) => (
-                                <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
-                                    {label}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
-                    <div className="flex items-center justify-end">
-                       <AuthButton />
-                    </div>
+                    {/* Right: Auth Button (or a placeholder to balance layout) */}
+                    <div className="w-10 h-10" />
                 </div>
 
-                {/* Auth button on mobile needs to be outside the justify-between on desktop */}
-                 <div className="flex items-center justify-end md:hidden">
+
+                {/* Right Aligned Auth Button for Desktop */}
+                <div className="hidden items-center justify-end md:flex">
                    <AuthButton />
                 </div>
             </div>
