@@ -106,14 +106,14 @@ export async function getPrograms(): Promise<Program[]> {
     return [];
   }
 
-  const programsCollection = collection(db, 'programs');
   try {
+    const programsCollection = collection(db, 'programs');
     const q = query(programsCollection, orderBy("name", "asc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toProgram);
   } catch (e: any) {
     console.error("Error getting programs: ", e);
-    throw new Error(`Gagal mengambil daftar program: ${e.message}`);
+    return [];
   }
 };
 

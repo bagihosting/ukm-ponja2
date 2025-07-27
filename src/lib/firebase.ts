@@ -37,19 +37,15 @@ export function getFirebaseServices(): FirebaseServices {
     const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
     
     if (!allConfigPresent) {
-        console.warn("Firebase configuration is incomplete. Firebase services will be disabled.");
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn("Firebase configuration is incomplete. Firebase services will be disabled. Check your .env file.");
+        }
         services = { app: null, auth: null, db: null, storage: null };
         return services;
     }
 
     try {
-        let app: FirebaseApp;
-        if (getApps().length) {
-            app = getApp();
-        } else {
-            app = initializeApp(firebaseConfig);
-        }
-
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);

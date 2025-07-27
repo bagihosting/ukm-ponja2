@@ -46,8 +46,8 @@ export async function updateSEOSettings(data: SEOData): Promise<void> {
     throw new Error("Layanan database tidak tersedia.");
   }
   
-  const seoSettingsRef = doc(db, 'settings', 'seo');
   try {
+    const seoSettingsRef = doc(db, 'settings', 'seo');
     // Use setDoc with merge:true to create the document if it doesn't exist,
     // or update it if it does.
     await setDoc(seoSettingsRef, data, { merge: true });

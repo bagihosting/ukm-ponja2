@@ -133,8 +133,8 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
     return [];
   }
 
-  const galleryCollection = collection(db, 'galleryImages');
   try {
+    const galleryCollection = collection(db, 'galleryImages');
     const q = query(galleryCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toGalleryImage);

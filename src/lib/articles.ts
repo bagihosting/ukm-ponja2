@@ -92,14 +92,14 @@ export const getArticles = async (): Promise<Article[]> => {
     return [];
   }
 
-  const articlesCollection = collection(db, 'articles');
   try {
+    const articlesCollection = collection(db, 'articles');
     const q = query(articlesCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toArticle);
   } catch (e: any) {
     console.error("Error getting documents: ", e);
-    throw new Error(`Gagal mengambil daftar artikel: ${e.message}`);
+    return [];
   }
 };
 
@@ -122,7 +122,7 @@ export const getArticle = async (id: string): Promise<Article | null> => {
     }
   } catch (e: any) {
     console.error("Error getting document: ", e);
-    throw new Error(`Gagal mengambil data artikel: ${e.message}`);
+    return null;
   }
 };
 
