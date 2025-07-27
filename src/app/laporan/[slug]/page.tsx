@@ -44,7 +44,7 @@ export default async function ReportViewerPage({ params }: { params: { slug: str
             allow="fullscreen"
             title={report.title}
         >
-            Memuat laporan...
+            Memuat laporan atau grafik...
         </iframe>
       </main>
     </div>
