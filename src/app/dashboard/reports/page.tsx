@@ -3,31 +3,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-
-const reportLinks = [
-  {
-    title: "Laporan ke Dinas",
-    url: "https://docs.google.com/spreadsheets/d/1A-_JO_9bN-_RSh1Ubr8Ux5-x4UxwN_zuYyeN4xM3gwY/edit?gid=1299877445#gid=1299877445",
-    description: "Spreadsheet berisi data laporan yang dikirimkan ke dinas kesehatan terkait."
-  },
-  {
-    title: "Laporan Grafik",
-    url: "https://docs.google.com/spreadsheets/d/17WWQvrkT5Nazx4-7eZQ566K-KfQt_PRmCJN1Zfi9xNw/edit?gid=661340878#gid=661340878",
-    description: "Visualisasi data dan grafik untuk memantau performa program UKM."
-  },
-  {
-    title: "Log Book UKM",
-    url: "https://docs.google.com/spreadsheets/d/17pzuT9gDLAXhwGQibsTYEzUvttzdg6qvZA8qVYbKh8w/edit?gid=377502369#gid=377502369",
-    description: "Buku catatan digital untuk semua aktivitas dan kegiatan UKM."
-  },
-  {
-    title: "Google Drive Data UKM",
-    url: "https://drive.google.com/drive/folders/12B0BJUMSfYS1pPRYunz5xI4xPC0KGUxa",
-    description: "Folder pusat untuk menyimpan semua file, dokumen, dan data terkait UKM."
-  }
-];
+import { reportLinks } from '@/lib/reports-data';
 
 export default function ReportsPage() {
   return (
@@ -39,7 +17,9 @@ export default function ReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Akses Cepat Laporan</CardTitle>
-          <CardDescription>Berikut adalah tautan-tautan penting untuk mengakses laporan dan data UKM.</CardDescription>
+          <CardDescription>
+            Berikut adalah tautan-tautan penting untuk mengakses laporan dan data UKM. Laporan akan dibuka di dalam aplikasi.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
@@ -49,12 +29,19 @@ export default function ReportsPage() {
                   <h3 className="font-semibold">{link.title}</h3>
                   <p className="text-sm text-muted-foreground">{link.description}</p>
                 </div>
-                <Button asChild variant="outline" className="w-full sm:w-auto">
-                  <Link href={link.url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Buka Laporan
-                  </Link>
-                </Button>
+                 <div className="flex w-full sm:w-auto space-x-2">
+                    <Button asChild className="flex-1 sm:flex-none">
+                        <Link href={`/laporan/${link.slug}`}>
+                            Buka Laporan
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="icon" title="Buka di Tab Baru">
+                        <Link href={link.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
               </Card>
             ))}
           </div>
