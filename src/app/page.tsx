@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { getArticles } from '@/lib/articles';
 import { getPrograms } from '@/lib/programs';
+import { getChartData } from '@/lib/chart-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
@@ -25,22 +26,23 @@ function truncate(text: string, length: number) {
 
 async function fetchData() {
   try {
-    const [fetchedArticles, fetchedPrograms] = await Promise.all([
+    const [fetchedArticles, fetchedPrograms, chartData] = await Promise.all([
       getArticles(),
-      getPrograms()
+      getPrograms(),
+      getChartData()
     ]);
     
     const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    return { articles: sortedArticles, programs: fetchedPrograms };
+    return { articles: sortedArticles, programs: fetchedPrograms, chartData };
   } catch (error) {
     console.error("Gagal memuat data portal:", error);
-    return { articles: [], programs: [] };
+    return { articles: [], programs: [], chartData: null };
   }
 }
 
 export default async function HomePage() {
-  const { articles, programs } = await fetchData();
+  const { articles, programs, chartData } = await fetchData();
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
@@ -48,6 +50,11 @@ export default async function HomePage() {
   
   const essentialPrograms = programs.filter(p => p.category === 'UKM Esensial').slice(0, 5);
   const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan').slice(0, 5);
+
+  const chartDescription = chartData?.programService && chartData?.period
+    ? `${chartData.programService} - Periode ${chartData.period}`
+    : "Visualisasi data untuk memantau performa program UKM.";
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -227,7 +234,7 @@ export default async function HomePage() {
                 <Card className="shadow-lg w-full flex flex-col">
                     <CardHeader>
                         <CardTitle>Grafik Target Tahunan</CardTitle>
-                        <CardDescription>Visualisasi data untuk memantau performa program UKM.</CardDescription>
+                        <CardDescription>{chartDescription}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow flex items-center justify-center p-2">
                         <DynamicChart />

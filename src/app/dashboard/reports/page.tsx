@@ -17,6 +17,9 @@ import { Textarea } from '@/components/ui/textarea';
 
 const chartDataSchema = z.object({
   targetData: z.string().min(1, 'Data target tidak boleh kosong.'),
+  personInCharge: z.string().optional(),
+  programService: z.string().optional(),
+  period: z.string().optional(),
 });
 
 type ChartDataFormValues = z.infer<typeof chartDataSchema>;
@@ -45,6 +48,9 @@ export default function ReportsPage() {
     resolver: zodResolver(chartDataSchema),
     defaultValues: {
       targetData: '',
+      personInCharge: '',
+      programService: '',
+      period: '',
     },
   });
 
@@ -53,10 +59,20 @@ export default function ReportsPage() {
       setIsLoading(true);
       try {
         const data = await getChartData();
-        if (data && data.targetData) {
-          reset(data);
+        if (data) {
+          reset({
+            targetData: data.targetData || initialData,
+            personInCharge: data.personInCharge || '',
+            programService: data.programService || '',
+            period: data.period || '',
+          });
         } else {
-          reset({ targetData: initialData });
+          reset({ 
+            targetData: initialData,
+            personInCharge: '',
+            programService: '',
+            period: '',
+          });
         }
       } catch (error) {
         toast({
@@ -64,7 +80,12 @@ export default function ReportsPage() {
           title: 'Gagal Memuat',
           description: 'Gagal memuat data grafik.',
         });
-        reset({ targetData: initialData });
+        reset({ 
+            targetData: initialData,
+            personInCharge: '',
+            programService: '',
+            period: '',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -77,7 +98,7 @@ export default function ReportsPage() {
       await updateChartData(data);
       toast({
         title: 'Berhasil!',
-        description: 'Data target grafik telah berhasil diperbarui.',
+        description: 'Data laporan grafik telah berhasil diperbarui.',
       });
     } catch (error: any) {
       toast({
@@ -98,6 +119,11 @@ export default function ReportsPage() {
             <Skeleton className="h-4 w-full mt-2" />
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-6">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-64 w-full" />
             <div className="flex justify-end">
@@ -116,20 +142,33 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle>Kelola Data Target Tahunan</CardTitle>
           <CardDescription>
-            Masukkan data target untuk ditampilkan di grafik halaman utama.
-            Gunakan format: NAMA_PROGRAM=NILAI. Setiap entri harus berada di baris baru.
+            Masukkan data target untuk ditampilkan di grafik halaman utama beserta informasi pendukungnya.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-6">
+                 <div className="space-y-2">
+                    <Label htmlFor="programService">Pelayanan Program</Label>
+                    <Input id="programService" {...register('programService')} disabled={isSubmitting} placeholder="Contoh: Program UKM Esensial" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="personInCharge">Penanggung Jawab</Label>
+                    <Input id="personInCharge" {...register('personInCharge')} disabled={isSubmitting} placeholder="Contoh: dr. Jane Doe" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="period">Periode</Label>
+                    <Input id="period" {...register('period')} disabled={isSubmitting} placeholder="Contoh: Jan 2024 - Des 2024" />
+                </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="targetData">Data Target</Label>
+              <Label htmlFor="targetData">Data Target (Format: NAMA_PROGRAM=NILAI)</Label>
               <Textarea
                 id="targetData"
                 {...register('targetData')}
                 disabled={isSubmitting}
                 className="min-h-[300px] font-mono text-sm"
-                placeholder="Contoh: PROGRAM A=100"
+                placeholder="Setiap entri harus berada di baris baru."
               />
               {errors.targetData && <p className="text-sm text-red-500">{errors.targetData.message}</p>}
             </div>

@@ -7,6 +7,9 @@ import { revalidatePath } from 'next/cache';
 
 export interface ChartData {
   targetData: string;
+  personInCharge?: string;
+  programService?: string;
+  period?: string;
 }
 
 const CHART_DATA_DOC_PATH = 'settings/chartData';
