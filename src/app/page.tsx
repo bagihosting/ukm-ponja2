@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { getArticles } from '@/lib/articles';
 import { getPrograms } from '@/lib/programs';
+import { reportLinks } from '@/lib/reports-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ async function fetchData() {
 
 export default async function HomePage() {
   const { articles, programs } = await fetchData();
+  const chartReport = reportLinks.find(link => link.slug === 'laporan-grafik');
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
@@ -222,22 +224,33 @@ export default async function HomePage() {
                   </div>
               </div>
 
-              <div id="reports" className="flex">
-                  <Card className="shadow-lg w-full flex flex-col justify-between">
-                        <CardHeader>
-                            <CardTitle>Laporan Publik</CardTitle>
-                            <CardDescription>Akses laporan dan dokumen publik dari kegiatan kami.</CardDescription>
-                        </CardHeader>
-                      <CardContent className="text-center text-muted-foreground flex-grow flex flex-col items-center justify-center">
-                          <p className="font-medium">Lihat semua laporan, logbook, dan data UKM secara transparan.</p>
-                      </CardContent>
-                        <CardFooter className="justify-center">
-                          <Button asChild variant="secondary">
-                              <Link href="/laporan">Lihat Halaman Laporan</Link>
-                          </Button>
-                        </CardFooter>
-                  </Card>
-              </div>
+              {chartReport && (
+                <div id="reports" className="flex">
+                    <Card className="shadow-lg w-full flex flex-col">
+                          <CardHeader>
+                              <CardTitle>{chartReport.title}</CardTitle>
+                              <CardDescription>{chartReport.description}</CardDescription>
+                          </CardHeader>
+                        <CardContent className="flex-grow p-0">
+                            <AspectRatio ratio={4/3}>
+                                <iframe
+                                    src={chartReport.embedUrl}
+                                    className="h-full w-full border-0"
+                                    allow="fullscreen"
+                                    title={chartReport.title}
+                                >
+                                    Memuat grafik...
+                                </iframe>
+                            </AspectRatio>
+                        </CardContent>
+                          <CardFooter className="justify-center p-4">
+                            <Button asChild variant="secondary">
+                                <Link href="/laporan">Lihat Semua Laporan</Link>
+                            </Button>
+                          </CardFooter>
+                    </Card>
+                </div>
+              )}
           </div>
         </section>
 
