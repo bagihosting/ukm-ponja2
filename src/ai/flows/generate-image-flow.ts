@@ -3,13 +3,12 @@
 /**
  * @fileOverview A flow for generating images from a text prompt.
  *
- * - generateImage - A function that generates an image and returns its public URL.
+ * - generateImage - A function that generates an image and returns its data URI.
  * - GenerateImageInput - The input type for the generateImage function.
  * - GenerateImageOutput - The return type for the generateImage function.
  */
 
 import { ai } from '@/ai/genkit';
-import { uploadImageToFreeImage } from '@/lib/image-hosting';
 import { z } from 'genkit';
 
 const GenerateImageInputSchema = z.object({
@@ -18,9 +17,9 @@ const GenerateImageInputSchema = z.object({
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
 const GenerateImageOutputSchema = z.object({
-  imageUrl: z
+  imageDataUri: z
     .string()
-    .describe('The public URL of the generated and hosted image.'),
+    .describe("The generated image as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
@@ -37,7 +36,7 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async ({ prompt }) => {
-    // 1. Generate the image using the AI model
+    // Generate the image using the AI model
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`,
@@ -50,17 +49,8 @@ const generateImageFlow = ai.defineFlow(
     if (!imageDataUri) {
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
-
-    // 2. Upload the generated image to the external hosting service
-    let publicUrl: string;
-    try {
-      publicUrl = await uploadImageToFreeImage(imageDataUri);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw new Error('Gagal mengunggah gambar yang telah dibuat.');
-    }
     
-    // 3. Return the public URL
-    return { imageUrl: publicUrl };
+    // Return the image data URI directly
+    return { imageDataUri };
   }
 );

@@ -17,6 +17,9 @@ export async function uploadImageToFreeImage(source: string | File): Promise<str
 
   if (typeof source === 'string') {
     // Handle data URI
+    if (!source.startsWith('data:image/')) {
+        throw new Error('Invalid data URI format. Expected "data:image/...".');
+    }
     const base64Data = source.split(',')[1];
     if (!base64Data) {
       throw new Error('Data URI tidak valid atau tidak berisi konten base64.');
