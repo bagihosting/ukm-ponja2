@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
+import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, addGalleryImageRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -158,16 +159,23 @@ export default function GalleryPage() {
     setIsGenerating(true);
     setGeneratedImageUrl(null);
     try {
-        // We tell the flow to handle saving to the gallery itself.
-        const input: GenerateImageInput = { prompt: aiPrompt, saveToGallery: true };
+        // 1. Generate the image
+        const input: GenerateImageInput = { prompt: aiPrompt };
         const result = await generateImage(input);
         
         if (result.imageUrl) {
             setGeneratedImageUrl(result.imageUrl);
+
+            // 2. Categorize the generated image
+            const category = await categorizeImage({ imageUrl: result.imageUrl });
+
+            // 3. Save the record to the gallery
+            const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+            await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
             
             toast({ title: 'Berhasil Dibuat & Disimpan!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
             
-            await fetchImages();
+            await fetchImages(); // Refresh the gallery list
             setIsAiModalOpen(false);
             resetAiModal();
 
@@ -177,7 +185,7 @@ export default function GalleryPage() {
     } catch (error: any) {
         toast({
             variant: 'destructive',
-            title: 'Gagal Membuat Gambar',
+            title: 'Gagal Membuat & Menyimpan Gambar',
             description: `Terjadi kesalahan: ${error.message}`,
         });
     } finally {

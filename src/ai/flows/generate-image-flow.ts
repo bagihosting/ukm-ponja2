@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A flow for generating images from a text prompt and uploading them.
+ * @fileOverview A flow for generating images from a text prompt.
  *
  * - generateImage - A function that generates an image and returns its public URL.
  * - GenerateImageInput - The input type for the generateImage function.
@@ -10,13 +10,10 @@
 
 import { ai } from '@/ai/genkit';
 import { uploadImageToFreeImage } from '@/lib/image-hosting';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
-import { addGalleryImageRecord } from '@/lib/gallery';
 import { z } from 'genkit';
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate an image from.'),
-  saveToGallery: z.boolean().optional().describe('Whether to save the image to the gallery history.')
 });
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
@@ -39,7 +36,7 @@ const generateImageFlow = ai.defineFlow(
     inputSchema: GenerateImageInputSchema,
     outputSchema: GenerateImageOutputSchema,
   },
-  async ({ prompt, saveToGallery = false }) => {
+  async ({ prompt }) => {
     // 1. Generate the image using the AI model
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
@@ -63,23 +60,7 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Gagal mengunggah gambar yang telah dibuat.');
     }
     
-    // 3. If requested, save to gallery history
-    if (saveToGallery) {
-        try {
-            // Categorize the image first
-            const category = await categorizeImage({ imageUrl: publicUrl });
-
-            // Then save the record
-            const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-            await addGalleryImageRecord({ name: imageName, url: publicUrl, category });
-        } catch (error) {
-            // We don't throw an error here, just log it. 
-            // The main goal is to return the image URL.
-            // The calling function can show a more specific toast.
-            console.error("Gagal menyimpan ke galeri:", error);
-        }
-    }
-
+    // 3. Return the public URL
     return { imageUrl: publicUrl };
   }
 );
