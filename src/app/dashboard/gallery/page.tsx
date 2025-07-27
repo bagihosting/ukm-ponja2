@@ -107,7 +107,7 @@ export default function GalleryPage() {
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url).then(() => {
       toast({
-        title: 'Berhasil Disalin',
+        title: 'Berhasil!',
         description: 'URL gambar telah disalin ke clipboard.',
       });
     });
@@ -124,7 +124,7 @@ export default function GalleryPage() {
       await deleteGalleryImage(imageToDelete.id);
       setImages(images.filter((image) => image.id !== imageToDelete.id));
       toast({
-        title: 'Berhasil',
+        title: 'Berhasil!',
         description: 'Riwayat gambar telah berhasil dihapus.',
       });
     } catch (err: any) {
@@ -140,13 +140,13 @@ export default function GalleryPage() {
   };
 
   const handleImageGenerated = async (url: string, prompt: string) => {
-    setIsAiModalOpen(false); // Close the dialog immediately
+    setIsAiModalOpen(false); 
     try {
       const category = await categorizeImage({ imageUrl: url });
       const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
       await addGalleryImageRecord({ name: imageName, url: url, category });
-      toast({ title: 'Berhasil Dibuat & Disimpan!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
-      await fetchImages(); // Refresh the gallery list
+      toast({ title: 'Berhasil!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
+      await fetchImages(); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -158,8 +158,8 @@ export default function GalleryPage() {
 
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-4 sm:p-6 space-y-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
@@ -291,6 +291,6 @@ export default function GalleryPage() {
         onOpenChange={setIsAiModalOpen}
         onImageGenerated={handleImageGenerated}
       />
-    </>
+    </div>
   );
 }

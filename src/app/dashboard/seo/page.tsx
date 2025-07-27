@@ -81,7 +81,7 @@ export default function SEOPage() {
   
   if (isLoading) {
     return (
-        <div className="space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
             <h1 className="text-lg font-semibold md:text-2xl">SEO</h1>
              <Card>
                 <CardHeader>
@@ -111,58 +111,60 @@ export default function SEOPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <h1 className="text-lg font-semibold md:text-2xl">SEO</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Pengaturan SEO</CardTitle>
-          <CardDescription>
-            Kelola judul, deskripsi, dan kata kunci untuk optimasi mesin pencari (SEO) situs Anda.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div className="space-y-2">
-            <Label htmlFor="title">Judul Situs</Label>
-            <Input
-              id="title"
-              {...register('title')}
-              disabled={isSubmitting}
-              placeholder="Contoh: UKM PONJA - Puskesmas Pondok Jagung"
-            />
-            {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Deskripsi Situs</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              disabled={isSubmitting}
-              className="min-h-24"
-              placeholder="Contoh: Website resmi Upaya Kesehatan Masyarakat (UKM) Puskesmas Pondok Jagung, menyediakan informasi kesehatan, program, dan berita terbaru."
-            />
-            {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="keywords">Kata Kunci (dipisahkan koma)</Label>
-            <Input
-              id="keywords"
-              {...register('keywords')}
-              disabled={isSubmitting}
-              placeholder="kesehatan, puskesmas, pondok jagung, ukm, ponja, tangerang selatan"
-            />
-             {errors.keywords && <p className="text-sm text-red-500">{errors.keywords.message}</p>}
-          </div>
-          
-           <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Simpan Perubahan
-                </Button>
+    <div className="p-4 sm:p-6 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <h1 className="text-lg font-semibold md:text-2xl">SEO</h1>
+        <Card>
+          <CardHeader>
+            <CardTitle>Pengaturan SEO</CardTitle>
+            <CardDescription>
+              Kelola judul, deskripsi, dan kata kunci untuk optimasi mesin pencari (SEO) situs Anda.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className="space-y-2">
+              <Label htmlFor="title">Judul Situs</Label>
+              <Input
+                id="title"
+                {...register('title')}
+                disabled={isSubmitting}
+                placeholder="Contoh: UKM PONJA - Puskesmas Pondok Jagung"
+              />
+              {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
             </div>
-        </CardContent>
-      </Card>
-    </form>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Deskripsi Situs</Label>
+              <Textarea
+                id="description"
+                {...register('description')}
+                disabled={isSubmitting}
+                className="min-h-24"
+                placeholder="Contoh: Website resmi Upaya Kesehatan Masyarakat (UKM) Puskesmas Pondok Jagung, menyediakan informasi kesehatan, program, dan berita terbaru."
+              />
+              {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="keywords">Kata Kunci (dipisahkan koma)</Label>
+              <Input
+                id="keywords"
+                {...register('keywords')}
+                disabled={isSubmitting}
+                placeholder="kesehatan, puskesmas, pondok jagung, ukm, ponja, tangerang selatan"
+              />
+               {errors.keywords && <p className="text-sm text-red-500">{errors.keywords.message}</p>}
+            </div>
+            
+             <div className="flex justify-end">
+                  <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Simpan Perubahan
+                  </Button>
+              </div>
+          </CardContent>
+        </Card>
+      </form>
+    </div>
   );
 }

@@ -57,7 +57,7 @@ export default function ProgramsPage() {
       await deleteProgram(programToDelete.id);
       setPrograms(programs.filter((p) => p.id !== programToDelete.id));
       toast({
-        title: 'Berhasil',
+        title: 'Berhasil!',
         description: 'Program telah berhasil dihapus.',
       });
     } catch (err: any) {
@@ -136,7 +136,7 @@ export default function ProgramsPage() {
   }
 
   return (
-    <>
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Program UKM</h1>
         <Link href="/dashboard/programs/new">
@@ -194,6 +194,6 @@ export default function ProgramsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

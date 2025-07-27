@@ -38,6 +38,7 @@ export default function NewArticlePage() {
   const { toast } = useToast();
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
+  const [notFound, setNotFound] = useState(false);
 
   const {
     register,
@@ -65,14 +66,15 @@ export default function NewArticlePage() {
         reset(article);
       } else {
         toast({ variant: 'destructive', title: 'Error', description: 'Artikel tidak ditemukan.' });
-        router.push('/dashboard/articles');
+        setNotFound(true);
       }
     } catch (error) {
        toast({ variant: 'destructive', title: 'Gagal Memuat', description: 'Gagal memuat data artikel.' });
+       setNotFound(true);
     } finally {
         setIsLoading(false);
     }
-  }, [reset, router, toast]);
+  }, [reset, toast]);
 
   useEffect(() => {
     if (isEditMode && articleId) {
@@ -90,11 +92,9 @@ export default function NewArticlePage() {
         await addArticle(data);
         toast({ title: 'Berhasil!', description: 'Artikel baru telah berhasil ditambahkan.' });
       }
-      // Use router.push which is sufficient for navigation and data refresh on the target page.
       router.push('/dashboard/articles');
-      router.refresh(); // Crucial for reflecting changes on server-rendered list pages.
+      router.refresh(); 
     } catch (error: any) {
-      console.error("Submit Error:", error);
       toast({
         variant: 'destructive',
         title: 'Gagal Menyimpan',
@@ -119,36 +119,46 @@ export default function NewArticlePage() {
         });
     }
   };
-
+  
   if (isLoading) {
      return (
-      <div className="space-y-4 p-4 md:p-0">
-        <div className="flex items-center gap-4 mb-4">
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-7 w-48" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
-                <Skeleton className="h-64 w-full" />
+        <div className="p-4 sm:p-6 space-y-4">
+            <div className="flex items-center gap-4">
+                <Skeleton className="h-7 w-7 rounded-md" />
+                <Skeleton className="h-7 w-48" />
             </div>
-             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                <Skeleton className="h-48 w-full" />
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
+                <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
+                    <Skeleton className="h-64 w-full" />
+                </div>
+                 <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                    <Skeleton className="h-48 w-full" />
+                </div>
             </div>
         </div>
-      </div>
     );
+  }
+
+  if (notFound) {
+    return (
+        <div className="p-4 sm:p-6 text-center">
+            <h1 className="text-xl font-semibold">Artikel Tidak Ditemukan</h1>
+            <p className="text-muted-foreground">Artikel yang Anda coba edit tidak ada.</p>
+            <Button onClick={() => router.push('/dashboard/articles')} className="mt-4">Kembali ke Daftar Artikel</Button>
+        </div>
+    )
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6">
         <div className="flex items-center gap-4 mb-4">
           <Button
             type="button"
             variant="outline"
             size="icon"
             className="h-7 w-7"
-            onClick={() => router.back()}
+            onClick={() => router.push('/dashboard/articles')}
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Kembali</span>
@@ -171,7 +181,7 @@ export default function NewArticlePage() {
             </Button>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
           <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
             <Card>
               <CardHeader>

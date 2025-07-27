@@ -29,7 +29,6 @@ export default function ArticlesPage() {
       try {
         setLoading(true);
         const fetchedArticles = await getArticles();
-        // Sort articles by date on the client-side
         const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setArticles(sortedArticles);
       } catch (err: any) {
@@ -58,7 +57,7 @@ export default function ArticlesPage() {
       await deleteArticle(articleToDelete.id);
       setArticles(articles.filter((article) => article.id !== articleToDelete.id));
       toast({
-        title: 'Berhasil',
+        title: 'Berhasil!',
         description: 'Artikel telah berhasil dihapus.',
       });
     } catch (err: any) {
@@ -74,7 +73,7 @@ export default function ArticlesPage() {
   };
 
   return (
-    <>
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Artikel</h1>
         <Link href="/dashboard/articles/new">
@@ -175,6 +174,6 @@ export default function ArticlesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

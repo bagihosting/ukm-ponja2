@@ -64,7 +64,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Settings</h1>
       </div>
@@ -183,6 +183,6 @@ export default function SettingsPage() {
             </form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

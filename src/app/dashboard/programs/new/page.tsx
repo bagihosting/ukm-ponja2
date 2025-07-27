@@ -46,6 +46,7 @@ export default function NewProgramPage() {
   const [picPhotoFile, setPicPhotoFile] = useState<File | null>(null);
   const [isUploadingPicPhoto, setIsUploadingPicPhoto] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
+  const [notFound, setNotFound] = useState(false);
 
   const {
     register,
@@ -77,14 +78,15 @@ export default function NewProgramPage() {
         reset(program);
       } else {
         toast({ variant: 'destructive', title: 'Error', description: 'Program tidak ditemukan.' });
-        router.push('/dashboard/programs');
+        setNotFound(true);
       }
     } catch (error) {
        toast({ variant: 'destructive', title: 'Gagal Memuat', description: 'Gagal memuat data program.' });
+       setNotFound(true);
     } finally {
       setIsLoading(false);
     }
-  }, [reset, router, toast]);
+  }, [reset, toast]);
 
   useEffect(() => {
     if (isEditMode && programId) {
@@ -151,36 +153,46 @@ export default function NewProgramPage() {
       setIsUploadingPicPhoto(false);
     }
   };
-
+  
   if (isLoading) {
      return (
-      <div className="space-y-4 p-4 md:p-0">
-        <div className="flex items-center gap-4 mb-4">
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-7 w-48" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
-                <Skeleton className="h-64 w-full" />
+        <div className="p-4 sm:p-6 space-y-4">
+            <div className="flex items-center gap-4">
+                <Skeleton className="h-7 w-7 rounded-md" />
+                <Skeleton className="h-7 w-48" />
             </div>
-             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                <Skeleton className="h-48 w-full" />
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
+                <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
+                    <Skeleton className="h-64 w-full" />
+                </div>
+                 <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                    <Skeleton className="h-48 w-full" />
+                </div>
             </div>
         </div>
-      </div>
     );
+  }
+
+  if (notFound) {
+    return (
+        <div className="p-4 sm:p-6 text-center">
+            <h1 className="text-xl font-semibold">Program Tidak Ditemukan</h1>
+            <p className="text-muted-foreground">Program yang Anda coba edit tidak ada.</p>
+            <Button onClick={() => router.push('/dashboard/programs')} className="mt-4">Kembali ke Daftar Program</Button>
+        </div>
+    )
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6">
         <div className="flex items-center gap-4 mb-4">
           <Button
             type="button"
             variant="outline"
             size="icon"
             className="h-7 w-7"
-            onClick={() => router.back()}
+            onClick={() => router.push('/dashboard/programs')}
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Kembali</span>
@@ -203,7 +215,7 @@ export default function NewProgramPage() {
             </Button>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 lg:gap-8">
           <div className="grid auto-rows-max items-start gap-4 lg:col-span-2">
             <Card>
               <CardHeader>
