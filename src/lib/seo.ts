@@ -27,6 +27,7 @@ export async function getSEOSettings(): Promise<SEOData | null> {
     }
     return null;
   } catch (error: any) {
+    // This will now catch the error from getAdminApp() if credentials are not set.
     if (error.message.includes('Firebase Admin credentials')) {
         console.warn("Firebase Admin credentials not set, returning null for getSEOSettings. This is expected during local development or build if server env vars are not set.");
     } else {

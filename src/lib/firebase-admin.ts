@@ -35,7 +35,7 @@ function getServiceAccount(): ServiceAccount {
  * Initializes and/or returns the Firebase Admin App instance.
  * This function ensures that the app is initialized only once (singleton pattern),
  * which is crucial for serverless environments.
- *
+ * It will throw an error if initialization fails, which should be caught by the calling function.
  * @returns The initialized Firebase Admin App.
  */
 export function getAdminApp(): admin.app.App {
@@ -50,11 +50,15 @@ export function getAdminApp(): admin.app.App {
     const serviceAccount = getServiceAccount();
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      // Add other configurations like databaseURL or storageBucket if needed.
     }, APP_NAME);
   } catch (error: any) {
-    // If initialization fails, log the error and re-throw it.
-    console.error('Failed to initialize Firebase Admin SDK:', error.message);
-    throw new Error('Firebase Admin SDK initialization failed. Check your credentials and server environment.');
+    // This makes the error catchable by the caller, allowing for graceful degradation.
+    if (error.message.includes('Firebase Admin credentials')) {
+       console.warn(`[Firebase Admin Warning] ${error.message}. Server-side Firebase features will be disabled.`);
+    } else {
+       console.error('Failed to initialize Firebase Admin SDK:', error.message);
+    }
+    // Re-throw the error to be handled by the calling function's try-catch block.
+    throw error;
   }
 }
