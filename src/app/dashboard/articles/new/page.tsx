@@ -103,9 +103,12 @@ export default function NewArticlePage() {
     }
   };
 
-  const handleImageGenerated = async (url: string, prompt: string) => {
+  const handleImageReady = async (url: string, prompt: string) => {
+    // 1. Set the image URL in the form
     setValue('imageUrl', url, { shouldValidate: true });
     setIsAiModalOpen(false);
+
+    // 2. Save to gallery in the background
     try {
       const category = await categorizeImage({ imageUrl: url });
       const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
@@ -266,7 +269,7 @@ export default function NewArticlePage() {
       <AiImageDialog 
         open={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
-        onImageGenerated={handleImageGenerated}
+        onImageReady={handleImageReady}
       />
     </>
   );

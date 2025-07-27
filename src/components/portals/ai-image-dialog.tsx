@@ -8,32 +8,29 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wand2 } from 'lucide-react';
-import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
-import { uploadImageToFreeImage } from '@/lib/image-hosting';
+import { generateImage } from '@/ai/flows/generate-image-flow';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface AiImageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImageGenerated: (url: string, prompt: string) => void;
+  onImageReady: (url: string, prompt: string) => void;
   promptSuggestion?: string;
 }
 
 export function AiImageDialog({ 
   open, 
   onOpenChange, 
-  onImageGenerated,
+  onImageReady,
   promptSuggestion = 'Contoh: "Sebuah danau di pegunungan saat matahari terbenam"'
 }: AiImageDialogProps) {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedImageDataUri, setGeneratedImageDataUri] = useState<string | null>(null);
 
   const resetState = () => {
     setPrompt('');
     setIsLoading(false);
-    setGeneratedImageDataUri(null);
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -49,27 +46,25 @@ export function AiImageDialog({
       return;
     }
     setIsLoading(true);
-    setGeneratedImageDataUri(null);
     try {
-      // 1. Generate image, get back the data URI
-      const input: GenerateImageInput = { prompt };
-      const result = await generateImage(input);
+      // 1. Generate image and get back the public URL directly
+      const result = await generateImage({ prompt });
       
-      if (result.imageDataUri) {
-        // 2. Upload the data URI to the hosting service
-        const publicUrl = await uploadImageToFreeImage(result.imageDataUri);
-        
-        // 3. Pass the final public URL to the parent component
-        onImageGenerated(publicUrl, prompt);
-        handleOpenChange(false);
+      if (result.publicUrl) {
+        // 2. Pass the public URL to the parent component
+        onImageReady(result.publicUrl, prompt);
       } else {
-        throw new Error('AI tidak mengembalikan data URI gambar.');
+        throw new Error('AI tidak mengembalikan URL gambar.');
       }
     } catch (error: any) {
+      let errorMessage = `Terjadi kesalahan: ${error.message}`;
+       if (error.message.includes("AI features are disabled")) {
+          errorMessage = "Fitur AI dinonaktifkan. Pastikan Anda telah mengatur GEMINI_API_KEY di file .env Anda.";
+      }
       toast({
         variant: 'destructive',
-        title: 'Gagal Membuat atau Mengunggah Gambar',
-        description: `Terjadi kesalahan: ${error.message}`,
+        title: 'Gagal Membuat Gambar',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

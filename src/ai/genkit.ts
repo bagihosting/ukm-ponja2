@@ -20,11 +20,13 @@ try {
     );
     // If initialization fails, create a "mock" genkit object with no-op functions
     // This prevents the application from crashing when AI features are called.
+    const disabledError = new Error("AI features are disabled due to missing credentials.");
     aiInstance = {
         defineFlow: (config, fn) => fn,
         definePrompt: (config, fn) => fn,
         defineTool: (config, fn) => fn,
-        generate: () => Promise.reject(new Error("AI features are disabled due to missing credentials.")),
+        // Make `generate` explicitly throw a controlled error.
+        generate: () => Promise.reject(disabledError),
         // @ts-ignore - Mocking a private or complex property
         dotcom: null, 
     } as unknown as GenkitType;

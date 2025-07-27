@@ -10,6 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { uploadImageToFreeImage } from '@/lib/image-hosting';
+
 
 const GenerateImageInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate an image from.'),
@@ -17,9 +19,7 @@ const GenerateImageInputSchema = z.object({
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
 const GenerateImageOutputSchema = z.object({
-  imageDataUri: z
-    .string()
-    .describe("The generated image as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  publicUrl: z.string().url().describe('The publicly accessible URL of the generated and hosted image.'),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
@@ -36,7 +36,7 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async ({ prompt }) => {
-    // Generate the image using the AI model
+    // 1. Generate the image using the AI model
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`,
@@ -50,7 +50,10 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
     
-    // Return the image data URI directly
-    return { imageDataUri };
+    // 2. Upload the generated image data URI to get a public URL
+    const publicUrl = await uploadImageToFreeImage(imageDataUri);
+
+    // 3. Return the public URL
+    return { publicUrl };
   }
 );
