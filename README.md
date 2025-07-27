@@ -83,13 +83,9 @@ npm install
     # --- Kunci API Google AI (Rahasia) ---
     GEMINI_API_KEY="AIza..."
 
-    # --- Konfigurasi Cloudinary (Hosting Gambar) ---
-    # Nama Cloud Anda, dapat dilihat di dasbor Cloudinary
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="nama-cloud-anda"
-    # Kunci API, dapat dilihat di dasbor Cloudinary (JANGAN DIBAGIKAN)
-    CLOUDINARY_API_KEY="12345..."
-    # Rahasia API, dapat dilihat di dasbor Cloudinary (JANGAN DIBAGIKAN)
-    CLOUDINARY_API_SECRET="abcde..."
+    # --- Konfigurasi Cloudinary (Hosting Gambar & Video) ---
+    # Salin nilai variabel lingkungan dari dasbor Cloudinary Anda
+    CLOUDINARY_URL="cloudinary://<api_key>:<api_secret>@<cloud_name>"
     ```
 
 ### 3.1. Mendapatkan Kredensial Klien Firebase (NEXT_PUBLIC_*)
@@ -132,10 +128,8 @@ Nilai-nilai ini **SANGAT RAHASIA** dan hanya boleh digunakan di server. **JANGAN
 Layanan ini digunakan untuk meng-host semua gambar yang diunggah.
 1. Buat akun di [Cloudinary](https://cloudinary.com/).
 2. Buka **Dashboard** Anda.
-3. Salin nilai-nilai berikut ke dalam berkas `.env`:
-    *   `Cloud Name` -> `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
-    *   `API Key` -> `CLOUDINARY_API_KEY`
-    *   `API Secret` -> `CLOUDINARY_API_SECRET`
+3. Temukan bagian **API Environment variable**.
+4. Salin seluruh nilai (dimulai dengan `cloudinary://...`) dan tempelkan ke `CLOUDINARY_URL` di berkas `.env` Anda.
 
 ## 4. Konfigurasi Firebase Authentication
 
