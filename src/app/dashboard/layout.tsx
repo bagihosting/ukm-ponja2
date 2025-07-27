@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { Bell, Home, LineChart, Menu, HeartPulse, Package2, Settings, ShoppingCart, Users, User, LogOut, Loader2, Newspaper, Image as ImageIcon, Briefcase, Search } from 'lucide-react';
 
-import { auth } from '@/lib/firebase';
+import { getClientAuth } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ function UserNav() {
 
   const handleLogout = async () => {
     try {
+      const auth = getClientAuth();
       await signOut(auth);
       router.push('/login');
       toast({

@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { getClientAuth, firebaseConfig } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -19,16 +20,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Pastikan `auth` telah diinisialisasi sebelum digunakan.
-    if (auth) {
+    // Check if the necessary config values are present on the client
+    const isConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+
+    if (isConfigured) {
+      const auth = getClientAuth();
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user);
         setLoading(false);
       });
-      // Membersihkan listener saat komponen di-unmount
+      // Cleanup listener on unmount
       return () => unsubscribe();
     } else {
-      // Jika Firebase tidak terkonfigurasi, hentikan loading dan anggap tidak ada pengguna.
+      // If Firebase is not configured, stop loading and assume no user.
+      console.error("Client-side Firebase configuration is missing. Auth will not work.");
       setLoading(false);
     }
   }, []);

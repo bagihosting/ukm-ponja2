@@ -2,7 +2,7 @@
 'use server';
 
 import { 
-  db
+  getFirebaseServices
 } from './firebase'; 
 import { 
   collection, 
@@ -17,12 +17,6 @@ import {
 import { uploadImageToFreeImage } from './image-hosting';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 
-
-if (!db) {
-  throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
-}
-
-const galleryCollection = collection(db, 'galleryImages');
 
 export interface GalleryImage {
   id: string;
@@ -70,6 +64,8 @@ function fileToDataUri(file: File): Promise<string> {
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
+    const { db } = getFirebaseServices();
+    const galleryCollection = collection(db, 'galleryImages');
     try {
         const docData = {
             name: imageData.name,
@@ -120,6 +116,8 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
+  const { db } = getFirebaseServices();
+  const galleryCollection = collection(db, 'galleryImages');
   try {
     const q = query(galleryCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
@@ -137,6 +135,7 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
+    const { db } = getFirebaseServices();
     try {
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);

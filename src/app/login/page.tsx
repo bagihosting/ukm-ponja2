@@ -7,7 +7,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { auth } from '@/lib/firebase';
+import { getClientAuth, firebaseConfig } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const isFirebaseConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,9 +44,10 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      if (!auth) {
+      if (!isFirebaseConfigured) {
         throw new Error("Konfigurasi Firebase tidak ditemukan. Pastikan berkas .env Anda sudah benar dan aplikasi telah di-restart.");
       }
+      const auth = getClientAuth();
       await signInWithEmailAndPassword(auth, values.email, values.password);
       // Redirect is handled by the effect hook, but we can push here as well for faster navigation
       router.push('/dashboard');
@@ -145,7 +147,7 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
-               {!auth && (
+               {!isFirebaseConfigured && (
                 <p className="mt-4 text-center text-sm text-destructive">
                   Kesalahan Konfigurasi: Kredensial Firebase tidak ditemukan. Periksa berkas .env Anda.
                 </p>

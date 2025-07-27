@@ -14,40 +14,44 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-
-// Memeriksa apakah semua variabel environment Firebase yang diperlukan sudah ada.
-const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
-
-if (allConfigPresent) {
-  try {
-    if (getApps().length) {
-      app = getApp();
-    } else {
-      app = initializeApp(firebaseConfig);
-    }
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-  } catch (error: any) {
-    console.error("Firebase initialization error:", error.message);
-    // Set to dummy objects to avoid breaking the app if initialization fails
-    app = null as any;
-    auth = null as any;
-    db = null as any;
-    storage = null as any;
-  }
-} else {
-   console.error("Firebase configuration is incomplete. Please check your .env file.");
-   // Set to dummy objects to avoid breaking the app
-   app = null as any;
-   auth = null as any;
-   db = null as any;
-   storage = null as any;
+interface FirebaseServices {
+    app: FirebaseApp;
+    auth: Auth;
+    db: Firestore;
+    storage: FirebaseStorage;
 }
 
+/**
+ * Initializes and/or returns Firebase services.
+ * This function ensures that Firebase is initialized only once (singleton pattern).
+ * @returns An object containing the initialized Firebase services.
+ * @throws An error if the Firebase configuration is incomplete.
+ */
+export function getFirebaseServices(): FirebaseServices {
+    const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
+    if (!allConfigPresent) {
+        throw new Error("Firebase configuration is incomplete. Please check your .env file.");
+    }
 
-export { app, auth, db, storage };
+    let app: FirebaseApp;
+    if (getApps().length) {
+        app = getApp();
+    } else {
+        app = initializeApp(firebaseConfig);
+    }
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    
+    return { app, auth, db, storage };
+}
+
+// For client-side usage where you might not want to throw an error immediately,
+// you can retrieve the auth object specifically.
+export function getClientAuth(): Auth {
+    return getFirebaseServices().auth;
+}
+
+// You can still export the raw config if needed elsewhere, though it's less common.
+export { firebaseConfig };

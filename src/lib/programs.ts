@@ -2,7 +2,7 @@
 'use server';
 
 import { 
-  db
+  getFirebaseServices
 } from './firebase'; 
 import { 
   collection, 
@@ -18,12 +18,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 import type { ProgramCategory } from './constants';
-
-if (!db) {
-  throw new Error("Firebase has not been initialized. Make sure your .env file is set up correctly.");
-}
-
-const programsCollection = collection(db, 'programs');
 
 
 export interface Program {
@@ -71,6 +65,8 @@ function toProgram(docSnap: any): Program {
 
 // Create
 export async function addProgram(program: ProgramInput): Promise<string> {
+  const { db } = getFirebaseServices();
+  const programsCollection = collection(db, 'programs');
   try {
     const dataToAdd: { [key: string]: any } = {
       name: program.name,
@@ -99,6 +95,8 @@ export async function addProgram(program: ProgramInput): Promise<string> {
 
 // Read all
 export async function getPrograms(): Promise<Program[]> {
+  const { db } = getFirebaseServices();
+  const programsCollection = collection(db, 'programs');
   try {
     const q = query(programsCollection, orderBy("name", "asc"));
     const querySnapshot = await getDocs(q);
@@ -111,6 +109,7 @@ export async function getPrograms(): Promise<Program[]> {
 
 // Read one
 export async function getProgram(id: string): Promise<Program | null> {
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'programs', id);
     const docSnap = await getDoc(docRef);
@@ -129,6 +128,7 @@ export async function getProgram(id: string): Promise<Program | null> {
 
 // Update
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'programs', id);
     
@@ -171,6 +171,7 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
 
 // Delete
 export async function deleteProgram(id: string): Promise<void> {
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'programs', id);
     await deleteDoc(docRef);

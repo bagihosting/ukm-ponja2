@@ -1,14 +1,8 @@
 
 'use server';
 
-import { db } from './firebase';
+import { getFirebaseServices } from './firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-
-if (!db) {
-  console.error("Firebase has not been initialized. Make sure your .env file is set up correctly. SEO functions will not work.");
-}
-
-const seoSettingsRef = doc(db, 'settings', 'seo');
 
 export interface SEOData {
   title: string;
@@ -21,8 +15,9 @@ export interface SEOData {
  * @returns A promise that resolves with the SEO data, or null if it doesn't exist.
  */
 export async function getSEOSettings(): Promise<SEOData | null> {
-  if (!db) return null;
   try {
+    const { db } = getFirebaseServices();
+    const seoSettingsRef = doc(db, 'settings', 'seo');
     const docSnap = await getDoc(seoSettingsRef);
     if (docSnap.exists()) {
       return docSnap.data() as SEOData;
@@ -30,7 +25,7 @@ export async function getSEOSettings(): Promise<SEOData | null> {
     return null;
   } catch (error) {
     console.error("Error getting SEO settings: ", error);
-    // Return null to allow fallback to default values
+    // Return null to allow fallback to default values in case of config error
     return null;
   }
 }
@@ -40,7 +35,8 @@ export async function getSEOSettings(): Promise<SEOData | null> {
  * @param data - The SEO data to save.
  */
 export async function updateSEOSettings(data: SEOData): Promise<void> {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat memperbarui pengaturan SEO.");
+  const { db } = getFirebaseServices();
+  const seoSettingsRef = doc(db, 'settings', 'seo');
   try {
     // Use setDoc with merge:true to create the document if it doesn't exist,
     // or update it if it does.

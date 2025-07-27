@@ -2,7 +2,7 @@
 'use server';
 
 import { 
-  db
+  getFirebaseServices
 } from './firebase'; 
 import { 
   collection, 
@@ -18,12 +18,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-
-if (!db) {
-  console.error("Firebase has not been initialized. Make sure your .env file is set up correctly. Articles functions will not work.");
-}
-
-const articlesCollection = collection(db, 'articles');
 
 // This is the interface that will be exposed to client components
 export interface Article {
@@ -62,7 +56,8 @@ function toArticle(docSnap: any): Article {
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat menambahkan artikel.");
+  const { db } = getFirebaseServices();
+  const articlesCollection = collection(db, 'articles');
   try {
     const dataToAdd: { [key: string]: any } = {
       title: article.title,
@@ -86,7 +81,8 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat mengambil artikel.");
+  const { db } = getFirebaseServices();
+  const articlesCollection = collection(db, 'articles');
   try {
     const q = query(articlesCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
@@ -99,7 +95,7 @@ export const getArticles = async (): Promise<Article[]> => {
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat mengambil artikel.");
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'articles', id);
     const docSnap = await getDoc(docRef);
@@ -117,7 +113,7 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat memperbarui artikel.");
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'articles', id);
     
@@ -148,7 +144,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
-  if (!db) throw new Error("Koneksi Firebase gagal. Tidak dapat menghapus artikel.");
+  const { db } = getFirebaseServices();
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
