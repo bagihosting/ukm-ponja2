@@ -3,15 +3,12 @@
 
 import Link from 'next/link';
 import { getArticles, type Article } from '@/lib/articles';
-import { getGalleryImages, type GalleryImage } from '@/lib/gallery';
 import { getPrograms, type Program } from '@/lib/programs';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
-import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AiDoctor } from '@/components/portals/ai-doctor';
 
@@ -20,37 +17,34 @@ function truncate(text: string, length: number) {
     if (!text || text.length <= length) {
         return text;
     }
-    return text.substring(0, length) + '...';
+    const cut = text.indexOf(' ', length);
+    if (cut === -1) return text;
+    return text.substring(0, cut) + '...';
 }
 
 async function fetchData() {
   try {
-    const [fetchedImages, fetchedArticles, fetchedPrograms] = await Promise.all([
-      getGalleryImages(),
+    const [fetchedArticles, fetchedPrograms] = await Promise.all([
       getArticles(),
       getPrograms()
     ]);
     
-    const sortedImages = fetchedImages
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
-
     const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    return { galleryImages: sortedImages, articles: sortedArticles, programs: fetchedPrograms };
+    return { articles: sortedArticles, programs: fetchedPrograms };
   } catch (error) {
     console.error("Gagal memuat data portal:", error);
-    return { galleryImages: [], articles: [], programs: [] };
+    return { articles: [], programs: [] };
   }
 }
 
 export default async function HomePage() {
-  const { galleryImages, articles, programs } = await fetchData();
+  const { articles, programs } = await fetchData();
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
-  const trendingArticles = articles.length > 1 ? articles.slice(1, 5) : [];
-  const healthArticles = articles.length > 5 ? articles.slice(5) : [];
-
+  const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
+  const otherArticles = articles.length > 6 ? articles.slice(6, 11) : [];
+  
   const essentialPrograms = programs.filter(p => p.category === 'UKM Esensial').slice(0, 5);
   const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan').slice(0, 5);
 
@@ -58,101 +52,86 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-background">
       <PortalNavbar />
       <main className="flex-1">
-        <div className="container px-4 md:px-6 space-y-16 md:space-y-24">
+        <div className="container px-4 md:px-6 space-y-16 md:space-y-24 mt-8 md:mt-12">
           
-          {/* Slider Section */}
-          {galleryImages.length > 0 && (
-            <section className="pt-8 md:pt-12" aria-label="Galeri Kegiatan Terbaru">
-                <Carousel 
-                    opts={{
-                    align: "start",
-                    loop: true,
-                    }}
-                    className="w-full"
-                >
-                    <CarouselContent>
-                    {galleryImages.map((image) => (
-                        <CarouselItem key={image.id}>
-                            <AspectRatio ratio={16 / 9} className="bg-muted rounded-lg overflow-hidden shadow-lg">
-                               <img
-                                 src={image.url}
-                                 alt={image.name || 'Gambar dari galeri kegiatan'}
-                                 className="w-full h-full object-cover"
-                               />
-                            </AspectRatio>
-                        </CarouselItem>
-                    ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex left-[-50px]" />
-                    <CarouselNext className="hidden sm:flex right-[-50px]" />
-                </Carousel>
-            </section>
+          {/* Headline and Popular Section */}
+          {articles.length > 0 && (
+             <section aria-labelledby="headline-heading">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Headline Article */}
+                    {headlineArticle && (
+                        <div className="lg:col-span-2">
+                           <h2 id="headline-heading" className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
+                                Berita Utama
+                            </h2>
+                            <Link href={`/artikel/${headlineArticle.id}`} className="group block">
+                                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                                    <AspectRatio ratio={16 / 9} className="bg-muted">
+                                        <img
+                                            src={headlineArticle.imageUrl || 'https://placehold.co/800x450.png'}
+                                            alt={headlineArticle.title}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            data-ai-hint="headline news"
+                                        />
+                                    </AspectRatio>
+                                    <div className="p-6">
+                                        <h3 className="text-2xl md:text-3xl font-extrabold leading-tight group-hover:text-primary transition-colors">
+                                            {headlineArticle.title}
+                                        </h3>
+                                        <p className="mt-4 text-base text-muted-foreground">
+                                            {truncate(headlineArticle.content, 150)}
+                                        </p>
+                                    </div>
+                                </Card>
+                            </Link>
+                        </div>
+                    )}
+                    
+                    {/* Popular Articles */}
+                    <div className="lg:col-span-1">
+                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
+                            Berita Populer
+                        </h2>
+                        <div className="space-y-4">
+                            {popularArticles.map((article, index) => (
+                                <Link key={article.id} href={`/artikel/${article.id}`} className="group block">
+                                    <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted transition-colors">
+                                        <div className="text-4xl font-bold text-muted-foreground/50 w-8 text-center">
+                                            {index + 1}
+                                        </div>
+                                        <h4 className="flex-1 font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
+                                            {article.title}
+                                        </h4>
+                                    </div>
+                                </Link>
+                            ))}
+                             {articles.length > 1 && (
+                                <Button asChild variant="outline" className="w-full mt-4">
+                                    <Link href="/#articles">
+                                        Lihat Semua Artikel <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                             )}
+                        </div>
+                    </div>
+                </div>
+             </section>
           )}
-
-          {/* Intro Section */}
-          <section className="py-8 md:py-12 text-center" aria-labelledby="intro-heading">
-            <div className="mx-auto max-w-4xl">
-                <h1 id="intro-heading" className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">Selamat Datang di UKM PONJA</h1>
-                <p className="mt-6 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                    Upaya Kesehatan Masyarakat (UKM) adalah setiap kegiatan untuk memelihara dan meningkatkan kesehatan serta mencegah dan menanggulangi timbulnya masalah kesehatan dengan sasaran keluarga, kelompok, dan masyarakat.
-                </p>
-            </div>
-          </section>
 
           {/* AI Doctor Section */}
           <section id="ai-doctor" className="py-8 md:py-12 max-w-4xl mx-auto" aria-label="Konsultasi dengan AI Dokter">
             <AiDoctor />
           </section>
 
-          {/* Articles Section */}
-          <section id="articles" className="py-8 md:py-12 space-y-12" aria-labelledby="articles-heading">
-             <div className="text-center max-w-4xl mx-auto">
-                 <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Artikel & Berita Kesehatan</h2>
-                 <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Ikuti berita terbaru dan dapatkan informasi kesehatan terpercaya dari kami.</p>
-            </div>
-            
-            {/* Headline News */}
-            {headlineArticle && (
-              <div>
-                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <div className="grid md:grid-cols-2">
-                    <div className="order-last md:order-first flex flex-col justify-center p-6 lg:p-8">
-                      <CardHeader className="p-0 mb-4">
-                         <Badge variant="secondary" className="w-fit mb-2">Artikel Terbaru</Badge>
-                        <CardTitle className="text-2xl font-bold leading-tight md:text-3xl">{headlineArticle.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                         <p className="text-sm text-muted-foreground leading-relaxed md:text-base">
-                          {truncate(headlineArticle.content, 180)}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="p-0 mt-6">
-                        <Button asChild>
-                          <Link href={`/artikel/${headlineArticle.id}`}>
-                            Baca Selengkapnya <ArrowRight className="ml-2 h-4 w-4"/>
-                          </Link>
-                        </Button>
-                      </CardFooter>
-                    </div>
-                     <AspectRatio ratio={4/3} className="md:ratio-auto">
-                       <img
-                          src={headlineArticle.imageUrl || 'https://placehold.co/600x400.png'}
-                          alt={headlineArticle.title}
-                          className="w-full h-full object-cover"
-                          data-ai-hint="news article"
-                        />
-                    </AspectRatio>
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {/* Trending News */}
-            {trendingArticles.length > 0 && (
-              <div className="space-y-8">
-                <h3 className="text-2xl md:text-3xl font-bold text-center">Berita Trending</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {trendingArticles.map(article => (
+          {/* More Articles Section */}
+          {otherArticles.length > 0 && (
+             <section id="articles" className="py-8 md:py-12 space-y-12" aria-labelledby="articles-heading">
+                <div className="text-center max-w-4xl mx-auto">
+                    <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Artikel Kesehatan Lainnya</h2>
+                    <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi lebih banyak informasi dan berita kesehatan dari kami.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {otherArticles.map(article => (
                      <Card key={article.id} className="group flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <Link href={`/artikel/${article.id}`} aria-label={`Baca artikel: ${article.title}`} className="block overflow-hidden">
                             <AspectRatio ratio={16 / 9} className="bg-muted">
@@ -160,16 +139,16 @@ export default async function HomePage() {
                                 src={article.imageUrl || 'https://placehold.co/400x225.png'}
                                 alt={article.title}
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                data-ai-hint="news placeholder"
+                                data-ai-hint="health news"
                                 />
                             </AspectRatio>
                         </Link>
                         <CardHeader className="flex-grow p-4">
-                          <h4 className="text-md font-semibold leading-tight mb-2 sm:text-lg">
-                            <Link href={`/artikel/${article.id}`} className="hover:underline">
-                                {truncate(article.title, 60)}
+                          <h3 className="text-lg font-semibold leading-tight mb-2">
+                            <Link href={`/artikel/${article.id}`} className="hover:underline hover:text-primary transition-colors">
+                                {truncate(article.title, 80)}
                             </Link>
-                          </h4>
+                          </h3>
                            <p className="text-xs text-muted-foreground">
                             {new Date(article.createdAt).toLocaleDateString('id-ID', {
                                 year: 'numeric', month: 'long', day: 'numeric'
@@ -179,19 +158,20 @@ export default async function HomePage() {
                     </Card>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {articles.length === 0 && (
+            </section>
+          )}
+          
+          {articles.length === 0 && (
+            <section>
                  <Card>
                     <CardContent className="py-16 text-center text-muted-foreground">
-                        <p>Belum ada artikel yang dipublikasikan.</p>
+                        <p className="font-semibold text-lg">Belum ada berita</p>
+                        <p>Saat ini belum ada artikel yang dipublikasikan. Silakan kembali lagi nanti.</p>
                     </CardContent>
                 </Card>
-            )}
+            </section>
+          )}
 
-          </section>
-          
           {/* Programs & Reports Section */}
           <section id="programs-reports" className="py-8 md:py-12" aria-labelledby="programs-reports-title">
              <div className="text-center max-w-4xl mx-auto">
