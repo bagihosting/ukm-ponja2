@@ -1,20 +1,30 @@
 
-# Panduan Instalasi Aplikasi di Ubuntu 22.04
+# Panduan Instalasi dan Arsitektur Aplikasi di Ubuntu 22.04
 
-Dokumen ini menjelaskan cara menginstal dan menjalankan aplikasi ini pada sistem operasi Ubuntu 22.04.
+Dokumen ini menjelaskan cara menginstal, mengonfigurasi, dan memahami arsitektur aplikasi ini pada sistem operasi Ubuntu 22.04.
 
-## 1. Prasyarat
+## 1. Arsitektur Inti: Cloudinary & Firebase
 
-Sebelum memulai, pastikan sistem Anda telah terinstal perangkat lunak berikut:
+Sebelum instalasi, penting untuk memahami bagaimana dua layanan cloud utama bekerja sama dalam aplikasi ini:
 
+*   **Cloudinary**: Bertindak sebagai **penyimpanan file eksternal (CDN)**. Semua file gambar yang diunggah oleh pengguna atau dibuat oleh AI akan disimpan di sini. Cloudinary menyediakan URL publik untuk setiap gambar.
+*   **Firebase Firestore**: Bertindak sebagai **database utama**. Firestore **tidak menyimpan file gambar secara langsung**. Sebaliknya, ia menyimpan *metadata* atau informasi tentang gambar tersebut, seperti nama file, kategori, tanggal pembuatan, dan yang paling penting, **URL gambar yang merujuk ke Cloudinary**.
+
+**Alur Kerja Unggah Gambar:**
+1.  Pengguna mengunggah gambar.
+2.  Aplikasi mengirim file gambar ke Cloudinary.
+3.  Cloudinary menyimpan gambar dan memberikan URL publik.
+4.  Aplikasi menyimpan URL tersebut (bersama data lain seperti kategori) sebagai dokumen baru di Firestore.
+5.  Saat menampilkan gambar, aplikasi mengambil data dari Firestore, mendapatkan URL Cloudinary, dan menampilkannya kepada pengguna.
+
+## 2. Prasyarat
+
+Pastikan sistem Anda telah terinstal perangkat lunak berikut:
 - **Node.js**: Versi 18.x atau yang lebih baru.
 - **npm**: Biasanya terinstal bersama Node.js.
 - **Git**: Untuk mengkloning repositori.
 
 ### Instalasi Prasyarat
-
-Jika Anda belum menginstalnya, buka terminal dan jalankan perintah berikut:
-
 ```bash
 # Perbarui daftar paket
 sudo apt update && sudo apt upgrade -y
@@ -28,45 +38,36 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 # Muat nvm
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # Instal Node.js versi 18
 nvm install 18
 nvm use 18
-
-# Verifikasi instalasi
-node -v
-npm -v
 ```
 
-## 2. Instalasi Aplikasi
-
-Ikuti langkah-langkah berikut untuk menginstal dependensi aplikasi.
+## 3. Instalasi Aplikasi
 
 ```bash
-# 1. Klona repositori (jika Anda belum memiliki kodenya)
+# 1. Klona repositori (jika belum)
 # git clone <URL_REPOSITORI>
 # cd <NAMA_DIREKTORI_PROYEK>
 
-# 2. Instal dependensi proyek
+# 2. Instal dependensi
 npm install
 ```
 
-## 3. Konfigurasi Lingkungan (Environment)
+## 4. Konfigurasi Lingkungan (`.env`)
 
-**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan beberapa set kredensial. Tanpa ini, fitur-fitur penting seperti login, penyimpanan data, dan AI tidak akan berjalan.
+**LANGKAH INI SANGAT PENTING.** Tanpa konfigurasi ini, fitur-fitur inti tidak akan berjalan.
 
-1.  **Buat Berkas `.env`**:
-    Di dalam direktori utama proyek Anda, buat sebuah berkas baru bernama `.env`.
+1.  Buat berkas `.env` di direktori utama proyek:
     ```bash
     touch .env
     ```
 
-2.  **Isi Berkas `.env` dengan Templat Berikut**:
-    Salin dan tempel templat di bawah ini ke dalam berkas `.env` Anda.
+2.  Salin dan tempel templat di bawah ini ke dalam berkas `.env` Anda, lalu isi nilainya sesuai petunjuk.
 
     ```
-    # --- Kredensial Klien (Browser) ---
+    # --- Kredensial Klien Firebase (Browser) ---
     NEXT_PUBLIC_FIREBASE_API_KEY="AIza..."
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="proyek-anda.firebaseapp.com"
     NEXT_PUBLIC_FIREBASE_PROJECT_ID="proyek-anda"
@@ -75,7 +76,7 @@ npm install
     NEXT_PUBLIC_FIREBASE_APP_ID="1:12345...:web:..."
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-..."
 
-    # --- Kredensial Admin Server (Rahasia) ---
+    # --- Kredensial Admin Server Firebase (Rahasia) ---
     FIREBASE_ADMIN_CLIENT_EMAIL="firebase-adminsdk-..."
     # Kunci privat yang sudah di-encode ke Base64 (lihat instruksi di bawah)
     FIREBASE_ADMIN_PRIVATE_KEY_BASE64="LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5..."
@@ -88,55 +89,23 @@ npm install
     CLOUDINARY_URL="cloudinary://<api_key>:<api_secret>@<cloud_name>"
     ```
 
-### 3.1. Mendapatkan Kredensial Klien Firebase (NEXT_PUBLIC_*)
+### 4.1. Mendapatkan Kredensial Firebase & Google AI
 
-Nilai-nilai ini aman untuk diekspos di browser.
-1. Buka **Firebase Console**.
-2. Klik ikon gerigi (⚙️) di sebelah "Project Overview" dan pilih **Project settings**.
-3. Di tab **General**, di bawah **Your apps**, pilih aplikasi web Anda.
-4. Di bagian **Firebase SDK snippet**, pilih **Config**.
-5. Salin nilai-nilai yang sesuai ke dalam variabel `NEXT_PUBLIC_*` di berkas `.env` Anda.
+Ikuti petunjuk di [Panduan Resmi Firebase](https://firebase.google.com/docs/web/setup) dan [Google AI Studio](https://aistudio.google.com/app/apikey) untuk mendapatkan nilai-nilai di atas. Untuk `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`, Anda perlu men-download file JSON service account, lalu mengubah nilai `private_key` menjadi format Base64.
 
-### 3.2. Mendapatkan Kredensial Admin Server Firebase (FIREBASE_ADMIN_*)
+Gunakan perintah ini untuk encode kunci privat:
+```bash
+# Ganti path/to/your/keyfile.json dengan path file JSON Anda
+cat path/to/your/keyfile.json | jq -r .private_key | base64 | tr -d '\n'
+```
+*Jika Anda tidak memiliki `jq`, instal dengan: `sudo apt-get install jq`*
 
-Nilai-nilai ini **SANGAT RAHASIA** dan hanya boleh digunakan di server. **JANGAN PERNAH** membagikannya di sisi klien.
+### 4.2. Mendapatkan Kredensial Cloudinary
 
-1.  **Unduh Kunci Privat**:
-    *   Buka **Firebase Console** -> **Project settings**.
-    *   Navigasi ke tab **Service accounts**.
-    *   Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh.
-
-2.  **Isi `FIREBASE_ADMIN_CLIENT_EMAIL`**:
-    *   Buka file JSON yang baru saja diunduh dan salin nilai dari `"client_email"`.
-
-3.  **Encode dan Isi `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`**:
-    *   Ubah kunci privat menjadi format **Base64** untuk keamanan. Jalankan perintah ini di terminal:
-        ```bash
-        # Ganti path/to/your/keyfile.json dengan path file JSON Anda
-        cat path/to/your/keyfile.json | jq -r .private_key | base64 | tr -d '\n'
-        ```
-        *Jika Anda tidak memiliki `jq`, instal dengan: `sudo apt-get install jq`*
-    *   **Salin seluruh output** dan tempelkan ke `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`.
-
-### 3.3. Mendapatkan Kunci API Google AI (GEMINI_API_KEY)
-
-1. Buka [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Buat kunci API baru dan salin nilainya ke `GEMINI_API_KEY`.
-
-### 3.4. Mendapatkan Kredensial Cloudinary
-
-Layanan ini digunakan untuk meng-host semua gambar yang diunggah.
-1. Buat akun di [Cloudinary](https://cloudinary.com/).
-2. Buka **Dashboard** Anda.
-3. Temukan bagian **API Environment variable**.
-4. Salin seluruh nilai (dimulai dengan `cloudinary://...`) dan tempelkan ke `CLOUDINARY_URL` di berkas `.env` Anda.
-
-## 4. Konfigurasi Firebase Authentication
-
-1.  Buka **Firebase Console**.
-2.  Navigasi ke **Authentication** -> **Sign-in method**.
-3.  Pilih **Email/Password** dan aktifkan.
-4.  Buat setidaknya satu pengguna di tab **Users** agar Anda dapat login ke dasbor.
+1.  Buat akun di [Cloudinary](https://cloudinary.com/).
+2.  Buka **Dashboard** Anda.
+3.  Temukan bagian **API Environment variable**.
+4.  Salin seluruh nilai (dimulai dengan `cloudinary://...`) dan tempelkan ke `CLOUDINARY_URL` di berkas `.env` Anda.
 
 ## 5. Menjalankan Aplikasi
 
@@ -147,44 +116,4 @@ Setelah semua konfigurasi selesai, **restart server pengembangan Anda** untuk me
 npm run dev
 ```
 
-Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`.
-
-## 6. Menjalankan Aplikasi di Latar Belakang dengan PM2 (Opsional)
-
-Untuk menjalankan aplikasi secara persisten di server produksi, gunakan manajer proses seperti `pm2`.
-
-### 6.1. Instalasi PM2
-
-```bash
-sudo npm install pm2 -g
-```
-
-### 6.2. Menjalankan Aplikasi dengan PM2
-
-1.  **Build Aplikasi untuk Produksi**:
-    ```bash
-    npm run build
-    ```
-
-2.  **Jalankan Aplikasi**:
-    ```bash
-    pm2 start npm --name "ukm-ponja-app" -- run start
-    ```
-
-### 6.3. Mengelola Aplikasi dengan PM2
-
--   **Melihat status**: `pm2 list`
--   **Melihat log**: `pm2 logs ukm-ponja-app`
--   **Menghentikan**: `pm2 stop ukm-ponja-app`
--   **Memulai ulang**: `pm2 restart ukm-ponja-app`
-
-### 6.4. Menjalankan PM2 saat Startup
-
-```bash
-pm2 startup
-```
-Jalankan perintah yang diberikan oleh PM2, lalu simpan daftar proses Anda:
-```bash
-pm2 save
-```
-Aplikasi Anda sekarang akan otomatis berjalan setiap kali server dinyalakan.
+Aplikasi akan berjalan di `http://localhost:3002`.
