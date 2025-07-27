@@ -21,6 +21,8 @@ import type { ProgramCategory } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { addGalleryImageRecord } from '@/lib/gallery';
 import ImagePreview from '@/components/portals/image-preview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -139,7 +141,20 @@ export default function EditProgramPage() {
       const result = await generateImage(input);
       if (result.imageUrl) {
         setValue('imageUrl', result.imageUrl, { shouldValidate: true });
-        toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan URL telah ditambahkan.' });
+        
+        try {
+          const category = await categorizeImage({ imageUrl: result.imageUrl });
+          const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+          await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
+          toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
+        } catch (galleryError: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Gagal Simpan ke Galeri',
+                description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
+            });
+        }
+        
         setIsAiModalOpen(false);
         setAiPrompt('');
       } else {
@@ -370,7 +385,7 @@ export default function EditProgramPage() {
           <DialogHeader>
             <DialogTitle>Buat Gambar dengan AI</DialogTitle>
             <DialogDescription>
-              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda.
+              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda dan menyimpannya ke galeri.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -403,3 +418,5 @@ export default function EditProgramPage() {
     </>
   );
 }
+
+    

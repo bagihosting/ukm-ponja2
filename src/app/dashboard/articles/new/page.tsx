@@ -17,6 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { addArticle } from '@/lib/articles';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { addGalleryImageRecord } from '@/lib/gallery';
 import ImagePreview from '@/components/portals/image-preview';
 
 
@@ -84,11 +86,28 @@ export default function NewArticlePage() {
     }
     setIsGeneratingImage(true);
     try {
+      // 1. Generate the image
       const input: GenerateImageInput = { prompt: aiPrompt };
       const result = await generateImage(input);
       if (result.imageUrl) {
+        // 2. Set the URL in the form
         setValue('imageUrl', result.imageUrl, { shouldValidate: true });
-        toast({ title: 'Berhasil!', description: 'Gambar berhasil dibuat dan URL telah ditambahkan.' });
+        
+        // 3. (New) Categorize and save to gallery in the background
+        try {
+          const category = await categorizeImage({ imageUrl: result.imageUrl });
+          const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+          await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
+          toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
+        } catch (galleryError: any) {
+            // If saving to gallery fails, don't block the user. Just notify them.
+             toast({
+                variant: 'destructive',
+                title: 'Gagal Simpan ke Galeri',
+                description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
+            });
+        }
+        
         setIsAiModalOpen(false);
       } else {
         throw new Error('AI tidak mengembalikan URL gambar.');
@@ -220,7 +239,7 @@ export default function NewArticlePage() {
           <DialogHeader>
             <DialogTitle>Buat Gambar dengan AI</DialogTitle>
             <DialogDescription>
-              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda.
+              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda dan menyimpannya ke galeri.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -253,3 +272,5 @@ export default function NewArticlePage() {
     </>
   );
 }
+
+    
