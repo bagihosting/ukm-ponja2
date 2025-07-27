@@ -63,14 +63,14 @@ const generateChartImageFlow = ai.defineFlow(
     outputSchema: GenerateChartImageOutputSchema,
   },
   async (input) => {
-    const renderedPrompt = await prompt.render(input);
+    const renderedPrompt = await prompt.render({ input });
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
       prompt: renderedPrompt.prompt,
     });
 
-    const dataUri = media.url;
+    const dataUri = media?.url;
     if (!dataUri) {
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }

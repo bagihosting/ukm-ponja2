@@ -35,11 +35,7 @@ export async function categorizeImage(input: CategorizeImageInput): Promise<type
   return result.category;
 }
 
-const prompt = ai.definePrompt({
-    name: 'categorizeImagePrompt',
-    input: { schema: CategorizeImageInputSchema },
-    output: { schema: CategorizeImageOutputSchema },
-    prompt: `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
+const prompt = `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
 
 Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari daftar berikut:
 - Penyuluhan Kesehatan (Contoh: seminar, pembagian brosur, edukasi ke masyarakat)
@@ -53,8 +49,7 @@ Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari
 
 Pilih HANYA SATU kategori yang paling mewakili aktivitas utama dalam gambar.
 
-Gambar untuk dianalisis: {{media url=imageUrl}}`
-});
+Gambar untuk dianalisis: {{media url=imageUrl}}`;
 
 const categorizeImageFlow = ai.defineFlow(
   {
@@ -63,7 +58,11 @@ const categorizeImageFlow = ai.defineFlow(
     outputSchema: CategorizeImageOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await ai.generate({
+        prompt,
+        input,
+        output: { schema: CategorizeImageOutputSchema },
+    });
     if (!output) {
         throw new Error("Gagal mendapatkan kategori dari AI.");
     }

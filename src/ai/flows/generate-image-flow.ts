@@ -42,14 +42,14 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const renderedPrompt = await imagePrompt.render(input);
+    const renderedPrompt = await imagePrompt.render({ input });
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
       prompt: renderedPrompt.prompt,
     });
 
-    const dataUri = media.url;
+    const dataUri = media?.url;
     if (!dataUri) {
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
