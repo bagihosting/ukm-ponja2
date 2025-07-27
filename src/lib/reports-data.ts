@@ -10,8 +10,8 @@ export const reportLinks = [
   {
     slug: "laporan-grafik",
     title: "Laporan Grafik",
-    url: "https://docs.google.com/spreadsheets/d/17WWQvrkT5Nazx4-7eZQ566K-KfQt_PRmCJN1Zfi9xNw/edit?usp=sharing",
-    embedUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTq9rYS_pTbq4Y-I9C5a-vM2b-2a7wJ_Z-J5nJ5mZ-b3aQ_kF/pubchart?oid=661340878&format=interactive",
+    url: "https://docs.google.com/spreadsheets/d/17WWQvrkT5Nazx4-7eZQ566K-KfQt_PRmCJN1Zfi9xNw/edit#gid=661340878",
+    embedUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-y4H4n8S45E-1D5G8iJpl5eDk7nDoB-j9aA3xT-C2sC4yHwS_dY_5B_rG_cZ-yE4g0wF_tXhJ9rP/pubchart?oid=661340878&format=interactive",
     description: "Visualisasi data dan grafik untuk memantau performa program UKM."
   },
   {
