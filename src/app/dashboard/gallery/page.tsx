@@ -163,8 +163,8 @@ export default function GalleryPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <Card className="h-fit">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <Card className="lg:w-1/2 flex-shrink-0">
           <CardHeader>
             <CardTitle>Unggah atau Buat Gambar</CardTitle>
             <CardDescription>Unggah gambar manual atau buat menggunakan AI. Setiap gambar akan dikategorikan secara otomatis.</CardDescription>
@@ -198,7 +198,7 @@ export default function GalleryPage() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="lg:w-1/2 flex-grow">
           <CardHeader>
             <CardTitle>Riwayat Gambar</CardTitle>
             <CardDescription>Daftar gambar yang riwayatnya tersimpan, beserta kategorinya.</CardDescription>

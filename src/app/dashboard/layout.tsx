@@ -187,7 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <UserNav />
         </header>
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 flex-grow p-4 sm:p-6">
           {children}
         </main>
         <footer className="mt-auto border-t bg-background px-4 py-4 sm:px-6">

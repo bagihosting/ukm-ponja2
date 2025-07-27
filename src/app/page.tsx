@@ -60,11 +60,8 @@ export default async function HomePage() {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Headline Article */}
                     {headlineArticle && (
-                        <div className="lg:w-2/3">
-                           <h2 id="headline-heading" className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
-                                Berita Utama
-                            </h2>
-                            <Link href={`/artikel/${headlineArticle.id}`} className="group block h-full">
+                        <div className="lg:w-2/3 flex">
+                            <Link href={`/artikel/${headlineArticle.id}`} className="group block h-full w-full">
                                 <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
                                     <AspectRatio ratio={16 / 9} className="bg-muted">
                                         <img
@@ -74,11 +71,11 @@ export default async function HomePage() {
                                             data-ai-hint="headline news"
                                         />
                                     </AspectRatio>
-                                    <CardContent className="p-6 flex-grow">
-                                        <h3 className="text-2xl md:text-3xl font-extrabold leading-tight group-hover:text-primary transition-colors">
+                                    <CardContent className="p-6 flex-grow flex flex-col">
+                                        <h2 id="headline-heading" className="text-2xl md:text-3xl font-extrabold leading-tight group-hover:text-primary transition-colors mb-2">
                                             {headlineArticle.title}
-                                        </h3>
-                                        <p className="mt-4 text-base text-muted-foreground">
+                                        </h2>
+                                        <p className="text-base text-muted-foreground">
                                             {truncate(headlineArticle.content, 150)}
                                         </p>
                                     </CardContent>
@@ -127,7 +124,7 @@ export default async function HomePage() {
 
           {/* More Articles Section */}
           {otherArticles.length > 0 && (
-             <section id="articles" className="py-8 md:py-12 space-y-12" aria-labelledby="articles-heading">
+             <section id="articles" className="py-8 md:py-12 space-y-8" aria-labelledby="articles-heading">
                 <div className="text-center max-w-4xl mx-auto">
                     <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Berita Terbaru</h2>
                     <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi lebih banyak informasi dan berita kesehatan dari kami.</p>
