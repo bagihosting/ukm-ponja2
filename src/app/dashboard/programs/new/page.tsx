@@ -103,7 +103,6 @@ export default function NewProgramPage() {
         toast({ title: 'Berhasil!', description: 'Program baru telah berhasil ditambahkan.' });
       }
       router.push('/dashboard/programs');
-      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',

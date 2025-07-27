@@ -91,7 +91,6 @@ export default function NewArticlePage() {
         toast({ title: 'Berhasil!', description: 'Artikel baru telah berhasil ditambahkan.' });
       }
       router.push('/dashboard/articles');
-      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',
