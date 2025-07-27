@@ -14,20 +14,21 @@ interface ServiceAccount {
 // Function to get the service account credentials from environment variables.
 // Throws an error if any of the required variables are missing.
 function getServiceAccount(): ServiceAccount {
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const privateKeyBase64 = process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-  if (!privateKey || !clientEmail || !projectId) {
-    throw new Error('Firebase Admin credentials are not set in environment variables.');
+  if (!privateKeyBase64 || !clientEmail || !projectId) {
+    throw new Error('Firebase Admin credentials (including private key as Base64) are not set in environment variables.');
   }
 
-  // The private key from the environment variable might have escaped newlines.
-  // We need to replace them with actual newline characters.
+  // Decode the Base64 private key back to its original PEM format.
+  const privateKey = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
+
   return {
     projectId,
     clientEmail,
-    privateKey: privateKey.replace(/\\n/g, '\n'),
+    privateKey,
   };
 }
 

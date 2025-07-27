@@ -76,7 +76,8 @@ npm install
 
     # --- Kredensial Admin Server (Rahasia) ---
     FIREBASE_ADMIN_CLIENT_EMAIL="firebase-adminsdk-..."
-    FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+    # Kunci privat yang sudah di-encode ke Base64 (lihat instruksi di bawah)
+    FIREBASE_ADMIN_PRIVATE_KEY_BASE64="LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5..."
 
     # --- Kunci API Google AI ---
     GEMINI_API_KEY="AIza..."
@@ -94,14 +95,26 @@ Nilai-nilai ini aman untuk diekspos di browser.
 ### 3.2. Mendapatkan Kredensial Admin Server (FIREBASE_ADMIN_*)
 
 Nilai-nilai ini **SANGAT RAHASIA** dan hanya boleh digunakan di server. **JANGAN PERNAH** membagikannya di sisi klien.
-1. Buka **Firebase Console** -> **Project settings**.
-2. Navigasi ke tab **Service accounts**.
-3. Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh secara otomatis.
-4. **Buka file JSON** yang baru saja diunduh menggunakan editor teks.
-5. Salin nilai-nilai dari file JSON ke dalam berkas `.env` Anda:
-   - Salin nilai dari `"client_email"` ke `FIREBASE_ADMIN_CLIENT_EMAIL`.
-   - Salin seluruh nilai dari `"private_key"` (termasuk `-----BEGIN PRIVATE KEY-----` dan `-----END PRIVATE KEY-----`) ke `FIREBASE_ADMIN_PRIVATE_KEY`.
-   - Nilai untuk `NEXT_PUBLIC_FIREBASE_PROJECT_ID` juga tersedia di file ini sebagai `"project_id"`.
+
+1.  **Unduh Kunci Privat**:
+    *   Buka **Firebase Console** -> **Project settings**.
+    *   Navigasi ke tab **Service accounts**.
+    *   Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh secara otomatis (misalnya, `proyek-anda-firebase-adminsdk.json`).
+
+2.  **Isi `FIREBASE_ADMIN_CLIENT_EMAIL`**:
+    *   Buka file JSON yang baru saja diunduh.
+    *   Salin nilai dari `"client_email"` dan tempelkan ke `FIREBASE_ADMIN_CLIENT_EMAIL` di file `.env` Anda.
+
+3.  **Encode dan Isi `FIREBASE_ADMIN_PRIVATE_KEY_BASE64`**:
+    *   Kunci privat mengandung karakter khusus yang sulit disimpan langsung di `.env`. Solusinya adalah mengubahnya menjadi format **Base64**.
+    *   Buka terminal Anda dan jalankan perintah berikut, ganti `path/to/your/keyfile.json` dengan path sebenarnya ke file JSON yang Anda unduh:
+        ```bash
+        # Perintah ini akan membaca file JSON, mengekstrak nilai "private_key", dan meng-encode-nya ke Base64
+        cat path/to/your/keyfile.json | jq -r .private_key | base64 | tr -d '\n'
+        ```
+        *Jika Anda tidak memiliki `jq`, instal dengan: `sudo apt-get install jq`*
+    *   **Salin seluruh output** dari perintah di atas (ini adalah satu baris teks yang panjang).
+    *   Tempelkan ke `FIREBASE_ADMIN_PRIVATE_KEY_BASE64` di file `.env` Anda.
 
 ### 3.3. Mendapatkan Kunci API Google AI (GEMINI_API_KEY)
 
@@ -120,13 +133,14 @@ Agar fitur login berfungsi, Anda harus mengaktifkan metode **Email/Password** di
 
 ## 5. Menjalankan Aplikasi
 
-Setelah semua konfigurasi selesai, jalankan server pengembangan:
+Setelah semua konfigurasi selesai, **restart server pengembangan Anda** untuk memuat variabel `.env` yang baru.
 
 ```bash
+# Hentikan server jika sedang berjalan (Ctrl+C), lalu jalankan lagi
 npm run dev
 ```
 
-Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`. Setiap perubahan pada kode akan secara otomatis memuat ulang aplikasi di peramban Anda.
+Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`.
 
 ## 6. Menjalankan Aplikasi di Latar Belakang dengan PM2 (Opsional)
 
