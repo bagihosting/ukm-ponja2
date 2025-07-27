@@ -83,11 +83,17 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
     const category = await categorizeImage({ imageUrl: url });
 
     // 3. Save metadata to Firestore (this will also revalidate the path)
-    return await addGalleryImageRecord({
+    const recordId = await addGalleryImageRecord({
         name: file.name,
         url: url,
         category: category,
     });
+    
+    // Revalidate gallery page
+    revalidatePath('/galeri');
+    
+    return recordId;
+
   } catch (e: any) {
     throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
   }

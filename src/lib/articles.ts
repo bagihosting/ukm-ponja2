@@ -3,6 +3,7 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
+import { revalidatePath } from 'next/cache';
 
 // This is the interface that will be exposed to client components
 export interface Article {
@@ -56,6 +57,11 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     }
       
     const docRef = await db.collection('articles').add(dataToAdd);
+    
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath(`/artikel/${docRef.id}`);
+
     return docRef.id;
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
@@ -123,6 +129,11 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     if (Object.keys(dataToUpdate).length > 0) {
       await docRef.update(dataToUpdate);
     }
+
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath(`/artikel/${id}`);
+
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
       console.warn(`[Firebase Warning] ${error.message}`);
@@ -139,6 +150,11 @@ export const deleteArticle = async (id: string): Promise<void> => {
     const db = getFirestore(getAdminApp());
     const docRef = db.collection('articles').doc(id);
     await docRef.delete();
+    
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath(`/artikel/${id}`);
+
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
       console.warn(`[Firebase Warning] ${error.message}`);
@@ -147,4 +163,5 @@ export const deleteArticle = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
 

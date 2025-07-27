@@ -4,6 +4,7 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
 import type { ProgramCategory } from './constants';
+import { revalidatePath } from 'next/cache';
 
 
 export interface Program {
@@ -66,6 +67,11 @@ export async function addProgram(program: ProgramInput): Promise<string> {
     if (!dataToAdd.personInChargePhotoUrl) delete dataToAdd.personInChargePhotoUrl;
     
     const docRef = await db.collection('programs').add(dataToAdd);
+
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath('/program-ukm');
+
     return docRef.id;
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
@@ -137,6 +143,11 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
     if (Object.keys(dataToUpdate).length > 0) {
       await docRef.update(dataToUpdate);
     }
+
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath('/program-ukm');
+
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
       console.warn(`[Firebase Warning] ${error.message}`);
@@ -153,6 +164,11 @@ export async function deleteProgram(id: string): Promise<void> {
     const db = getFirestore(getAdminApp());
     const docRef = db.collection('programs').doc(id);
     await docRef.delete();
+
+    // Revalidate paths
+    revalidatePath('/');
+    revalidatePath('/program-ukm');
+    
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
       console.warn(`[Firebase Warning] ${error.message}`);
@@ -161,4 +177,3 @@ export async function deleteProgram(id: string): Promise<void> {
     throw error;
   }
 }
-
