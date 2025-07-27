@@ -52,20 +52,20 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-background">
       <PortalNavbar />
       <main className="flex-1">
-        <div className="container px-4 md:px-6 space-y-16 md:space-y-24 mt-8 md:mt-12">
+        <div className="container px-4 md:px-6 space-y-12 md:space-y-16 mt-8 md:mt-12">
           
           {/* Headline and Popular Section */}
           {articles.length > 0 && (
              <section aria-labelledby="headline-heading">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="flex flex-col lg:flex-row gap-8">
                     {/* Headline Article */}
                     {headlineArticle && (
-                        <div className="lg:col-span-2">
+                        <div className="lg:w-2/3">
                            <h2 id="headline-heading" className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
                                 Berita Utama
                             </h2>
-                            <Link href={`/artikel/${headlineArticle.id}`} className="group block">
-                                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <Link href={`/artikel/${headlineArticle.id}`} className="group block h-full">
+                                <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
                                     <AspectRatio ratio={16 / 9} className="bg-muted">
                                         <img
                                             src={headlineArticle.imageUrl || 'https://placehold.co/800x450.png'}
@@ -74,46 +74,48 @@ export default async function HomePage() {
                                             data-ai-hint="headline news"
                                         />
                                     </AspectRatio>
-                                    <div className="p-6">
+                                    <CardContent className="p-6 flex-grow">
                                         <h3 className="text-2xl md:text-3xl font-extrabold leading-tight group-hover:text-primary transition-colors">
                                             {headlineArticle.title}
                                         </h3>
                                         <p className="mt-4 text-base text-muted-foreground">
                                             {truncate(headlineArticle.content, 150)}
                                         </p>
-                                    </div>
+                                    </CardContent>
                                 </Card>
                             </Link>
                         </div>
                     )}
                     
                     {/* Popular Articles */}
-                    <div className="lg:col-span-1">
-                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
-                            Berita Populer
-                        </h2>
-                        <div className="space-y-4">
-                            {popularArticles.map((article, index) => (
-                                <Link key={article.id} href={`/artikel/${article.id}`} className="group block">
-                                    <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted transition-colors">
-                                        <div className="text-4xl font-bold text-muted-foreground/50 w-8 text-center">
-                                            {index + 1}
+                    {popularArticles.length > 0 && (
+                        <div className="lg:w-1/3 flex flex-col">
+                             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4 border-b pb-2">
+                                Berita Populer
+                            </h2>
+                            <div className="space-y-4 flex-grow flex flex-col">
+                                {popularArticles.map((article, index) => (
+                                    <Link key={article.id} href={`/artikel/${article.id}`} className="group block">
+                                        <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted transition-colors">
+                                            <div className="text-4xl font-bold text-muted-foreground/50 w-8 text-center flex-shrink-0">
+                                                {index + 1}
+                                            </div>
+                                            <h4 className="flex-1 font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
+                                                {article.title}
+                                            </h4>
                                         </div>
-                                        <h4 className="flex-1 font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
-                                            {article.title}
-                                        </h4>
-                                    </div>
-                                </Link>
-                            ))}
-                             {articles.length > 1 && (
-                                <Button asChild variant="outline" className="w-full mt-4">
-                                    <Link href="/#articles">
-                                        Lihat Semua Artikel <ArrowRight className="ml-2 h-4 w-4" />
                                     </Link>
-                                </Button>
-                             )}
+                                ))}
+                                <div className="mt-auto pt-4">
+                                     <Button asChild variant="outline" className="w-full">
+                                        <Link href="/#articles">
+                                            Lihat Semua Artikel <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
              </section>
           )}
@@ -127,7 +129,7 @@ export default async function HomePage() {
           {otherArticles.length > 0 && (
              <section id="articles" className="py-8 md:py-12 space-y-12" aria-labelledby="articles-heading">
                 <div className="text-center max-w-4xl mx-auto">
-                    <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Artikel Kesehatan Lainnya</h2>
+                    <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Berita Terbaru</h2>
                     <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi lebih banyak informasi dan berita kesehatan dari kami.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
