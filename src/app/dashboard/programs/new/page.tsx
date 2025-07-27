@@ -17,8 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { addProgram, getProgram, updateProgram } from '@/lib/programs';
 import { uploadImageToCloudinary } from '@/lib/image-hosting';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
-import { addGalleryImageRecord } from '@/lib/gallery';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -105,7 +103,6 @@ export default function NewProgramPage() {
         toast({ title: 'Berhasil!', description: 'Program baru telah berhasil ditambahkan.' });
       }
       router.push('/dashboard/programs');
-      router.refresh();
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -115,24 +112,9 @@ export default function NewProgramPage() {
     }
   };
 
-  const handleImageReady = async (url: string, prompt: string) => {
-    // 1. Set the image URL in the form
+  const handleImageReady = (url: string) => {
     setValue('imageUrl', url, { shouldValidate: true });
     setIsAiModalOpen(false);
-
-    // 2. Save to gallery in the background
-    try {
-        const category = await categorizeImage({ imageUrl: url });
-        const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-        await addGalleryImageRecord({ name: imageName, url: url, category });
-        toast({ title: 'Berhasil!', description: 'Gambar dibuat & riwayatnya disimpan ke galeri.' });
-    } catch (galleryError: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Gagal Simpan ke Galeri',
-            description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
-        });
-    }
   };
   
   const handlePicPhotoUpload = async () => {

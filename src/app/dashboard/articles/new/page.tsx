@@ -15,8 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addArticle, getArticle, updateArticle } from '@/lib/articles';
-import { addGalleryImageRecord } from '@/lib/gallery';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImagePreview } from '@/components/portals/image-preview';
@@ -93,7 +91,6 @@ export default function NewArticlePage() {
         toast({ title: 'Berhasil!', description: 'Artikel baru telah berhasil ditambahkan.' });
       }
       router.push('/dashboard/articles');
-      router.refresh(); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -103,22 +100,9 @@ export default function NewArticlePage() {
     }
   };
 
-  const handleImageReady = async (url: string, prompt: string) => {
+  const handleImageReady = (url: string) => {
     setValue('imageUrl', url, { shouldValidate: true });
     setIsAiModalOpen(false);
-
-    try {
-      const category = await categorizeImage({ imageUrl: url });
-      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-      await addGalleryImageRecord({ name: imageName, url: url, category });
-      toast({ title: 'Berhasil!', description: 'Gambar dibuat & riwayatnya disimpan ke galeri.' });
-    } catch (galleryError: any) {
-         toast({
-            variant: 'destructive',
-            title: 'Gagal Simpan ke Galeri',
-            description: `Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri: ${galleryError.message}`,
-        });
-    }
   };
   
   if (isLoading) {

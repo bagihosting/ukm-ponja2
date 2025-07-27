@@ -9,11 +9,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, addGalleryImageRecord, type GalleryImage } from '@/lib/gallery';
+import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { Badge } from '@/components/ui/badge';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 
@@ -139,22 +138,9 @@ export default function GalleryPage() {
     }
   };
 
-  const handleImageReady = async (url: string, prompt: string) => {
+  const handleImageReady = async () => {
     setIsAiModalOpen(false); 
-    
-    try {
-      const category = await categorizeImage({ imageUrl: url });
-      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-      await addGalleryImageRecord({ name: imageName, url: url, category });
-      toast({ title: 'Berhasil!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
-      await fetchImages(); 
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Gagal Menyimpan Riwayat Gambar',
-        description: `Terjadi kesalahan: ${error.message}`,
-      });
-    }
+    await fetchImages(); 
   };
 
 

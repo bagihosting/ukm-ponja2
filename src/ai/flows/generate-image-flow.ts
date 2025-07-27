@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { uploadImageToCloudinary } from '@/lib/image-hosting';
 
 
 const GenerateImageInputSchema = z.object({
@@ -19,7 +18,7 @@ const GenerateImageInputSchema = z.object({
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
 const GenerateImageOutputSchema = z.object({
-  publicUrl: z.string().url().describe('The publicly accessible URL of the generated and hosted image.'),
+  dataUri: z.string().describe("The generated image as a data URI, including a MIME type and Base64 encoding. Format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
 
@@ -45,15 +44,12 @@ const generateImageFlow = ai.defineFlow(
       },
     });
 
-    const imageDataUri = media.url;
-    if (!imageDataUri) {
+    const dataUri = media.url;
+    if (!dataUri) {
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
     
-    // 2. Upload the generated image data URI to get a public URL
-    const publicUrl = await uploadImageToCloudinary(imageDataUri);
-
-    // 3. Return the public URL
-    return { publicUrl };
+    // 2. Return the data URI
+    return { dataUri };
   }
 );
