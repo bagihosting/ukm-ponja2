@@ -3,12 +3,9 @@
 
 import { notFound } from 'next/navigation';
 import { reportLinks } from '@/lib/reports-data';
-import { PortalNavbar } from '@/components/portals/navbar';
-import { PortalFooter } from '@/components/portals/footer';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 export default async function ReportViewerPage({ params }: { params: { slug: string } }) {
   const report = reportLinks.find(link => link.slug === params.slug);
@@ -18,45 +15,38 @@ export default async function ReportViewerPage({ params }: { params: { slug: str
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <PortalNavbar />
-      <main className="flex-1">
-        <div className="container py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div className="flex-1">
-                    <Button asChild variant="ghost" className="mb-2 -ml-4">
-                        <Link href="/laporan">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Kembali ke Daftar Laporan
-                        </Link>
-                    </Button>
-                    <h1 className="text-2xl md:text-3xl font-bold">{report.title}</h1>
-                    <p className="text-muted-foreground mt-1">{report.description}</p>
-                </div>
-                <Button asChild>
-                    <Link href={report.url} target="_blank" rel="noopener noreferrer">
-                         <ExternalLink className="mr-2 h-4 w-4" />
-                        Buka di Tab Baru
-                    </Link>
-                </Button>
-            </div>
-          
-            <Card className="overflow-hidden">
-                <CardContent className="p-0">
-                    <div className="aspect-w-16 aspect-h-9 bg-muted">
-                         <iframe
-                            src={report.embedUrl}
-                            className="w-full h-[calc(100vh-250px)] border-0"
-                            allow="fullscreen"
-                        >
-                            Memuat laporan...
-                        </iframe>
-                    </div>
-                </CardContent>
-            </Card>
+    <div className="flex h-screen w-screen flex-col bg-muted/40">
+      {/* Local Header for Fullscreen View */}
+      <header className="flex h-16 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6 flex-shrink-0">
+        <div className="flex items-center gap-2">
+           <Button asChild variant="outline" size="sm">
+                <Link href="/laporan">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Kembali
+                </Link>
+            </Button>
+            <div className="hidden md:block border-l h-6 mx-4"></div>
+            <h1 className="text-lg font-semibold truncate hidden md:block">{report.title}</h1>
         </div>
+        <Button asChild size="sm">
+            <Link href={report.url} target="_blank" rel="noopener noreferrer">
+                 <ExternalLink className="mr-2 h-4 w-4" />
+                Buka di Tab Baru
+            </Link>
+        </Button>
+      </header>
+
+      {/* Responsive Iframe Container */}
+      <main className="flex-1 overflow-hidden">
+        <iframe
+            src={report.embedUrl}
+            className="h-full w-full border-0"
+            allow="fullscreen"
+            title={report.title}
+        >
+            Memuat laporan...
+        </iframe>
       </main>
-      <PortalFooter />
     </div>
   );
 }
