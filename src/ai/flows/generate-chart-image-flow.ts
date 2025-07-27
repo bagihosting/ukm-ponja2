@@ -30,32 +30,6 @@ export async function generateChartImage(
   return generateChartImageFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateChartImagePrompt',
-  input: { schema: GenerateChartImageInputSchema },
-  prompt: `Anda adalah seorang desainer grafis AI yang ahli dalam visualisasi data. Tugas Anda adalah membuat gambar grafik batang horizontal yang bersih, profesional, dan mudah dibaca berdasarkan data yang diberikan.
-
-Instruksi Desain:
-1.  **Jenis Grafik**: Buat grafik batang horizontal (horizontal bar chart).
-2.  **Latar Belakang**: Gunakan latar belakang putih bersih atau sangat terang (off-white).
-3.  **Palet Warna**: Gunakan palet warna biru dan hijau yang modern dan profesional untuk batang grafik. Warna harus konsisten.
-4.  **Label**: Setiap batang harus memiliki label yang jelas di sumbu Y (kiri) yang menampilkan nama program. Nilai data harus ditampilkan dengan jelas di ujung kanan setiap batang.
-5.  **Judul**: Gunakan informasi dari 'Pelayanan Program' dan 'Periode' untuk membuat judul yang informatif. Contoh Judul: "Laporan Target Tahunan: {{programService}} (Periode: {{period}})". Jika data tidak tersedia, buat judul umum seperti "Laporan Target Tahunan".
-6.  **Font**: Gunakan font sans-serif yang modern dan mudah dibaca (seperti Inter, Helvetica, atau Arial).
-7.  **Komposisi**: Pastikan ada cukup ruang (padding) di sekitar grafik. Jangan membuat elemen terlalu padat.
-8.  **Output**: Gambar harus berkualitas tinggi dan dalam format PNG.
-
-Data untuk Grafik:
-- **Judul Program/Pelayanan**: {{{programService}}}
-- **Periode**: {{{period}}}
-- **Penanggung Jawab**: {{{personInCharge}}}
-- **Data Target**:
-{{{targetData}}}
-
-Berdasarkan data dan instruksi di atas, buatlah gambar grafik yang sesuai.`,
-});
-
-
 const generateChartImageFlow = ai.defineFlow(
   {
     name: 'generateChartImageFlow',
@@ -63,11 +37,31 @@ const generateChartImageFlow = ai.defineFlow(
     outputSchema: GenerateChartImageOutputSchema,
   },
   async (input) => {
-    const renderedPrompt = await prompt.render({ input });
+    
+    const prompt = `Anda adalah seorang desainer grafis AI yang ahli dalam visualisasi data. Tugas Anda adalah membuat gambar grafik batang horizontal yang bersih, profesional, dan mudah dibaca berdasarkan data yang diberikan.
+
+Instruksi Desain:
+1.  **Jenis Grafik**: Buat grafik batang horizontal (horizontal bar chart).
+2.  **Latar Belakang**: Gunakan latar belakang putih bersih atau sangat terang (off-white).
+3.  **Palet Warna**: Gunakan palet warna biru dan hijau yang modern dan profesional untuk batang grafik. Warna harus konsisten.
+4.  **Label**: Setiap batang harus memiliki label yang jelas di sumbu Y (kiri) yang menampilkan nama program. Nilai data harus ditampilkan dengan jelas di ujung kanan setiap batang.
+5.  **Judul**: Gunakan informasi dari 'Pelayanan Program' dan 'Periode' untuk membuat judul yang informatif. Contoh Judul: "Laporan Target Tahunan: ${input.programService || ''} (Periode: ${input.period || ''})". Jika data tidak tersedia, buat judul umum seperti "Laporan Target Tahunan".
+6.  **Font**: Gunakan font sans-serif yang modern dan mudah dibaca (seperti Inter, Helvetica, atau Arial).
+7.  **Komposisi**: Pastikan ada cukup ruang (padding) di sekitar grafik. Jangan membuat elemen terlalu padat.
+8.  **Output**: Gambar harus berkualitas tinggi dan dalam format PNG.
+
+Data untuk Grafik:
+- **Judul Program/Pelayanan**: ${input.programService || 'Tidak ada'}
+- **Periode**: ${input.period || 'Tidak ada'}
+- **Penanggung Jawab**: ${input.personInCharge || 'Tidak ada'}
+- **Data Target**:
+${input.targetData}
+
+Berdasarkan data dan instruksi di atas, buatlah gambar grafik yang sesuai.`;
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
-      prompt: renderedPrompt.prompt,
+      prompt: prompt,
     });
 
     const dataUri = media?.url;
