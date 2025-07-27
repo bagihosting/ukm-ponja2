@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getChartData, updateChartData } from '@/lib/chart-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { REPORT_PROGRAM_SERVICES } from '@/lib/report-programs';
 
 const chartDataSchema = z.object({
   targetData: z.string().min(1, 'Data target tidak boleh kosong.'),
@@ -43,6 +45,7 @@ export default function ReportsPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ChartDataFormValues>({
     resolver: zodResolver(chartDataSchema),
@@ -148,9 +151,24 @@ export default function ReportsPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid md:grid-cols-3 gap-6">
-                 <div className="space-y-2">
+                <div className="space-y-2">
                     <Label htmlFor="programService">Pelayanan Program</Label>
-                    <Input id="programService" {...register('programService')} disabled={isSubmitting} placeholder="Contoh: Program UKM Esensial" />
+                    <Controller
+                        control={control}
+                        name="programService"
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                            <SelectTrigger id="programService">
+                              <SelectValue placeholder="Pilih Pelayanan Program" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {REPORT_PROGRAM_SERVICES.map(service => (
+                                <SelectItem key={service} value={service}>{service}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="personInCharge">Penanggung Jawab</Label>
