@@ -42,20 +42,28 @@ function toArticle(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
-  const db = getFirestore(getAdminApp());
+  try {
+    const db = getFirestore(getAdminApp());
 
-  const dataToAdd: { [key: string]: any } = {
-    ...article,
-    createdAt: FieldValue.serverTimestamp(),
-  };
-  
-  // Ensure optional fields are not 'undefined'
-  if (!dataToAdd.imageUrl) {
-    delete dataToAdd.imageUrl;
-  }
+    const dataToAdd: { [key: string]: any } = {
+      ...article,
+      createdAt: FieldValue.serverTimestamp(),
+    };
     
-  const docRef = await db.collection('articles').add(dataToAdd);
-  return docRef.id;
+    // Ensure optional fields are not 'undefined'
+    if (!dataToAdd.imageUrl) {
+      delete dataToAdd.imageUrl;
+    }
+      
+    const docRef = await db.collection('articles').add(dataToAdd);
+    return docRef.id;
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 };
 
 
@@ -100,26 +108,43 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('articles').doc(id);
-  
-  const dataToUpdate: { [key: string]: any } = { ...article };
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('articles').doc(id);
+    
+    const dataToUpdate: { [key: string]: any } = { ...article };
 
-  // Handle imageUrl separately for deletion. Use FieldValue.delete() for robust removal.
-  if (article.imageUrl === '' || article.imageUrl === null) {
-    dataToUpdate.imageUrl = FieldValue.delete();
-  }
-  
-  // Only update if there's something to update
-  if (Object.keys(dataToUpdate).length > 0) {
-    await docRef.update(dataToUpdate);
+    // Handle imageUrl separately for deletion. Use FieldValue.delete() for robust removal.
+    if (article.imageUrl === '' || article.imageUrl === null) {
+      dataToUpdate.imageUrl = FieldValue.delete();
+    }
+    
+    // Only update if there's something to update
+    if (Object.keys(dataToUpdate).length > 0) {
+      await docRef.update(dataToUpdate);
+    }
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
   }
 };
 
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('articles').doc(id);
-  await docRef.delete();
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('articles').doc(id);
+    await docRef.delete();
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 };
+

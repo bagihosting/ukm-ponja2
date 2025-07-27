@@ -52,20 +52,28 @@ function toProgram(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore
 
 // Create
 export async function addProgram(program: ProgramInput): Promise<string> {
-  const db = getFirestore(getAdminApp());
-  
-  const dataToAdd: { [key: string]: any } = {
-    ...program,
-    createdAt: FieldValue.serverTimestamp(),
-  };
+  try {
+    const db = getFirestore(getAdminApp());
     
-  // Clean up any undefined or empty optional fields before adding
-  if (!dataToAdd.imageUrl) delete dataToAdd.imageUrl;
-  if (!dataToAdd.personInChargeName) delete dataToAdd.personInChargeName;
-  if (!dataToAdd.personInChargePhotoUrl) delete dataToAdd.personInChargePhotoUrl;
-  
-  const docRef = await db.collection('programs').add(dataToAdd);
-  return docRef.id;
+    const dataToAdd: { [key: string]: any } = {
+      ...program,
+      createdAt: FieldValue.serverTimestamp(),
+    };
+      
+    // Clean up any undefined or empty optional fields before adding
+    if (!dataToAdd.imageUrl) delete dataToAdd.imageUrl;
+    if (!dataToAdd.personInChargeName) delete dataToAdd.personInChargeName;
+    if (!dataToAdd.personInChargePhotoUrl) delete dataToAdd.personInChargePhotoUrl;
+    
+    const docRef = await db.collection('programs').add(dataToAdd);
+    return docRef.id;
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 };
 
 // Read all
@@ -109,31 +117,48 @@ export async function getProgram(id: string): Promise<Program | null> {
 
 // Update
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('programs').doc(id);
-    
-  const dataToUpdate: { [key: string]: any } = { ...program };
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('programs').doc(id);
+      
+    const dataToUpdate: { [key: string]: any } = { ...program };
 
-  // Use FieldValue.delete() for robust removal of optional fields
-  if (program.imageUrl === null || program.imageUrl === '') {
-      dataToUpdate.imageUrl = FieldValue.delete();
-  }
-  if (program.personInChargeName === null || program.personInChargeName === '') {
-      dataToUpdate.personInChargeName = FieldValue.delete();
-  }
-  if (program.personInChargePhotoUrl === null || program.personInChargePhotoUrl === '') {
-      dataToUpdate.personInChargePhotoUrl = FieldValue.delete();
-  }
-    
-  if (Object.keys(dataToUpdate).length > 0) {
-    await docRef.update(dataToUpdate);
+    // Use FieldValue.delete() for robust removal of optional fields
+    if (program.imageUrl === null || program.imageUrl === '') {
+        dataToUpdate.imageUrl = FieldValue.delete();
+    }
+    if (program.personInChargeName === null || program.personInChargeName === '') {
+        dataToUpdate.personInChargeName = FieldValue.delete();
+    }
+    if (program.personInChargePhotoUrl === null || program.personInChargePhotoUrl === '') {
+        dataToUpdate.personInChargePhotoUrl = FieldValue.delete();
+    }
+      
+    if (Object.keys(dataToUpdate).length > 0) {
+      await docRef.update(dataToUpdate);
+    }
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
   }
 };
 
 
 // Delete
 export async function deleteProgram(id: string): Promise<void> {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('programs').doc(id);
-  await docRef.delete();
-};
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('programs').doc(id);
+    await docRef.delete();
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
+}
+

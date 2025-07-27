@@ -42,8 +42,17 @@ export async function getSEOSettings(): Promise<SEOData | null> {
  * @param data - The SEO data to save.
  */
 export async function updateSEOSettings(data: SEOData): Promise<void> {
-  const db = getFirestore(getAdminApp());
-  const seoSettingsRef = db.doc(SEO_DOC_PATH);
-  // Use setDoc with merge:true to create or update the document.
-  await seoSettingsRef.set(data, { merge: true });
+  try {
+    const db = getFirestore(getAdminApp());
+    const seoSettingsRef = db.doc(SEO_DOC_PATH);
+    // Use setDoc with merge:true to create or update the document.
+    await seoSettingsRef.set(data, { merge: true });
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 }
+

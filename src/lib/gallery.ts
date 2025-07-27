@@ -42,6 +42,7 @@ function toGalleryImage(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFire
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
+  try {
     const db = getFirestore(getAdminApp());
 
     const docData = {
@@ -52,6 +53,13 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
     };
     const docRef = await db.collection('galleryImages').add(docData);
     return docRef.id;
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 };
 
 
@@ -106,7 +114,16 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('galleryImages').doc(id);
-  await docRef.delete();
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('galleryImages').doc(id);
+    await docRef.delete();
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+      console.warn(`[Firebase Warning] ${error.message}`);
+      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+    }
+    throw error;
+  }
 };
+
