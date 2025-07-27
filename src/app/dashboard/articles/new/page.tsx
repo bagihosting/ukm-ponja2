@@ -15,12 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addArticle } from '@/lib/articles';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { addGalleryImageRecord } from '@/lib/gallery';
-import ImagePreview from '@/components/portals/image-preview';
-
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 
 const articleSchema = z.object({
   title: z.string().min(1, { message: 'Judul tidak boleh kosong.' }),
@@ -30,20 +28,36 @@ const articleSchema = z.object({
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
 
+function ImagePreview({ imageUrl }: { imageUrl: string | null | undefined; }) {
+  if (!imageUrl) {
+    return null;
+  }
+  return (
+    <div className="space-y-2">
+      <AspectRatio ratio={16 / 9} className="relative overflow-hidden rounded-md bg-muted">
+        <img
+          key={imageUrl}
+          src={imageUrl}
+          alt="Pratinjau Gambar"
+          className="w-full h-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+      </AspectRatio>
+    </div>
+  );
+}
+
 export default function NewArticlePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
     defaultValues: {
@@ -56,7 +70,6 @@ export default function NewArticlePage() {
   const imageUrl = watch('imageUrl');
 
   const onSubmit = async (data: ArticleFormValues) => {
-    setLoading(true);
     try {
       await addArticle({
         title: data.title,
@@ -74,52 +87,23 @@ export default function NewArticlePage() {
         title: 'Gagal Menyimpan',
         description: `Terjadi kesalahan: ${error.message}`,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleGenerateImage = async () => {
-    if (!aiPrompt) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
-      return;
-    }
-    setIsGeneratingImage(true);
+  const handleImageGenerated = async (url: string, prompt: string) => {
+    setValue('imageUrl', url, { shouldValidate: true });
+    setIsAiModalOpen(false);
     try {
-      // 1. Generate the image
-      const input: GenerateImageInput = { prompt: aiPrompt };
-      const result = await generateImage(input);
-      if (result.imageUrl) {
-        // 2. Set the URL in the form
-        setValue('imageUrl', result.imageUrl, { shouldValidate: true });
-        
-        // 3. (New) Categorize and save to gallery in the background
-        try {
-          const category = await categorizeImage({ imageUrl: result.imageUrl });
-          const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-          await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
-          toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
-        } catch (galleryError: any) {
-            // If saving to gallery fails, don't block the user. Just notify them.
-             toast({
-                variant: 'destructive',
-                title: 'Gagal Simpan ke Galeri',
-                description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
-            });
-        }
-        
-        setIsAiModalOpen(false);
-      } else {
-        throw new Error('AI tidak mengembalikan URL gambar.');
-      }
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Gagal Membuat Gambar',
-        description: `Terjadi kesalahan: ${error.message}`,
-      });
-    } finally {
-      setIsGeneratingImage(false);
+      const category = await categorizeImage({ imageUrl: url });
+      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+      await addGalleryImageRecord({ name: imageName, url: url, category });
+      toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
+    } catch (galleryError: any) {
+         toast({
+            variant: 'destructive',
+            title: 'Gagal Simpan ke Galeri',
+            description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
+        });
     }
   };
 
@@ -149,8 +133,8 @@ export default function NewArticlePage() {
             >
               Batal
             </Button>
-            <Button type="submit" size="sm" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan Artikel
             </Button>
           </div>
@@ -227,50 +211,18 @@ export default function NewArticlePage() {
           <Button type="button" variant="outline" size="sm" onClick={() => router.push('/dashboard/articles')}>
             Batal
           </Button>
-          <Button type="submit" size="sm" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Simpan Artikel
           </Button>
         </div>
       </form>
 
-      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Buat Gambar dengan AI</DialogTitle>
-            <DialogDescription>
-              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda dan menyimpannya ke galeri.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-prompt">Deskripsi Gambar</Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder='Contoh: "Sebuah danau di pegunungan saat matahari terbenam"'
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                disabled={isGeneratingImage}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isGeneratingImage}>Batal</Button>
-            </DialogClose>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage || !aiPrompt}>
-              {isGeneratingImage ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Membuat...
-                </>
-              ) : "Buat Gambar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AiImageDialog 
+        open={isAiModalOpen}
+        onOpenChange={setIsAiModalOpen}
+        onImageGenerated={handleImageGenerated}
+      />
     </>
   );
 }
-
-    

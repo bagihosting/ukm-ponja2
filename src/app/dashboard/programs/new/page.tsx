@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Wand2, Upload, User } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Wand2, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,13 +17,11 @@ import { useToast } from '@/hooks/use-toast';
 import { addProgram } from '@/lib/programs';
 import { uploadImageToFreeImage } from '@/lib/image-hosting';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
-import type { ProgramCategory } from '@/lib/constants';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { addGalleryImageRecord } from '@/lib/gallery';
-import ImagePreview from '@/components/portals/image-preview';
+import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 
 const programSchema = z.object({
   name: z.string().min(1, { message: 'Nama program tidak boleh kosong.' }),
@@ -45,13 +43,29 @@ function fileToDataUri(file: File): Promise<string> {
     });
 }
 
+function ImagePreview({ imageUrl }: { imageUrl: string | null | undefined; }) {
+  if (!imageUrl) {
+    return null;
+  }
+  return (
+    <div className="space-y-2">
+      <AspectRatio ratio={16 / 9} className="relative overflow-hidden rounded-md bg-muted">
+        <img
+          key={imageUrl}
+          src={imageUrl}
+          alt="Pratinjau Gambar"
+          className="w-full h-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+      </AspectRatio>
+    </div>
+  );
+}
+
 export default function NewProgramPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [picPhotoFile, setPicPhotoFile] = useState<File | null>(null);
   const [isUploadingPicPhoto, setIsUploadingPicPhoto] = useState(false);
 
@@ -61,7 +75,7 @@ export default function NewProgramPage() {
     watch,
     setValue,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
     defaultValues: {
@@ -77,7 +91,6 @@ export default function NewProgramPage() {
   const picPhotoUrl = watch('personInChargePhotoUrl');
 
   const onSubmit = async (data: ProgramFormValues) => {
-    setLoading(true);
     try {
       await addProgram({
         name: data.name,
@@ -98,48 +111,23 @@ export default function NewProgramPage() {
         title: 'Gagal Menyimpan',
         description: `Terjadi kesalahan: ${error.message}`,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleGenerateImage = async () => {
-    if (!aiPrompt) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
-      return;
-    }
-    setIsGeneratingImage(true);
+  const handleImageGenerated = async (url: string, prompt: string) => {
+    setValue('imageUrl', url, { shouldValidate: true });
+    setIsAiModalOpen(false);
     try {
-      const input: GenerateImageInput = { prompt: aiPrompt };
-      const result = await generateImage(input);
-      if (result.imageUrl) {
-        setValue('imageUrl', result.imageUrl, { shouldValidate: true });
-        
-        try {
-          const category = await categorizeImage({ imageUrl: result.imageUrl });
-          const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-          await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
-          toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
-        } catch (galleryError: any) {
-             toast({
-                variant: 'destructive',
-                title: 'Gagal Simpan ke Galeri',
-                description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
-            });
-        }
-        
-        setIsAiModalOpen(false);
-      } else {
-        throw new Error('AI tidak mengembalikan URL gambar.');
-      }
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Gagal Membuat Gambar',
-        description: `Terjadi kesalahan: ${error.message}`,
-      });
-    } finally {
-      setIsGeneratingImage(false);
+      const category = await categorizeImage({ imageUrl: url });
+      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+      await addGalleryImageRecord({ name: imageName, url: url, category });
+      toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
+    } catch (galleryError: any) {
+         toast({
+            variant: 'destructive',
+            title: 'Gagal Simpan ke Galeri',
+            description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
+        });
     }
   };
   
@@ -192,8 +180,8 @@ export default function NewProgramPage() {
             >
               Batal
             </Button>
-            <Button type="submit" size="sm" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan Program
             </Button>
           </div>
@@ -325,50 +313,19 @@ export default function NewProgramPage() {
           <Button type="button" variant="outline" size="sm" onClick={() => router.push('/dashboard/programs')}>
             Batal
           </Button>
-          <Button type="submit" size="sm" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Simpan Program
           </Button>
         </div>
       </form>
 
-      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Buat Gambar dengan AI</DialogTitle>
-            <DialogDescription>
-              Tulis deskripsi untuk gambar yang ingin Anda buat. AI akan membuatkannya untuk Anda dan menyimpannya ke galeri.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-prompt">Deskripsi Gambar</Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder='Contoh: "Kegiatan penyuluhan kesehatan di desa"'
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                disabled={isGeneratingImage}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isGeneratingImage}>Batal</Button>
-            </DialogClose>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGeneratingImage || !aiPrompt}>
-              {isGeneratingImage ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Membuat...
-                </>
-              ) : "Buat Gambar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AiImageDialog 
+        open={isAiModalOpen}
+        onOpenChange={setIsAiModalOpen}
+        onImageGenerated={handleImageGenerated}
+        promptSuggestion='Contoh: "Kegiatan penyuluhan kesehatan di desa"'
+      />
     </>
   );
 }
-
-    

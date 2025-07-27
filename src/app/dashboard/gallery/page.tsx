@@ -7,18 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, addGalleryImageRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateImage, type GenerateImageInput } from '@/ai/flows/generate-image-flow';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 
 
 export default function GalleryPage() {
@@ -32,9 +29,6 @@ export default function GalleryPage() {
   const { toast } = useToast();
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
   const fetchImages = async () => {
     setIsLoading(true);
@@ -144,54 +138,24 @@ export default function GalleryPage() {
       setImageToDelete(null);
     }
   };
-  
-  const resetAiModal = () => {
-    setAiPrompt('');
-    setGeneratedImageUrl(null);
-    setIsGenerating(false);
-  }
 
-  const handleGenerateImage = async () => {
-    if (!aiPrompt) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Deskripsi gambar tidak boleh kosong.' });
-        return;
-    }
-    setIsGenerating(true);
-    setGeneratedImageUrl(null);
+  const handleImageGenerated = async (url: string, prompt: string) => {
+    setIsAiModalOpen(false); // Close the dialog immediately
     try {
-        // 1. Generate the image
-        const input: GenerateImageInput = { prompt: aiPrompt };
-        const result = await generateImage(input);
-        
-        if (result.imageUrl) {
-            setGeneratedImageUrl(result.imageUrl);
-
-            // 2. Categorize the generated image
-            const category = await categorizeImage({ imageUrl: result.imageUrl });
-
-            // 3. Save the record to the gallery
-            const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-            await addGalleryImageRecord({ name: imageName, url: result.imageUrl, category });
-            
-            toast({ title: 'Berhasil Dibuat & Disimpan!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
-            
-            await fetchImages(); // Refresh the gallery list
-            setIsAiModalOpen(false);
-            resetAiModal();
-
-        } else {
-            throw new Error('AI tidak mengembalikan URL gambar.');
-        }
+      const category = await categorizeImage({ imageUrl: url });
+      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+      await addGalleryImageRecord({ name: imageName, url: url, category });
+      toast({ title: 'Berhasil Dibuat & Disimpan!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
+      await fetchImages(); // Refresh the gallery list
     } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Gagal Membuat & Menyimpan Gambar',
-            description: `Terjadi kesalahan: ${error.message}`,
-        });
-    } finally {
-        setIsGenerating(false);
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Menyimpan Riwayat Gambar',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
     }
   };
+
 
   return (
     <>
@@ -322,63 +286,11 @@ export default function GalleryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isAiModalOpen} onOpenChange={(isOpen) => { setIsAiModalOpen(isOpen); if (!isOpen) resetAiModal(); }}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Buat Gambar dengan AI</DialogTitle>
-            <DialogDescription>
-              Tulis deskripsi dan AI akan membuatkan gambar untuk Anda. Gambar akan otomatis disimpan dan dikategorikan.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ai-prompt">Deskripsi Gambar (Prompt)</Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder='Contoh: "Sebuah danau di pegunungan saat matahari terbenam"'
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                disabled={isGenerating}
-              />
-            </div>
-             
-            {(isGenerating || generatedImageUrl) && (
-                 <div className="space-y-2">
-                    <Label>Hasil Gambar</Label>
-                    <AspectRatio ratio={16/9} className="bg-muted rounded-md border flex items-center justify-center">
-                    {isGenerating ? (
-                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    ) : generatedImageUrl ? (
-                        <img
-                          src={generatedImageUrl}
-                          alt="Gambar yang dibuat AI"
-                          className="w-full h-full object-cover"
-                        />
-                    ) : null}
-                    </AspectRatio>
-                </div>
-            )}
-          </div>
-          <DialogFooter>
-             <Button type="button" variant="secondary" onClick={() => setIsAiModalOpen(false)} disabled={isGenerating}>
-                Tutup
-              </Button>
-            <Button type="button" onClick={handleGenerateImage} disabled={isGenerating || !aiPrompt}>
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Membuat & Menyimpan...
-                </>
-              ) : (
-                <>
-                 <Wand2 className="mr-2 h-4 w-4" />
-                 Buat & Simpan
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AiImageDialog 
+        open={isAiModalOpen}
+        onOpenChange={setIsAiModalOpen}
+        onImageGenerated={handleImageGenerated}
+      />
     </>
   );
 }
