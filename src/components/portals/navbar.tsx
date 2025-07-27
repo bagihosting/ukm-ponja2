@@ -72,13 +72,12 @@ export function PortalNavbar() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                {/* Logo and Mobile Menu Trigger */}
+            <div className="container flex h-14 items-center justify-between">
+                {/* Left Section: Mobile Menu & Desktop Logo */}
                 <div className="flex items-center">
-                    {/* Mobile Menu Trigger */}
                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="mr-2 md:hidden">
+                            <Button variant="ghost" size="icon" className="md:hidden">
                                 <Menu className="h-6 w-6" />
                                 <span className="sr-only">Buka Menu</span>
                             </Button>
@@ -110,39 +109,30 @@ export function PortalNavbar() {
                             </div>
                         </SheetContent>
                     </Sheet>
-
-                    {/* Desktop Logo */}
-                    <Link href="/" className="mr-6 hidden md:flex items-center space-x-2">
+                    <Link href="/" className="hidden md:flex items-center space-x-2">
                         <HeartPulse className="h-6 w-6 text-primary" />
                         <span className="font-bold sm:inline-block">UKM PONJA</span>
                     </Link>
                 </div>
 
-                {/* Mobile-only Logo */}
-                 <div className="flex-1 flex justify-center md:hidden">
-                    <Link href="/" className="flex items-center space-x-2">
+                {/* Center Section: Mobile Logo & Desktop Nav */}
+                <div className="flex items-center">
+                     <Link href="/" className="flex items-center space-x-2 md:hidden">
                         <HeartPulse className="h-6 w-6 text-primary" />
                         <span className="font-bold">UKM PONJA</span>
                     </Link>
+                    <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+                        {navLinks.map(({ href, label }) => (
+                            <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+                                {label}
+                            </Link>
+                        ))}
+                    </nav>
                 </div>
 
-
-                {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center space-x-6 text-sm font-medium flex-1">
-                    {navLinks.map(({ href, label }) => (
-                        <Link key={label} href={href} className="transition-colors hover:text-foreground/80 text-foreground/60">
-                            {label}
-                        </Link>
-                    ))}
-                </nav>
-                
-                {/* Auth Button */}
+                {/* Right Section: Auth Button */}
                 <div className="flex items-center justify-end">
-                    <div className="hidden md:block">
-                        <AuthButton />
-                    </div>
-                    {/* Placeholder to balance the flexbox for mobile logo centering */}
-                     <div className="md:hidden" style={{ width: '40px' }}></div>
+                   <AuthButton />
                 </div>
             </div>
         </header>
