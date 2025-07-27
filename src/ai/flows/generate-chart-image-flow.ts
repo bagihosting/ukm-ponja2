@@ -71,7 +71,7 @@ const generateChartImageFlow = ai.defineFlow(
     // Then, pass the rendered prompt to the generation model.
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
-      prompt: renderedPrompt,
+      prompt: renderedPrompt.prompt,
     });
 
     const dataUri = media.url;

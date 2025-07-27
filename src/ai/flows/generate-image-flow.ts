@@ -28,17 +28,25 @@ export async function generateImage(
   return generateImageFlow(input);
 }
 
+const imagePrompt = ai.definePrompt({
+  name: 'generateImagePrompt',
+  input: { schema: GenerateImageInputSchema },
+  prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: {{{prompt}}}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`
+});
+
 const generateImageFlow = ai.defineFlow(
   {
     name: 'generateImageFlow',
     inputSchema: GenerateImageInputSchema,
     outputSchema: GenerateImageOutputSchema,
   },
-  async ({ prompt }) => {
-    // 1. Generate the image using the AI model
+  async (input) => {
+    
+    const renderedPrompt = await imagePrompt.render({ input });
+    
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
-      prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: ${prompt}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`,
+      prompt: renderedPrompt.prompt,
     });
 
     const dataUri = media.url;
@@ -46,7 +54,6 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
     }
     
-    // 2. Return the data URI
     return { dataUri };
   }
 );
