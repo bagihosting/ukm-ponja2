@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, addGalleryImageRecord, type GalleryImage } from '@/lib/gallery';
+import { getGalleryImages, uploadGalleryImage, deleteGalleryImage, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -158,14 +158,12 @@ export default function GalleryPage() {
     setIsGenerating(true);
     setGeneratedImageUrl(null);
     try {
-        const input: GenerateImageInput = { prompt: aiPrompt };
+        // We tell the flow to handle saving to the gallery itself.
+        const input: GenerateImageInput = { prompt: aiPrompt, saveToGallery: true };
         const result = await generateImage(input);
+        
         if (result.imageUrl) {
             setGeneratedImageUrl(result.imageUrl);
-            
-            // Auto save to gallery
-            const imageName = `${aiPrompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-            await addGalleryImageRecord({ name: imageName, url: result.imageUrl });
             
             toast({ title: 'Berhasil Dibuat & Disimpan!', description: 'Gambar telah disimpan dan dikategorikan secara otomatis.' });
             
@@ -193,7 +191,7 @@ export default function GalleryPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Galeri</h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Unggah atau Buat Gambar</CardTitle>

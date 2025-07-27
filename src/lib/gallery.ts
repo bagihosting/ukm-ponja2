@@ -35,7 +35,7 @@ export interface GalleryImage {
 export interface GalleryImageInput {
   name: string;
   url: string;
-  category?: string;
+  category: string;
 }
 
 // Helper to convert Firestore doc to a client-safe GalleryImage object
@@ -64,17 +64,17 @@ function fileToDataUri(file: File): Promise<string> {
 
 /**
  * Adds a new gallery image record to Firestore.
- * @param imageData The data for the new image record.
+ * This function is now simpler and only handles saving data.
+ * The categorization logic has been moved to the calling components.
+ * @param imageData The data for the new image record, including the category.
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
     try {
-        const category = imageData.category || await categorizeImage({ imageUrl: imageData.url });
-        
         const docData = {
             name: imageData.name,
             url: imageData.url,
-            category: category,
+            category: imageData.category || 'Lain-lain', // Fallback just in case
             createdAt: serverTimestamp(),
         };
         const docRef = await addDoc(galleryCollection, docData);
@@ -88,6 +88,7 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
 
 /**
  * Uploads an image file to freeimage.host and saves its metadata to Firestore.
+ * This function orchestrates the entire upload process, including categorization.
  * @param file The image file to upload.
  * @returns A promise that resolves with the metadata of the newly added image.
  */
