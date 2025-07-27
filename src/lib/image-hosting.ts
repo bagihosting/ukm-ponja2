@@ -9,8 +9,9 @@ if (
     !process.env.CLOUDINARY_API_KEY ||
     !process.env.CLOUDINARY_API_SECRET
 ) {
+    // This warning will appear in the server console during build or runtime.
     console.warn(
-      'Cloudinary configuration is missing or incomplete. Image uploads will fail. ' +
+      '[Cloudinary Warning] Cloudinary configuration is missing or incomplete. Image uploads will fail. ' +
       'Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
     );
 } else {
@@ -32,8 +33,8 @@ if (
  */
 export async function uploadImageToCloudinary(source: string | File): Promise<string> {
   // Ensure Cloudinary is configured before attempting to upload
-  if (!cloudinary.config().cloud_name) {
-      throw new Error('Cloudinary is not configured. Cannot upload image.');
+  if (!cloudinary.config().api_key) {
+      throw new Error('Cloudinary is not configured. Please check your environment variables. Cannot upload image.');
   }
 
   try {
@@ -46,7 +47,7 @@ export async function uploadImageToCloudinary(source: string | File): Promise<st
         const base64String = Buffer.from(buffer).toString('base64');
         const mimeType = source.type;
         fileToUpload = `data:${mimeType};base64,${base64String}`;
-    } else if (typeof source === 'string' && source.startsWith('data:image')) {
+    } else if (typeof source === 'string' && source.startsWith('data:')) {
         fileToUpload = source;
     } else {
         throw new Error('Invalid image source. Must be a data URI or a File object.');
@@ -54,7 +55,7 @@ export async function uploadImageToCloudinary(source: string | File): Promise<st
     
     const result: UploadApiResponse = await cloudinary.uploader.upload(fileToUpload, {
       folder: 'ukm-ponja-app', // Optional: organize uploads into a specific folder
-      resource_type: 'image',
+      resource_type: 'auto',
     });
 
     if (result && result.secure_url) {
@@ -69,3 +70,5 @@ export async function uploadImageToCloudinary(source: string | File): Promise<st
     throw new Error(`Failed to upload image to Cloudinary: ${errorMessage}`);
   }
 }
+
+    

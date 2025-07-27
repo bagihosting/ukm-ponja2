@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 function UserNav() {
   const { user } = useAuth();
@@ -80,31 +81,41 @@ const navLinks = [
   { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
   { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
   { href: "/dashboard/reports", icon: BarChart, label: "Laporan", disabled: false },
-  { href: "/dashboard/seo", icon: TrendingUp, label: "SEO", disabled: false },
+  { href: "/dashboard/seo", icon: TrendingUp, label: "SEO", disabled: true },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
 ];
 
 function SidebarNav() {
     const pathname = usePathname();
     return (
+      <TooltipProvider>
         <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             {navLinks.map(({ href, icon: Icon, label, disabled }) => (
-            <Link 
-                key={label} 
-                href={disabled ? "#" : href}
-                className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    pathname === href && "bg-muted text-primary",
-                    disabled && "cursor-not-allowed opacity-50"
-                )}
-                aria-disabled={disabled}
-                onClick={(e) => disabled && e.preventDefault()}
-            >
-                <Icon className="h-4 w-4" />
-                {label}
-            </Link>
+            <Tooltip key={label} delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link 
+                    href={disabled ? "#" : href}
+                    className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                        pathname === href && "bg-muted text-primary",
+                        disabled && "cursor-not-allowed opacity-50"
+                    )}
+                    aria-disabled={disabled}
+                    onClick={(e) => disabled && e.preventDefault()}
+                >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                </Link>
+              </TooltipTrigger>
+              {disabled && (
+                <TooltipContent side="right">
+                    <p>Fitur ini dinonaktifkan sementara.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
             ))}
         </nav>
+      </TooltipProvider>
     )
 }
 
@@ -200,3 +211,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+
+    

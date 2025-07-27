@@ -281,12 +281,14 @@ export default function NewProgramPage() {
                       disabled={isUploadingPicPhoto || isSubmitting}
                     />
                     {picPhotoFile && (
-                       <Button type="button" size="sm" onClick={handlePicPhotoUpload} disabled={isUploadingPicPhoto || isSubmitting}>
+                       <Button type="button" size="sm" onClick={handlePicPhotoUpload} disabled={isUploadingPicPhoto || isSubmitting} className="mt-2">
                         {isUploadingPicPhoto ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                         Unggah Foto
                       </Button>
                     )}
-                  <ImagePreview imageUrl={picPhotoUrl} />
+                  <div className="mt-4">
+                    <ImagePreview imageUrl={picPhotoUrl} />
+                  </div>
                   {errors.personInChargePhotoUrl && <p className="text-sm text-red-500">{errors.personInChargePhotoUrl.message}</p>}
                 </div>
               </CardContent>
@@ -347,3 +349,5 @@ export default function NewProgramPage() {
     </>
   );
 }
+
+    

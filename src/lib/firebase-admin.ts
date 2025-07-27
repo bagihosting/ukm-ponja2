@@ -49,7 +49,8 @@ export function getAdminApp(): admin.app.App {
   const serviceAccount = getServiceAccount();
 
   if (!serviceAccount) {
-    throw new Error('Firebase Admin credentials are not set in environment variables.');
+    const errorMsg = 'Firebase Admin credentials are not set in environment variables. Server-side Firebase features will be disabled. Please set FIREBASE_ADMIN_PRIVATE_KEY_BASE64, FIREBASE_ADMIN_CLIENT_EMAIL, and NEXT_PUBLIC_FIREBASE_PROJECT_ID.';
+    throw new Error(errorMsg);
   }
 
   // If it doesn't exist, initialize a new app with our credentials and name.
@@ -63,3 +64,5 @@ export function getAdminApp(): admin.app.App {
     throw error;
   }
 }
+
+    
