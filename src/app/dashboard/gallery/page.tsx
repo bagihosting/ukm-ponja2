@@ -140,10 +140,8 @@ export default function GalleryPage() {
   };
 
   const handleImageReady = async (url: string, prompt: string) => {
-    // 1. Close the modal
     setIsAiModalOpen(false); 
     
-    // 2. Save the image record to the gallery
     try {
       const category = await categorizeImage({ imageUrl: url });
       const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
@@ -277,7 +275,7 @@ export default function GalleryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Ini hanya akan menghapus riwayat gambar dari database, bukan gambar dari server freeimage.host.
+              Tindakan ini tidak dapat dibatalkan. Ini hanya akan menghapus riwayat gambar dari database, bukan gambar dari Cloudinary.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

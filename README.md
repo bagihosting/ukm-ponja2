@@ -1,3 +1,4 @@
+
 # Panduan Instalasi Aplikasi di Ubuntu 22.04
 
 Dokumen ini menjelaskan cara menginstal dan menjalankan aplikasi ini pada sistem operasi Ubuntu 22.04.

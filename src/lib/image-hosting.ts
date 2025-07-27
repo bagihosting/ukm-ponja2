@@ -18,25 +18,6 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     );
 }
 
-/**
- * Converts a file or Blob into a Base64 data URI.
- * @param file The File or Blob object to convert.
- * @returns A promise that resolves with the data URI string.
- */
-async function toDataURI(file: File | Blob): Promise<string> {
-  const reader = new FileReader();
-  return new Promise((resolve, reject) => {
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-    // This is a browser API, so this check prevents server-side errors
-    if (typeof window !== 'undefined') {
-        reader.readAsDataURL(file);
-    } else {
-        // This part won't be executed in the browser, it's for type safety
-        reject(new Error("FileReader is not available in this environment."));
-    }
-  });
-}
 
 /**
  * Uploads an image to Cloudinary.

@@ -54,9 +54,8 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
     };
     const docRef = await db.collection('galleryImages').add(docData);
     
-    // Revalidate the public gallery page to show the new image
-    revalidatePath('/galeri');
     revalidatePath('/dashboard/gallery');
+    revalidatePath('/galeri');
 
     return docRef.id;
   } catch (error: any) {
@@ -128,9 +127,8 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
     const docRef = db.collection('galleryImages').doc(id);
     await docRef.delete();
     
-    // Revalidate the public gallery page after deleting an image
-    revalidatePath('/galeri');
     revalidatePath('/dashboard/gallery');
+    revalidatePath('/galeri');
 
   } catch (error: any)
 {
