@@ -34,15 +34,6 @@ const programSchema = z.object({
 
 type ProgramFormValues = z.infer<typeof programSchema>;
 
-function fileToDataUri(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 function ImagePreview({ imageUrl }: { imageUrl: string | null | undefined; }) {
   if (!imageUrl) {
     return null;
@@ -114,16 +105,16 @@ export default function NewProgramPage() {
     }
   };
 
-  const handleImageGenerated = async (url: string, prompt: string) => {
+  const handleGenerateImage = async (url: string, prompt: string) => {
     setValue('imageUrl', url, { shouldValidate: true });
     setIsAiModalOpen(false);
     try {
-      const category = await categorizeImage({ imageUrl: url });
-      const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
-      await addGalleryImageRecord({ name: imageName, url: url, category });
-      toast({ title: 'Berhasil!', description: 'Gambar dibuat & disimpan ke galeri.' });
+        const category = await categorizeImage({ imageUrl: url });
+        const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
+        await addGalleryImageRecord({ name: imageName, url: url, category });
+        toast({ title: 'Berhasil!', description: 'Gambar dibuat & riwayatnya disimpan ke galeri.' });
     } catch (galleryError: any) {
-         toast({
+        toast({
             variant: 'destructive',
             title: 'Gagal Simpan ke Galeri',
             description: 'Gambar berhasil dibuat, tapi gagal disimpan ke riwayat galeri.',
@@ -138,8 +129,7 @@ export default function NewProgramPage() {
     }
     setIsUploadingPicPhoto(true);
     try {
-      const dataUri = await fileToDataUri(picPhotoFile);
-      const url = await uploadImageToFreeImage(dataUri);
+      const url = await uploadImageToFreeImage(picPhotoFile);
       setValue('personInChargePhotoUrl', url, { shouldValidate: true });
       toast({ title: 'Berhasil!', description: 'Foto penanggung jawab berhasil diunggah.' });
       setPicPhotoFile(null);
@@ -323,7 +313,7 @@ export default function NewProgramPage() {
       <AiImageDialog 
         open={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
-        onImageGenerated={handleImageGenerated}
+        onImageGenerated={handleGenerateImage}
         promptSuggestion='Contoh: "Kegiatan penyuluhan kesehatan di desa"'
       />
     </>

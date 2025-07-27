@@ -5,25 +5,35 @@ const FREEIMAGE_API_KEY = '6d207e02198a847aa98d0a2a901485a5';
 const FREEIMAGE_API_URL = 'https://freeimage.host/api/1/upload';
 
 /**
- * Mengunggah gambar dalam format data URI ke layanan freeimage.host.
- * @param dataUri - Gambar yang akan diunggah, dalam format data URI (misal: 'data:image/png;base64,iVBORw...').
+ * Mengunggah gambar ke layanan freeimage.host.
+ * Fungsi ini dapat menerima gambar dalam format data URI atau sebagai objek File.
+ * @param source - Gambar yang akan diunggah, bisa berupa string data URI atau objek File.
  * @returns URL publik dari gambar yang diunggah.
  * @throws Akan melempar error jika unggahan gagal atau respons dari API tidak valid.
  */
-export async function uploadImageToFreeImage(dataUri: string): Promise<string> {
-  // Ekstrak konten base64 dari data URI.
-  const base64Data = dataUri.split(',')[1];
-  if (!base64Data) {
-    throw new Error('Data URI tidak valid atau tidak berisi konten base64.');
+export async function uploadImageToFreeImage(source: string | File): Promise<string> {
+  let imageBlob: Blob;
+  let fileName = 'image.png';
+
+  if (typeof source === 'string') {
+    // Handle data URI
+    const base64Data = source.split(',')[1];
+    if (!base64Data) {
+      throw new Error('Data URI tidak valid atau tidak berisi konten base64.');
+    }
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    imageBlob = new Blob([imageBuffer]);
+  } else {
+    // Handle File object
+    imageBlob = source;
+    fileName = source.name;
   }
-  
-  const imageBuffer = Buffer.from(base64Data, 'base64');
   
   try {
     const formData = new FormData();
     formData.append('key', FREEIMAGE_API_KEY);
     // 'source' is the field name for the image data for freeimage.host
-    formData.append('source', new Blob([imageBuffer]), 'image.png');
+    formData.append('source', imageBlob, fileName);
     formData.append('format', 'json');
 
     const response = await fetch(FREEIMAGE_API_URL, {
