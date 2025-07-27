@@ -1,50 +1,145 @@
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
-import { reportLinks } from '@/lib/reports-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { getChartData, updateChartData } from '@/lib/chart-data';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+
+const chartDataSchema = z.object({
+  targetData: z.string().min(1, 'Data target tidak boleh kosong.'),
+});
+
+type ChartDataFormValues = z.infer<typeof chartDataSchema>;
+
+const initialData = `MELAKSANKAN KAMPANYE GERMAS=7
+MELAKSANKAN GERAKAN MASYARAKAT=3
+EDUKASI DAN PEMBINAAN PHBS TATANAN RUMAH TANGGA=13067
+EDUKASI DAN PEMBINAAN PHBS TATANAN INSTITUSI PENDIDIKAN=50
+EDUKASI DAN PEMBINAAN PHBS TATANAN TEMPAT UMUM=26
+EDUKASI DAN PEMBINAAN PHBS TATANAN TEMPAT KERJA=10
+EDUKASI DAN PEMBINAAN PHBS TATANAN FASKES=8
+POSYANDU AKTIF=27
+PEMBINAAN POSYANDU AKTIF=100
+MONITORING POSYANDU AKTIF=27`;
 
 export default function ReportsPage() {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ChartDataFormValues>({
+    resolver: zodResolver(chartDataSchema),
+    defaultValues: {
+      targetData: '',
+    },
+  });
+
+  useEffect(() => {
+    async function fetchChartData() {
+      setIsLoading(true);
+      try {
+        const data = await getChartData();
+        if (data && data.targetData) {
+          reset(data);
+        } else {
+          reset({ targetData: initialData });
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Gagal Memuat',
+          description: 'Gagal memuat data grafik.',
+        });
+        reset({ targetData: initialData });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchChartData();
+  }, [reset, toast]);
+
+  const onSubmit = async (data: ChartDataFormValues) => {
+    try {
+      await updateChartData(data);
+      toast({
+        title: 'Berhasil!',
+        description: 'Data target grafik telah berhasil diperbarui.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Menyimpan',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6 space-y-4">
+        <h1 className="text-lg font-semibold md:text-2xl">Data Laporan Grafik</h1>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-full mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-64 w-full" />
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">Laporan</h1>
-      </div>
-
+      <h1 className="text-lg font-semibold md:text-2xl">Data Laporan Grafik</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Akses Cepat Laporan</CardTitle>
+          <CardTitle>Kelola Data Target Tahunan</CardTitle>
           <CardDescription>
-            Berikut adalah tautan-tautan penting untuk mengakses laporan dan data UKM. Laporan akan dibuka di dalam aplikasi.
+            Masukkan data target untuk ditampilkan di grafik halaman utama.
+            Gunakan format: NAMA_PROGRAM=NILAI. Setiap entri harus berada di baris baru.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6">
-            {reportLinks.map((link) => (
-              <Card key={link.title} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4">
-                <div className="mb-4 sm:mb-0">
-                  <h3 className="font-semibold">{link.title}</h3>
-                  <p className="text-sm text-muted-foreground">{link.description}</p>
-                </div>
-                 <div className="flex w-full sm:w-auto space-x-2">
-                    <Button asChild className="flex-1 sm:flex-none">
-                        <Link href={`/laporan/${link.slug}`}>
-                            Buka Laporan
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="icon" title="Buka di Tab Baru">
-                        <Link href={link.url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        </Link>
-                    </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="targetData">Data Target</Label>
+              <Textarea
+                id="targetData"
+                {...register('targetData')}
+                disabled={isSubmitting}
+                className="min-h-[300px] font-mono text-sm"
+                placeholder="Contoh: PROGRAM A=100"
+              />
+              {errors.targetData && <p className="text-sm text-red-500">{errors.targetData.message}</p>}
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Simpan Data
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

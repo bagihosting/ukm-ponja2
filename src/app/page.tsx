@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { getArticles } from '@/lib/articles';
 import { getPrograms } from '@/lib/programs';
-import { reportLinks } from '@/lib/reports-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AiDoctor } from '@/components/portals/ai-doctor';
+import { DynamicChart } from '@/components/portals/dynamic-chart';
 
 
 function truncate(text: string, length: number) {
@@ -41,7 +41,6 @@ async function fetchData() {
 
 export default async function HomePage() {
   const { articles, programs } = await fetchData();
-  const chartReport = reportLinks.find(link => link.slug === 'laporan-grafik');
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
@@ -224,33 +223,22 @@ export default async function HomePage() {
                   </div>
               </div>
 
-              {chartReport && (
-                <div id="reports" className="flex">
-                    <Card className="shadow-lg w-full flex flex-col">
-                          <CardHeader>
-                              <CardTitle>{chartReport.title}</CardTitle>
-                              <CardDescription>{chartReport.description}</CardDescription>
-                          </CardHeader>
-                        <CardContent className="flex-grow p-0">
-                            <AspectRatio ratio={4/3}>
-                                <iframe
-                                    src={chartReport.embedUrl}
-                                    className="h-full w-full border-0"
-                                    allow="fullscreen"
-                                    title={chartReport.title}
-                                >
-                                    Memuat grafik...
-                                </iframe>
-                            </AspectRatio>
-                        </CardContent>
-                          <CardFooter className="justify-center p-4">
-                            <Button asChild variant="secondary">
-                                <Link href="/laporan">Lihat Semua Laporan</Link>
-                            </Button>
-                          </CardFooter>
-                    </Card>
-                </div>
-              )}
+              <div id="reports" className="flex">
+                <Card className="shadow-lg w-full flex flex-col">
+                    <CardHeader>
+                        <CardTitle>Grafik Target Tahunan</CardTitle>
+                        <CardDescription>Visualisasi data untuk memantau performa program UKM.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex items-center justify-center p-2">
+                        <DynamicChart />
+                    </CardContent>
+                    <CardFooter className="justify-center p-4">
+                    <Button asChild variant="secondary">
+                        <Link href="/laporan">Lihat Semua Laporan</Link>
+                    </Button>
+                    </CardFooter>
+                </Card>
+              </div>
           </div>
         </section>
 

@@ -79,7 +79,7 @@ const navLinks = [
   { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
   { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
   { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
-  { href: "/dashboard/reports", icon: BarChart, label: "Laporan", disabled: true },
+  { href: "/dashboard/reports", icon: BarChart, label: "Laporan", disabled: false },
   { href: "/dashboard/seo", icon: TrendingUp, label: "SEO", disabled: false },
   { href: "/dashboard/settings", icon: Settings, label: "Pengaturan", disabled: false },
 ];
