@@ -191,6 +191,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 p-4 sm:p-6">
           {children}
         </main>
+        <footer className="mt-auto border-t bg-background px-4 py-4 sm:px-6">
+            <p className="text-center text-sm text-muted-foreground">
+                Dibangun dengan ❤️ oleh Rani Kirana.
+            </p>
+        </footer>
       </div>
     </div>
   );
