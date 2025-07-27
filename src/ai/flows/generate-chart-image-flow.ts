@@ -33,7 +33,8 @@ export async function generateChartImage(
 const prompt = ai.definePrompt({
   name: 'generateChartImagePrompt',
   input: { schema: GenerateChartImageInputSchema },
-  output: { schema: GenerateChartImageOutputSchema },
+  // Note: The output schema is for our flow's final result, not the direct model output.
+  // The model itself will just return an image, which we process.
   prompt: `Anda adalah seorang desainer grafis AI yang ahli dalam visualisasi data. Tugas Anda adalah membuat gambar grafik batang horizontal yang bersih, profesional, dan mudah dibaca berdasarkan data yang diberikan.
 
 Instruksi Desain:
@@ -64,9 +65,13 @@ const generateChartImageFlow = ai.defineFlow(
     outputSchema: GenerateChartImageOutputSchema,
   },
   async (input) => {
+    // Correctly render the prompt with the input data first.
+    const renderedPrompt = await prompt.render({ input });
+
+    // Then, pass the rendered prompt to the generation model.
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
-      prompt: await prompt.render({ input }),
+      prompt: renderedPrompt,
     });
 
     const dataUri = media.url;
