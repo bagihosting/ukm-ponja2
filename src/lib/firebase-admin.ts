@@ -12,14 +12,14 @@ interface ServiceAccount {
 }
 
 // Function to get the service account credentials from environment variables.
-// Throws an error if any of the required variables are missing.
-function getServiceAccount(): ServiceAccount {
+// Returns null if any of the required variables are missing.
+function getServiceAccount(): ServiceAccount | null {
   const privateKeyBase64 = process.env.FIREBASE_ADMIN_PRIVATE_KEY_BASE64;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
   if (!privateKeyBase64 || !clientEmail || !projectId) {
-    throw new Error('Firebase Admin credentials (including private key as Base64) are not set in environment variables.');
+    return null;
   }
 
   // Decode the Base64 private key back to its original PEM format.
@@ -46,19 +46,19 @@ export function getAdminApp(): admin.app.App {
     return existingApp;
   }
 
+  const serviceAccount = getServiceAccount();
+
+  if (!serviceAccount) {
+    throw new Error('Firebase Admin credentials are not set in environment variables.');
+  }
+
   // If it doesn't exist, initialize a new app with our credentials and name.
   try {
-    const serviceAccount = getServiceAccount();
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     }, APP_NAME);
   } catch (error: any) {
-    // This makes the error catchable by the caller, allowing for graceful degradation.
-    if (error.message.includes('Firebase Admin credentials')) {
-       console.warn(`[Firebase Admin Warning] ${error.message}. Server-side Firebase features will be disabled.`);
-    } else {
-       console.error('Failed to initialize Firebase Admin SDK:', error.message);
-    }
+    console.error('Failed to initialize Firebase Admin SDK:', error.message);
     // Re-throw the error to be handled by the calling function's try-catch block.
     throw error;
   }

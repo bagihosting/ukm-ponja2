@@ -3,18 +3,12 @@
 
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 
-// Configure Cloudinary with credentials from environment variables
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-    cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
-    });
-} else {
+// Cloudinary's Node.js SDK will automatically read the CLOUDINARY_URL environment variable.
+// We just need to check if it exists to provide a helpful warning.
+if (!process.env.CLOUDINARY_URL) {
     console.warn(
       'Cloudinary configuration is missing. Image uploads will fail. ' +
-      'Please check your .env file for CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.'
+      'Please set the CLOUDINARY_URL environment variable in your .env file.'
     );
 }
 
@@ -28,7 +22,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
  */
 export async function uploadImageToCloudinary(source: string | File): Promise<string> {
   // Ensure Cloudinary is configured before attempting to upload
-  if (!cloudinary.config().api_key) {
+  if (!process.env.CLOUDINARY_URL) {
       throw new Error('Cloudinary is not configured. Cannot upload image.');
   }
 
