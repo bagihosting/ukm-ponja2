@@ -90,8 +90,11 @@ export default function NewArticlePage() {
         await addArticle(data);
         toast({ title: 'Berhasil!', description: 'Artikel baru telah berhasil ditambahkan.' });
       }
+      // Use router.push which is sufficient for navigation and data refresh on the target page.
       router.push('/dashboard/articles');
+      router.refresh(); // Crucial for reflecting changes on server-rendered list pages.
     } catch (error: any) {
+      console.error("Submit Error:", error);
       toast({
         variant: 'destructive',
         title: 'Gagal Menyimpan',

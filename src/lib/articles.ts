@@ -1,23 +1,8 @@
 
 'use server';
 
-import { 
-  getFirebaseServices
-} from './firebase'; 
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  serverTimestamp,
-  deleteField,
-  query,
-  orderBy
-} from 'firebase/firestore';
-
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getAdminApp } from './firebase-admin';
 
 // This is the interface that will be exposed to client components
 export interface Article {
@@ -42,8 +27,9 @@ export interface ArticleUpdateInput {
 }
 
 // Helper to convert Firestore doc to a client-safe Article object
-function toArticle(docSnap: any): Article {
+function toArticle(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>): Article {
   const data = docSnap.data();
+  if (!data) throw new Error("Document data is empty");
   return {
     id: docSnap.id,
     title: data.title,
@@ -56,116 +42,72 @@ function toArticle(docSnap: any): Article {
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-  }
+  const db = getFirestore(getAdminApp());
 
-  try {
-    const dataToAdd: { [key: string]: any } = {
-      title: article.title,
-      content: article.content,
-      createdAt: serverTimestamp(),
-    };
-    
-    // Only add imageUrl if it's a non-empty string
-    if (article.imageUrl && article.imageUrl.trim() !== '') {
-        dataToAdd.imageUrl = article.imageUrl;
-    }
-    
-    const docRef = await addDoc(collection(db, 'articles'), dataToAdd);
-    return docRef.id;
-  } catch (e: any) {
-    throw new Error(`Gagal menambahkan artikel: ${e.message}`);
+  const dataToAdd: { [key: string]: any } = {
+    ...article,
+    createdAt: FieldValue.serverTimestamp(),
+  };
+  
+  // Ensure optional fields are not 'undefined'
+  if (!dataToAdd.imageUrl) {
+    delete dataToAdd.imageUrl;
   }
+    
+  const docRef = await db.collection('articles').add(dataToAdd);
+  return docRef.id;
 };
 
 
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    // Fail gracefully during build or if firebase is not configured
-    return [];
-  }
-
   try {
-    const q = query(collection(db, 'articles'), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
+    const db = getFirestore(getAdminApp());
+    const q = db.collection('articles').orderBy("createdAt", "desc");
+    const querySnapshot = await q.get();
     return querySnapshot.docs.map(toArticle);
-  } catch (e: any) {
-    // Fail gracefully, but log the error on the server
-    console.error("Error getting articles from Firestore: ", e);
+  } catch (e) {
+    // In case of error (e.g. during build if creds are not yet set), return empty array.
+    console.error("Could not fetch articles, returning empty array. Error: ", e);
     return [];
   }
 };
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    return null;
-  }
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('articles').doc(id);
+  const docSnap = await docRef.get();
   
-  try {
-    const docRef = doc(db, 'articles', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return toArticle(docSnap);
-    } else {
-      return null;
-    }
-  } catch (e: any) {
-    console.error(`Error getting article (ID: ${id}) from Firestore: `, e);
+  if (docSnap.exists) {
+    return toArticle(docSnap);
+  } else {
     return null;
   }
 };
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
-  const { db } = getFirebaseServices();
-   if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('articles').doc(id);
+  
+  const dataToUpdate: { [key: string]: any } = { ...article };
+
+  // Handle imageUrl separately for deletion. Use FieldValue.delete() for robust removal.
+  if (article.imageUrl === '' || article.imageUrl === null) {
+    dataToUpdate.imageUrl = FieldValue.delete();
   }
-
-  try {
-    const docRef = doc(db, 'articles', id);
-    
-    const dataToUpdate: { [key: string]: any } = {};
-
-    // Only add defined fields to the update object
-    if (article.title !== undefined) dataToUpdate.title = article.title;
-    if (article.content !== undefined) dataToUpdate.content = article.content;
-
-    // Handle imageUrl separately for deletion. Use deleteField() for robust removal.
-    if (article.imageUrl === '' || article.imageUrl === null) {
-      dataToUpdate.imageUrl = deleteField();
-    } else if (article.imageUrl) {
-      dataToUpdate.imageUrl = article.imageUrl;
-    }
-    
-    // Only update if there's something to update
-    if (Object.keys(dataToUpdate).length > 0) {
-      await updateDoc(docRef, dataToUpdate);
-    }
-
-  } catch (e: any) {
-    throw new Error(`Gagal memperbarui artikel: ${e.message}`);
+  
+  // Only update if there's something to update
+  if (Object.keys(dataToUpdate).length > 0) {
+    await docRef.update(dataToUpdate);
   }
 };
 
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
-  const { db } = getFirebaseServices();
-   if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-  }
-  
-  try {
-    const docRef = doc(db, 'articles', id);
-    await deleteDoc(docRef);
-  } catch (e: any) {
-    throw new Error(`Gagal menghapus artikel: ${e.message}`);
-  }
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('articles').doc(id);
+  await docRef.delete();
 };

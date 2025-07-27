@@ -1,19 +1,8 @@
 
 'use server';
 
-import { 
-  getFirebaseServices
-} from './firebase'; 
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  deleteDoc, 
-  serverTimestamp,
-  query,
-  orderBy
-} from 'firebase/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getAdminApp } from './firebase-admin';
 import { uploadImageToFreeImage } from './image-hosting';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 
@@ -33,8 +22,9 @@ export interface GalleryImageInput {
 }
 
 // Helper to convert Firestore doc to a client-safe GalleryImage object
-function toGalleryImage(docSnap: any): GalleryImage {
+function toGalleryImage(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>): GalleryImage {
   const data = docSnap.data();
+  if (!data) throw new Error("Document data is empty");
   return {
     id: docSnap.id,
     name: data.name,
@@ -45,17 +35,6 @@ function toGalleryImage(docSnap: any): GalleryImage {
   };
 }
 
-
-// Converts a File to a a data URI
-function fileToDataUri(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 /**
  * Adds a new gallery image record to Firestore.
  * This function is now simpler and only handles saving data.
@@ -63,23 +42,16 @@ function fileToDataUri(file: File): Promise<string> {
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
-    const { db } = getFirebaseServices();
-    if (!db) {
-      throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-    }
+    const db = getFirestore(getAdminApp());
 
-    try {
-        const docData = {
-            name: imageData.name,
-            url: imageData.url,
-            category: imageData.category || 'Lain-lain', // Fallback just in case
-            createdAt: serverTimestamp(),
-        };
-        const docRef = await addDoc(collection(db, 'galleryImages'), docData);
-        return docRef.id;
-    } catch (e: any) {
-        throw new Error(`Gagal menyimpan riwayat gambar ke Firestore: ${e.message}`);
-    }
+    const docData = {
+        name: imageData.name,
+        url: imageData.url,
+        category: imageData.category || 'Lain-lain', // Fallback just in case
+        createdAt: FieldValue.serverTimestamp(),
+    };
+    const docRef = await db.collection('galleryImages').add(docData);
+    return docRef.id;
 };
 
 
@@ -90,11 +62,6 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
  * @returns A promise that resolves with the metadata of the newly added image.
  */
 export const uploadGalleryImage = async (file: File): Promise<string> => {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-  }
-  
   try {
     // 1. Upload to external host (freeimage.host) using the File object directly
     const url = await uploadImageToFreeImage(file);
@@ -118,17 +85,13 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    return [];
-  }
-
   try {
-    const q = query(collection(db, 'galleryImages'), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
+    const db = getFirestore(getAdminApp());
+    const q = db.collection('galleryImages').orderBy("createdAt", "desc");
+    const querySnapshot = await q.get();
     return querySnapshot.docs.map(toGalleryImage);
-  } catch (e: any) {
-    console.error("Error getting gallery images from Firestore: ", e);
+  } catch (e) {
+    console.error("Could not fetch gallery images, returning empty array. Error: ", e);
     return [];
   }
 };
@@ -139,15 +102,7 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
-    const { db } = getFirebaseServices();
-    if (!db) {
-      throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-    }
-
-    try {
-        const docRef = doc(db, 'galleryImages', id);
-        await deleteDoc(docRef);
-    } catch (e: any) {
-        throw new Error(`Gagal menghapus riwayat gambar dari Firebase: ${e.message}`);
-    }
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('galleryImages').doc(id);
+  await docRef.delete();
 };

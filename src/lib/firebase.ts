@@ -1,8 +1,9 @@
 
+// THIS FILE IS FOR CLIENT-SIDE FIREBASE SDKs ONLY
+// DO NOT IMPORT/USE IN SERVER-SIDE CODE (e.g., in /lib/*-admin.ts files)
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,49 +15,43 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-interface FirebaseServices {
+interface FirebaseClientServices {
     app: FirebaseApp | null;
     auth: Auth | null;
-    db: Firestore | null;
-    storage: FirebaseStorage | null;
 }
 
-let services: FirebaseServices | null = null;
+let clientServices: FirebaseClientServices | null = null;
 
 /**
- * Initializes and/or returns Firebase services.
- * This function ensures that Firebase is initialized only once (singleton pattern).
+ * Initializes and/or returns Firebase CLIENT services.
+ * This should only be used in client components ('use client').
  * It will not throw an error if config is missing, but will return null services.
- * @returns An object containing the initialized Firebase services, or nulls if not configured.
+ * @returns An object containing the initialized Firebase client services, or nulls if not configured.
  */
-export function getFirebaseServices(): FirebaseServices {
-    if (services) {
-        return services;
+export function getFirebaseClientServices(): FirebaseClientServices {
+    if (clientServices) {
+        return clientServices;
     }
 
     const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
     
     if (!allConfigPresent) {
-        if (process.env.NODE_ENV !== 'production') {
-            console.warn("Firebase configuration is incomplete. Firebase services will be disabled. Check your .env file.");
-        }
-        services = { app: null, auth: null, db: null, storage: null };
-        return services;
+        console.warn("Client-side Firebase configuration is incomplete. Firebase services will be disabled. Check your .env file.");
+        clientServices = { app: null, auth: null };
+        return clientServices;
     }
 
     try {
         const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
         
-        services = { app, auth, db, storage };
-        return services;
+        clientServices = { app, auth };
+        return clientServices;
 
     } catch (error) {
-        console.error("Error initializing Firebase:", error);
-        services = { app: null, auth: null, db: null, storage: null };
-        return services;
+        console.error("Error initializing client-side Firebase:", error);
+        clientServices = { app: null, auth: null };
+        return clientServices;
     }
 }
 
@@ -66,7 +61,7 @@ export function getFirebaseServices(): FirebaseServices {
  * @returns The Auth instance or null.
  */
 export function getClientAuth(): Auth | null {
-    return getFirebaseServices().auth;
+    return getFirebaseClientServices().auth;
 }
 
 export { firebaseConfig };

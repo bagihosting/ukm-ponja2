@@ -1,22 +1,8 @@
 
 'use server';
 
-import { 
-  getFirebaseServices
-} from './firebase'; 
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  serverTimestamp,
-  deleteField,
-  query,
-  orderBy
-} from 'firebase/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getAdminApp } from './firebase-admin';
 import type { ProgramCategory } from './constants';
 
 
@@ -49,8 +35,9 @@ export interface ProgramUpdateInput {
   personInChargePhotoUrl?: string | null;
 }
 
-function toProgram(docSnap: any): Program {
+function toProgram(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>): Program {
   const data = docSnap.data();
+  if (!data) throw new Error("Document data is empty");
   return {
     id: docSnap.id,
     name: data.name,
@@ -65,132 +52,75 @@ function toProgram(docSnap: any): Program {
 
 // Create
 export async function addProgram(program: ProgramInput): Promise<string> {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-  }
+  const db = getFirestore(getAdminApp());
   
-  try {
-    const dataToAdd: { [key: string]: any } = {
-      name: program.name,
-      category: program.category,
-      description: program.description,
-      createdAt: serverTimestamp(),
-    };
+  const dataToAdd: { [key: string]: any } = {
+    ...program,
+    createdAt: FieldValue.serverTimestamp(),
+  };
     
-    // Add optional fields only if they have a valid, non-empty value
-    if (program.imageUrl && program.imageUrl.trim() !== '') {
-        dataToAdd.imageUrl = program.imageUrl;
-    }
-    if (program.personInChargeName && program.personInChargeName.trim() !== '') {
-        dataToAdd.personInChargeName = program.personInChargeName;
-    }
-    if (program.personInChargePhotoUrl && program.personInChargePhotoUrl.trim() !== '') {
-        dataToAdd.personInChargePhotoUrl = program.personInChargePhotoUrl;
-    }
-    
-    const docRef = await addDoc(collection(db, 'programs'), dataToAdd);
-    return docRef.id;
-  } catch (e: any) {
-    throw new Error(`Gagal menambahkan program: ${e.message}`);
-  }
+  // Clean up any undefined or empty optional fields before adding
+  if (!dataToAdd.imageUrl) delete dataToAdd.imageUrl;
+  if (!dataToAdd.personInChargeName) delete dataToAdd.personInChargeName;
+  if (!dataToAdd.personInChargePhotoUrl) delete dataToAdd.personInChargePhotoUrl;
+  
+  const docRef = await db.collection('programs').add(dataToAdd);
+  return docRef.id;
 };
 
 // Read all
 export async function getPrograms(): Promise<Program[]> {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    return [];
-  }
-
   try {
-    const q = query(collection(db, 'programs'), orderBy("name", "asc"));
-    const querySnapshot = await getDocs(q);
+    const db = getFirestore(getAdminApp());
+    const q = db.collection('programs').orderBy("name", "asc");
+    const querySnapshot = await q.get();
     return querySnapshot.docs.map(toProgram);
-  } catch (e: any) {
-    console.error("Error getting programs from Firestore: ", e);
+  } catch (e) {
+    console.error("Could not fetch programs, returning empty array. Error: ", e);
     return [];
   }
 };
 
 // Read one
 export async function getProgram(id: string): Promise<Program | null> {
-  const { db } = getFirebaseServices();
-  if (!db) {
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('programs').doc(id);
+  const docSnap = await docRef.get();
+  
+  if (docSnap.exists) {
+    return toProgram(docSnap);
+  } else {
     return null;
-  }
-
-  try {
-    const docRef = doc(db, 'programs', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return toProgram(docSnap);
-    } else {
-      return null;
-    }
-  } catch (e: any)
-    {
-    throw new Error(`Gagal mengambil data program: ${e.message}`);
   }
 };
 
 // Update
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('programs').doc(id);
+    
+  const dataToUpdate: { [key: string]: any } = { ...program };
+
+  // Use FieldValue.delete() for robust removal of optional fields
+  if (program.imageUrl === null || program.imageUrl === '') {
+      dataToUpdate.imageUrl = FieldValue.delete();
   }
-  
-  try {
-    const docRef = doc(db, 'programs', id);
+  if (program.personInChargeName === null || program.personInChargeName === '') {
+      dataToUpdate.personInChargeName = FieldValue.delete();
+  }
+  if (program.personInChargePhotoUrl === null || program.personInChargePhotoUrl === '') {
+      dataToUpdate.personInChargePhotoUrl = FieldValue.delete();
+  }
     
-    const dataToUpdate: { [key: string]: any } = {};
-
-    // Assign only defined, non-null fields to the update object
-    if (program.name !== undefined) dataToUpdate.name = program.name;
-    if (program.category !== undefined) dataToUpdate.category = program.category;
-    if (program.description !== undefined) dataToUpdate.description = program.description;
-    
-    // Robustly handle optional fields that can be added, updated, or deleted
-    if (program.imageUrl === null || program.imageUrl === '') {
-        dataToUpdate.imageUrl = deleteField();
-    } else if (program.imageUrl) {
-        dataToUpdate.imageUrl = program.imageUrl;
-    }
-
-    if (program.personInChargeName === null || program.personInChargeName === '') {
-        dataToUpdate.personInChargeName = deleteField();
-    } else if (program.personInChargeName) {
-        dataToUpdate.personInChargeName = program.personInChargeName;
-    }
-
-    if (program.personInChargePhotoUrl === null || program.personInChargePhotoUrl === '') {
-        dataToUpdate.personInChargePhotoUrl = deleteField();
-    } else if (program.personInChargePhotoUrl) {
-        dataToUpdate.personInChargePhotoUrl = program.personInChargePhotoUrl;
-    }
-    
-    if (Object.keys(dataToUpdate).length > 0) {
-      await updateDoc(docRef, dataToUpdate);
-    }
-
-  } catch (e: any) {
-    throw new Error(`Gagal memperbarui program: ${e.message}`);
+  if (Object.keys(dataToUpdate).length > 0) {
+    await docRef.update(dataToUpdate);
   }
 };
 
 
 // Delete
 export async function deleteProgram(id: string): Promise<void> {
-  const { db } = getFirebaseServices();
-  if (!db) {
-    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
-  }
-
-  try {
-    const docRef = doc(db, 'programs', id);
-    await deleteDoc(docRef);
-  } catch (e: any) {
-    throw new Error(`Gagal menghapus program: ${e.message}`);
-  }
+  const db = getFirestore(getAdminApp());
+  const docRef = db.collection('programs').doc(id);
+  await docRef.delete();
 };
