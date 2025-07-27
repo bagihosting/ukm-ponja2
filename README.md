@@ -53,18 +53,19 @@ npm install
 
 ## 3. Konfigurasi Lingkungan (Environment)
 
-**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan kredensial dari Firebase dan Google AI agar dapat berfungsi. Tanpa ini, fitur penyimpanan data dan AI tidak akan berjalan.
+**LANGKAH INI SANGAT PENTING.** Aplikasi ini memerlukan dua set kredensial: satu untuk **klien** (berprefik `NEXT_PUBLIC_`) dan satu untuk **server** (berprefik `FIREBASE_ADMIN_`). Tanpa ini, fitur-fitur penting seperti login, penyimpanan data, dan AI tidak akan berjalan.
 
 1.  **Buat Berkas `.env`**:
     Di dalam direktori utama proyek Anda, buat sebuah berkas baru bernama `.env`.
     ```bash
     touch .env
     ```
-    Salin konten dari berkas `.env.example` (jika ada) atau gunakan templat di bawah.
 
-2.  **Isi Kredensial Firebase**:
-    Buka berkas `.env` dan isi variabel berikut dengan kredensial dari proyek Firebase Anda:
+2.  **Isi Berkas `.env` dengan Templat Berikut**:
+    Salin dan tempel templat di bawah ini ke dalam berkas `.env` Anda.
+
     ```
+    # --- Kredensial Klien (Browser) ---
     NEXT_PUBLIC_FIREBASE_API_KEY="AIza..."
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="proyek-anda.firebaseapp.com"
     NEXT_PUBLIC_FIREBASE_PROJECT_ID="proyek-anda"
@@ -72,17 +73,41 @@ npm install
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="12345..."
     NEXT_PUBLIC_FIREBASE_APP_ID="1:12345...:web:..."
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-..."
-    ```
-    Anda dapat menemukan nilai-nilai ini di **Firebase Console** -> **Project Settings** -> **General** -> **Your apps** -> **Firebase SDK snippet** -> **Config**.
 
-3.  **Isi Kunci API Google AI**:
-    Tambahkan kunci API untuk Google AI ke dalam berkas `.env`. Kunci ini diperlukan untuk fitur pembuatan gambar dan AI Dokter.
-    ```
+    # --- Kredensial Admin Server (Rahasia) ---
+    FIREBASE_ADMIN_CLIENT_EMAIL="firebase-adminsdk-..."
+    FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+    # --- Kunci API Google AI ---
     GEMINI_API_KEY="AIza..."
     ```
-    Anda bisa mendapatkan kunci ini dari [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-Pastikan berkas `.env` ini ada di server tempat Anda menjalankan aplikasi.
+### 3.1. Mendapatkan Kredensial Klien (NEXT_PUBLIC_*)
+
+Nilai-nilai ini aman untuk diekspos di browser.
+1. Buka **Firebase Console**.
+2. Klik ikon gerigi (⚙️) di sebelah "Project Overview" dan pilih **Project settings**.
+3. Di tab **General**, di bawah **Your apps**, pilih aplikasi web Anda.
+4. Di bagian **Firebase SDK snippet**, pilih **Config**.
+5. Salin nilai-nilai yang sesuai ke dalam variabel `NEXT_PUBLIC_*` di berkas `.env` Anda.
+
+### 3.2. Mendapatkan Kredensial Admin Server (FIREBASE_ADMIN_*)
+
+Nilai-nilai ini **SANGAT RAHASIA** dan hanya boleh digunakan di server. **JANGAN PERNAH** membagikannya di sisi klien.
+1. Buka **Firebase Console** -> **Project settings**.
+2. Navigasi ke tab **Service accounts**.
+3. Klik tombol **Generate new private key**. Sebuah file JSON akan terunduh secara otomatis.
+4. **Buka file JSON** yang baru saja diunduh menggunakan editor teks.
+5. Salin nilai-nilai dari file JSON ke dalam berkas `.env` Anda:
+   - Salin nilai dari `"client_email"` ke `FIREBASE_ADMIN_CLIENT_EMAIL`.
+   - Salin seluruh nilai dari `"private_key"` (termasuk `-----BEGIN PRIVATE KEY-----` dan `-----END PRIVATE KEY-----`) ke `FIREBASE_ADMIN_PRIVATE_KEY`.
+   - Nilai untuk `NEXT_PUBLIC_FIREBASE_PROJECT_ID` juga tersedia di file ini sebagai `"project_id"`.
+
+### 3.3. Mendapatkan Kunci API Google AI (GEMINI_API_KEY)
+
+Kunci ini diperlukan untuk fitur AI seperti Tanya Dokter dan pembuatan gambar.
+1. Buka [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Buat kunci API baru dan salin nilainya ke `GEMINI_API_KEY` di berkas `.env` Anda.
 
 ## 4. Konfigurasi Firebase Authentication
 
@@ -101,9 +126,7 @@ Setelah semua konfigurasi selesai, jalankan server pengembangan:
 npm run dev
 ```
 
-Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`.
-
-Server pengembangan ini menggunakan *hot-reloading*, yang berarti setiap perubahan pada kode akan secara otomatis memuat ulang aplikasi di peramban Anda.
+Aplikasi akan berjalan dan dapat diakses di `http://localhost:3002`. Setiap perubahan pada kode akan secara otomatis memuat ulang aplikasi di peramban Anda.
 
 ## 6. Menjalankan Aplikasi di Latar Belakang dengan PM2 (Opsional)
 
