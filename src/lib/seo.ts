@@ -55,4 +55,3 @@ export async function updateSEOSettings(data: SEOData): Promise<void> {
     throw error;
   }
 }
-

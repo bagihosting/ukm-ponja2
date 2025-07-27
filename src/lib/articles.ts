@@ -60,6 +60,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${docRef.id}`);
 
     return docRef.id;
@@ -132,6 +133,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${id}`);
 
   } catch (error: any) {
@@ -153,6 +155,7 @@ export const deleteArticle = async (id: string): Promise<void> => {
     
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${id}`);
 
   } catch (error: any) {
@@ -163,5 +166,3 @@ export const deleteArticle = async (id: string): Promise<void> => {
     throw error;
   }
 };
-
-

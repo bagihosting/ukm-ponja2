@@ -70,6 +70,7 @@ export async function addProgram(program: ProgramInput): Promise<string> {
 
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
 
     return docRef.id;
@@ -146,6 +147,7 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
 
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
 
   } catch (error: any) {
@@ -167,6 +169,7 @@ export async function deleteProgram(id: string): Promise<void> {
 
     // Revalidate paths
     revalidatePath('/');
+    revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
     
   } catch (error: any) {
