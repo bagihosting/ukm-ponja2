@@ -229,7 +229,7 @@ export default async function HomePage() {
                             <CardDescription>Akses laporan dan dokumen publik dari kegiatan kami.</CardDescription>
                         </CardHeader>
                       <CardContent className="text-center text-muted-foreground flex-grow flex flex-col items-center justify-center">
-                          <p className="font-medium">Fitur ini sedang dalam pengembangan.</p>
+                          <p className="font-medium">Lihat semua laporan, logbook, dan data UKM secara transparan.</p>
                       </CardContent>
                         <CardFooter className="justify-center">
                           <Button asChild variant="secondary">
