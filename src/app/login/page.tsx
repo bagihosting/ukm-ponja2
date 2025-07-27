@@ -82,9 +82,8 @@ export default function LoginPage() {
           break;
         default:
            if (error.message.includes("Firebase")) {
-            errorMessage = `Terjadi kesalahan pada Firebase. Periksa konsol untuk detail.`;
+            errorMessage = `Terjadi kesalahan pada Firebase. Periksa konsol server untuk detail.`;
            }
-           console.error("Login Error:", error);
            break;
       }
 

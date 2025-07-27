@@ -65,11 +65,9 @@ function fileToDataUri(file: File): Promise<string> {
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
     const { db } = getFirebaseServices();
     if (!db) {
-      console.error("Firebase has not been initialized. Gallery functions will not work.");
-      throw new Error("Layanan database tidak tersedia.");
+      throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
     }
 
-    const galleryCollection = collection(db, 'galleryImages');
     try {
         const docData = {
             name: imageData.name,
@@ -77,10 +75,9 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
             category: imageData.category || 'Lain-lain', // Fallback just in case
             createdAt: serverTimestamp(),
         };
-        const docRef = await addDoc(galleryCollection, docData);
+        const docRef = await addDoc(collection(db, 'galleryImages'), docData);
         return docRef.id;
     } catch (e: any) {
-        console.error("Error adding document to gallery: ", e);
         throw new Error(`Gagal menyimpan riwayat gambar ke Firestore: ${e.message}`);
     }
 };
@@ -95,8 +92,7 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
 export const uploadGalleryImage = async (file: File): Promise<string> => {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Gallery functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
   
   try {
@@ -113,7 +109,6 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
         category: category,
     });
   } catch (e: any) {
-    console.error("Error uploading image and saving to Firestore: ", e);
     throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
   }
 };
@@ -125,18 +120,15 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Gallery functions will not work.");
     return [];
   }
 
   try {
-    const galleryCollection = collection(db, 'galleryImages');
-    const q = query(galleryCollection, orderBy("createdAt", "desc"));
+    const q = query(collection(db, 'galleryImages'), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toGalleryImage);
   } catch (e: any) {
-    console.error("Error getting documents: ", e);
-    // On failure, return an empty array to prevent the page from crashing.
+    console.error("Error getting gallery images from Firestore: ", e);
     return [];
   }
 };
@@ -149,15 +141,13 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
 export const deleteGalleryImage = async (id: string): Promise<void> => {
     const { db } = getFirebaseServices();
     if (!db) {
-      console.error("Firebase has not been initialized. Gallery functions will not work.");
-      throw new Error("Layanan database tidak tersedia.");
+      throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
     }
 
     try {
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);
     } catch (e: any) {
-        console.error("Error deleting image metadata: ", e);
         throw new Error(`Gagal menghapus riwayat gambar dari Firebase: ${e.message}`);
     }
 };

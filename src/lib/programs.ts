@@ -67,11 +67,9 @@ function toProgram(docSnap: any): Program {
 export async function addProgram(program: ProgramInput): Promise<string> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Program functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
   
-  const programsCollection = collection(db, 'programs');
   try {
     const dataToAdd: { [key: string]: any } = {
       name: program.name,
@@ -91,10 +89,9 @@ export async function addProgram(program: ProgramInput): Promise<string> {
         dataToAdd.personInChargePhotoUrl = program.personInChargePhotoUrl;
     }
     
-    const docRef = await addDoc(programsCollection, dataToAdd);
+    const docRef = await addDoc(collection(db, 'programs'), dataToAdd);
     return docRef.id;
   } catch (e: any) {
-    console.error("Error adding program: ", e);
     throw new Error(`Gagal menambahkan program: ${e.message}`);
   }
 };
@@ -103,17 +100,15 @@ export async function addProgram(program: ProgramInput): Promise<string> {
 export async function getPrograms(): Promise<Program[]> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Program functions will not work.");
     return [];
   }
 
   try {
-    const programsCollection = collection(db, 'programs');
-    const q = query(programsCollection, orderBy("name", "asc"));
+    const q = query(collection(db, 'programs'), orderBy("name", "asc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toProgram);
   } catch (e: any) {
-    console.error("Error getting programs: ", e);
+    console.error("Error getting programs from Firestore: ", e);
     return [];
   }
 };
@@ -122,7 +117,6 @@ export async function getPrograms(): Promise<Program[]> {
 export async function getProgram(id: string): Promise<Program | null> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Program functions will not work.");
     return null;
   }
 
@@ -132,12 +126,10 @@ export async function getProgram(id: string): Promise<Program | null> {
     if (docSnap.exists()) {
       return toProgram(docSnap);
     } else {
-      console.log("No such program document!");
       return null;
     }
   } catch (e: any)
     {
-    console.error("Error getting program: ", e);
     throw new Error(`Gagal mengambil data program: ${e.message}`);
   }
 };
@@ -146,8 +138,7 @@ export async function getProgram(id: string): Promise<Program | null> {
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Program functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
   
   try {
@@ -184,7 +175,6 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
     }
 
   } catch (e: any) {
-    console.error("Error updating program: ", e);
     throw new Error(`Gagal memperbarui program: ${e.message}`);
   }
 };
@@ -194,15 +184,13 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
 export async function deleteProgram(id: string): Promise<void> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Program functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
 
   try {
     const docRef = doc(db, 'programs', id);
     await deleteDoc(docRef);
   } catch (e: any) {
-    console.error("Error deleting program: ", e);
     throw new Error(`Gagal menghapus program: ${e.message}`);
   }
 };

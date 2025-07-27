@@ -58,11 +58,9 @@ function toArticle(docSnap: any): Article {
 export const addArticle = async (article: ArticleInput): Promise<string> => {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Article functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
 
-  const articlesCollection = collection(db, 'articles');
   try {
     const dataToAdd: { [key: string]: any } = {
       title: article.title,
@@ -75,10 +73,9 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
         dataToAdd.imageUrl = article.imageUrl;
     }
     
-    const docRef = await addDoc(articlesCollection, dataToAdd);
+    const docRef = await addDoc(collection(db, 'articles'), dataToAdd);
     return docRef.id;
   } catch (e: any) {
-    console.error("Error adding document: ", e);
     throw new Error(`Gagal menambahkan artikel: ${e.message}`);
   }
 };
@@ -88,17 +85,17 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 export const getArticles = async (): Promise<Article[]> => {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Article functions will not work.");
+    // Fail gracefully during build or if firebase is not configured
     return [];
   }
 
   try {
-    const articlesCollection = collection(db, 'articles');
-    const q = query(articlesCollection, orderBy("createdAt", "desc"));
+    const q = query(collection(db, 'articles'), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(toArticle);
   } catch (e: any) {
-    console.error("Error getting documents: ", e);
+    // Fail gracefully, but log the error on the server
+    console.error("Error getting articles from Firestore: ", e);
     return [];
   }
 };
@@ -107,7 +104,6 @@ export const getArticles = async (): Promise<Article[]> => {
 export const getArticle = async (id: string): Promise<Article | null> => {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase has not been initialized. Article functions will not work.");
     return null;
   }
   
@@ -117,11 +113,10 @@ export const getArticle = async (id: string): Promise<Article | null> => {
     if (docSnap.exists()) {
       return toArticle(docSnap);
     } else {
-      console.log("No such document!");
       return null;
     }
   } catch (e: any) {
-    console.error("Error getting document: ", e);
+    console.error(`Error getting article (ID: ${id}) from Firestore: `, e);
     return null;
   }
 };
@@ -130,8 +125,7 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
   const { db } = getFirebaseServices();
    if (!db) {
-    console.error("Firebase has not been initialized. Article functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
 
   try {
@@ -156,7 +150,6 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     }
 
   } catch (e: any) {
-    console.error("Error updating document: ", e);
     throw new Error(`Gagal memperbarui artikel: ${e.message}`);
   }
 };
@@ -166,15 +159,13 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 export const deleteArticle = async (id: string): Promise<void> => {
   const { db } = getFirebaseServices();
    if (!db) {
-    console.error("Firebase has not been initialized. Article functions will not work.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
   
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
   } catch (e: any) {
-    console.error("Error deleting document: ", e);
     throw new Error(`Gagal menghapus artikel: ${e.message}`);
   }
 };

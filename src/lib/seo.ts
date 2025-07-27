@@ -19,7 +19,6 @@ const SEO_DOC_PATH = 'settings/seo';
 export async function getSEOSettings(): Promise<SEOData | null> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.warn("Firebase is not initialized. SEO settings will not be available.");
     return null;
   }
   
@@ -31,7 +30,7 @@ export async function getSEOSettings(): Promise<SEOData | null> {
     }
     return null;
   } catch (error) {
-    console.error("Error getting SEO settings: ", error);
+    console.error("Error getting SEO settings from Firestore: ", error);
     // Return null to allow fallback to default values in case of config error
     return null;
   }
@@ -44,8 +43,7 @@ export async function getSEOSettings(): Promise<SEOData | null> {
 export async function updateSEOSettings(data: SEOData): Promise<void> {
   const { db } = getFirebaseServices();
   if (!db) {
-    console.error("Firebase is not initialized. SEO settings cannot be updated.");
-    throw new Error("Layanan database tidak tersedia.");
+    throw new Error("Layanan database tidak tersedia. Konfigurasi Firebase tidak lengkap.");
   }
   
   try {
@@ -53,7 +51,6 @@ export async function updateSEOSettings(data: SEOData): Promise<void> {
     // Use setDoc with merge:true to create or update the document.
     await setDoc(seoSettingsRef, data, { merge: true });
   } catch (error: any) {
-    console.error("Error updating SEO settings: ", error);
     throw new Error(`Gagal memperbarui pengaturan SEO: ${error.message}`);
   }
 }
