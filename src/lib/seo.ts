@@ -26,9 +26,12 @@ export async function getSEOSettings(): Promise<SEOData | null> {
       return docSnap.data() as SEOData;
     }
     return null;
-  } catch (error) {
-    // Fail gracefully during build or if firebase is not configured
-    console.error("Could not fetch SEO settings, returning null. Error: ", error);
+  } catch (error: any) {
+    if (error.message.includes('Firebase Admin credentials')) {
+        console.warn("Firebase Admin credentials not set, returning null for getSEOSettings. This is expected during local development or build if server env vars are not set.");
+    } else {
+        console.error("Error fetching SEO settings:", error);
+    }
     return null;
   }
 }

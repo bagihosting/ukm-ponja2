@@ -66,22 +66,34 @@ export const getArticles = async (): Promise<Article[]> => {
     const q = db.collection('articles').orderBy("createdAt", "desc");
     const querySnapshot = await q.get();
     return querySnapshot.docs.map(toArticle);
-  } catch (e) {
-    // In case of error (e.g. during build if creds are not yet set), return empty array.
-    console.error("Could not fetch articles, returning empty array. Error: ", e);
+  } catch (e: any) {
+    if (e.message.includes('Firebase Admin credentials')) {
+        console.warn("Firebase Admin credentials not set, returning empty array for getArticles. This is expected during local development or build if server env vars are not set.");
+    } else {
+        console.error("Error fetching articles:", e);
+    }
     return [];
   }
 };
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('articles').doc(id);
-  const docSnap = await docRef.get();
-  
-  if (docSnap.exists) {
-    return toArticle(docSnap);
-  } else {
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('articles').doc(id);
+    const docSnap = await docRef.get();
+    
+    if (docSnap.exists) {
+      return toArticle(docSnap);
+    } else {
+      return null;
+    }
+  } catch (e: any) {
+    if (e.message.includes('Firebase Admin credentials')) {
+        console.warn(`Firebase Admin credentials not set, returning null for getArticle(${id}).`);
+    } else {
+        console.error(`Error fetching article ${id}:`, e);
+    }
     return null;
   }
 };

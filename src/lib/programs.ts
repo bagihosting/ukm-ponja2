@@ -75,21 +75,34 @@ export async function getPrograms(): Promise<Program[]> {
     const q = db.collection('programs').orderBy("name", "asc");
     const querySnapshot = await q.get();
     return querySnapshot.docs.map(toProgram);
-  } catch (e) {
-    console.error("Could not fetch programs, returning empty array. Error: ", e);
+  } catch (e: any) {
+    if (e.message.includes('Firebase Admin credentials')) {
+        console.warn("Firebase Admin credentials not set, returning empty array for getPrograms. This is expected during local development or build if server env vars are not set.");
+    } else {
+        console.error("Error fetching programs:", e);
+    }
     return [];
   }
 };
 
 // Read one
 export async function getProgram(id: string): Promise<Program | null> {
-  const db = getFirestore(getAdminApp());
-  const docRef = db.collection('programs').doc(id);
-  const docSnap = await docRef.get();
-  
-  if (docSnap.exists) {
-    return toProgram(docSnap);
-  } else {
+  try {
+    const db = getFirestore(getAdminApp());
+    const docRef = db.collection('programs').doc(id);
+    const docSnap = await docRef.get();
+    
+    if (docSnap.exists) {
+      return toProgram(docSnap);
+    } else {
+      return null;
+    }
+  } catch (e: any) {
+     if (e.message.includes('Firebase Admin credentials')) {
+        console.warn(`Firebase Admin credentials not set, returning null for getProgram(${id}).`);
+    } else {
+        console.error(`Error fetching program ${id}:`, e);
+    }
     return null;
   }
 };

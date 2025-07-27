@@ -90,8 +90,12 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
     const q = db.collection('galleryImages').orderBy("createdAt", "desc");
     const querySnapshot = await q.get();
     return querySnapshot.docs.map(toGalleryImage);
-  } catch (e) {
-    console.error("Could not fetch gallery images, returning empty array. Error: ", e);
+  } catch (e: any) {
+    if (e.message.includes('Firebase Admin credentials')) {
+        console.warn("Firebase Admin credentials not set, returning empty array for getGalleryImages. This is expected during local development or build if server env vars are not set.");
+    } else {
+        console.error("Error fetching gallery images:", e);
+    }
     return [];
   }
 };
