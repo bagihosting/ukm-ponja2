@@ -15,43 +15,62 @@ const firebaseConfig = {
 };
 
 interface FirebaseServices {
-    app: FirebaseApp;
-    auth: Auth;
-    db: Firestore;
-    storage: FirebaseStorage;
+    app: FirebaseApp | null;
+    auth: Auth | null;
+    db: Firestore | null;
+    storage: FirebaseStorage | null;
 }
+
+let services: FirebaseServices | null = null;
 
 /**
  * Initializes and/or returns Firebase services.
  * This function ensures that Firebase is initialized only once (singleton pattern).
- * @returns An object containing the initialized Firebase services.
- * @throws An error if the Firebase configuration is incomplete.
+ * It will not throw an error if config is missing, but will return null services.
+ * @returns An object containing the initialized Firebase services, or nulls if not configured.
  */
 export function getFirebaseServices(): FirebaseServices {
+    if (services) {
+        return services;
+    }
+
     const allConfigPresent = Object.values(firebaseConfig).every(value => !!value);
-    if (!allConfigPresent) {
-        throw new Error("Firebase configuration is incomplete. Please check your .env file.");
-    }
-
-    let app: FirebaseApp;
-    if (getApps().length) {
-        app = getApp();
-    } else {
-        app = initializeApp(firebaseConfig);
-    }
-
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
     
-    return { app, auth, db, storage };
+    if (!allConfigPresent) {
+        console.warn("Firebase configuration is incomplete. Firebase services will be disabled.");
+        services = { app: null, auth: null, db: null, storage: null };
+        return services;
+    }
+
+    try {
+        let app: FirebaseApp;
+        if (getApps().length) {
+            app = getApp();
+        } else {
+            app = initializeApp(firebaseConfig);
+        }
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        
+        services = { app, auth, db, storage };
+        return services;
+
+    } catch (error) {
+        console.error("Error initializing Firebase:", error);
+        services = { app: null, auth: null, db: null, storage: null };
+        return services;
+    }
 }
 
-// For client-side usage where you might not want to throw an error immediately,
-// you can retrieve the auth object specifically.
-export function getClientAuth(): Auth {
+/**
+ * Specifically gets the Auth instance for client-side components.
+ * Returns null if Firebase is not configured.
+ * @returns The Auth instance or null.
+ */
+export function getClientAuth(): Auth | null {
     return getFirebaseServices().auth;
 }
 
-// You can still export the raw config if needed elsewhere, though it's less common.
 export { firebaseConfig };

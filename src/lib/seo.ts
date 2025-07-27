@@ -15,8 +15,13 @@ export interface SEOData {
  * @returns A promise that resolves with the SEO data, or null if it doesn't exist.
  */
 export async function getSEOSettings(): Promise<SEOData | null> {
+  const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. SEO settings will not be available.");
+    return null;
+  }
+  
   try {
-    const { db } = getFirebaseServices();
     const seoSettingsRef = doc(db, 'settings', 'seo');
     const docSnap = await getDoc(seoSettingsRef);
     if (docSnap.exists()) {
@@ -36,6 +41,11 @@ export async function getSEOSettings(): Promise<SEOData | null> {
  */
 export async function updateSEOSettings(data: SEOData): Promise<void> {
   const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. SEO settings cannot be updated.");
+    throw new Error("Layanan database tidak tersedia.");
+  }
+  
   const seoSettingsRef = doc(db, 'settings', 'seo');
   try {
     // Use setDoc with merge:true to create the document if it doesn't exist,

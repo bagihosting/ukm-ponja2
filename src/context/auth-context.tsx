@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { getClientAuth, firebaseConfig } from '@/lib/firebase';
+import { getClientAuth } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -20,11 +20,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if the necessary config values are present on the client
-    const isConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+    // getClientAuth() will return null if Firebase isn't configured
+    const auth = getClientAuth();
 
-    if (isConfigured) {
-      const auth = getClientAuth();
+    if (auth) {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user);
         setLoading(false);
@@ -33,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return () => unsubscribe();
     } else {
       // If Firebase is not configured, stop loading and assume no user.
-      console.error("Client-side Firebase configuration is missing. Auth will not work.");
+      console.warn("Client-side Firebase configuration is missing or invalid. Auth will not work.");
       setLoading(false);
     }
   }, []);

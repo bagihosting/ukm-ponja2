@@ -65,6 +65,11 @@ function fileToDataUri(file: File): Promise<string> {
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
     const { db } = getFirebaseServices();
+    if (!db) {
+      console.error("Firebase has not been initialized. Gallery functions will not work.");
+      throw new Error("Layanan database tidak tersedia.");
+    }
+
     const galleryCollection = collection(db, 'galleryImages');
     try {
         const docData = {
@@ -89,6 +94,12 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
  * @returns A promise that resolves with the metadata of the newly added image.
  */
 export const uploadGalleryImage = async (file: File): Promise<string> => {
+  const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. Gallery functions will not work.");
+    throw new Error("Layanan database tidak tersedia.");
+  }
+  
   try {
     // 1. Convert file to data URI
     const dataUri = await fileToDataUri(file);
@@ -117,6 +128,11 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
   const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. Gallery functions will not work.");
+    return [];
+  }
+
   const galleryCollection = collection(db, 'galleryImages');
   try {
     const q = query(galleryCollection, orderBy("createdAt", "desc"));
@@ -136,6 +152,11 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
     const { db } = getFirebaseServices();
+    if (!db) {
+      console.error("Firebase has not been initialized. Gallery functions will not work.");
+      throw new Error("Layanan database tidak tersedia.");
+    }
+
     try {
         const docRef = doc(db, 'galleryImages', id);
         await deleteDoc(docRef);

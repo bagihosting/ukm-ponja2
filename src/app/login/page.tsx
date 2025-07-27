@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, type Auth } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getClientAuth, firebaseConfig } from '@/lib/firebase';
+import { getClientAuth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const isFirebaseConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+  const [authInstance, setAuthInstance] = useState<Auth | null>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,6 +35,10 @@ export default function LoginPage() {
     },
   });
 
+  useEffect(() => {
+    setAuthInstance(getClientAuth());
+  }, []);
+
   // Redirect if user is already logged in
   useEffect(() => {
     if (!authLoading && user) {
@@ -43,46 +47,45 @@ export default function LoginPage() {
   }, [user, authLoading, router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!authInstance) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Gagal',
+        description: "Konfigurasi Firebase tidak ditemukan. Pastikan berkas .env Anda sudah benar dan aplikasi telah di-restart.",
+      });
+      return;
+    }
+
     try {
-      if (!isFirebaseConfigured) {
-        throw new Error("Konfigurasi Firebase tidak ditemukan. Pastikan berkas .env Anda sudah benar dan aplikasi telah di-restart.");
-      }
-      const auth = getClientAuth();
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      // Redirect is handled by the effect hook, but we can push here as well for faster navigation
+      await signInWithEmailAndPassword(authInstance, values.email, values.password);
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'Terjadi kesalahan tak terduga. Silakan coba lagi.';
       
-      // Handle custom error for missing auth
-      if (error.message.includes("Konfigurasi Firebase tidak ditemukan")) {
-        errorMessage = error.message;
-      } else {
-        switch (error.code) {
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            errorMessage = 'Email atau kata sandi salah. Silakan coba lagi.';
-            break;
-          case 'auth/invalid-email':
-            errorMessage = 'Format email tidak valid.';
-            break;
-          case 'auth/user-disabled':
-            errorMessage = 'Akun pengguna ini telah dinonaktifkan.';
-            break;
-          case 'auth/too-many-requests':
-            errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
-            break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
-            break;
-          default:
-             if (error.message.includes("Firebase")) {
-              errorMessage = `Terjadi kesalahan pada Firebase. Periksa konsol untuk detail.`;
-             }
-             console.error("Login Error:", error);
-             break;
-        }
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = 'Email atau kata sandi salah. Silakan coba lagi.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Format email tidak valid.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'Akun pengguna ini telah dinonaktifkan.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+          break;
+        default:
+           if (error.message.includes("Firebase")) {
+            errorMessage = `Terjadi kesalahan pada Firebase. Periksa konsol untuk detail.`;
+           }
+           console.error("Login Error:", error);
+           break;
       }
 
       toast({
@@ -143,11 +146,11 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || !authInstance}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
-               {!isFirebaseConfigured && (
+               {!authInstance && (
                 <p className="mt-4 text-center text-sm text-destructive">
                   Kesalahan Konfigurasi: Kredensial Firebase tidak ditemukan. Periksa berkas .env Anda.
                 </p>

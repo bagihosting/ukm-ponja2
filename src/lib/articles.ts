@@ -57,6 +57,11 @@ function toArticle(docSnap: any): Article {
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
   const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. Article functions will not work.");
+    throw new Error("Layanan database tidak tersedia.");
+  }
+
   const articlesCollection = collection(db, 'articles');
   try {
     const dataToAdd: { [key: string]: any } = {
@@ -82,6 +87,11 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
   const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. Article functions will not work.");
+    return [];
+  }
+
   const articlesCollection = collection(db, 'articles');
   try {
     const q = query(articlesCollection, orderBy("createdAt", "desc"));
@@ -96,6 +106,11 @@ export const getArticles = async (): Promise<Article[]> => {
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
   const { db } = getFirebaseServices();
+  if (!db) {
+    console.error("Firebase has not been initialized. Article functions will not work.");
+    return null;
+  }
+  
   try {
     const docRef = doc(db, 'articles', id);
     const docSnap = await getDoc(docRef);
@@ -114,6 +129,11 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
   const { db } = getFirebaseServices();
+   if (!db) {
+    console.error("Firebase has not been initialized. Article functions will not work.");
+    throw new Error("Layanan database tidak tersedia.");
+  }
+
   try {
     const docRef = doc(db, 'articles', id);
     
@@ -145,6 +165,11 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
   const { db } = getFirebaseServices();
+   if (!db) {
+    console.error("Firebase has not been initialized. Article functions will not work.");
+    throw new Error("Layanan database tidak tersedia.");
+  }
+  
   try {
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
