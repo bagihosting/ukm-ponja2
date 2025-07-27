@@ -2,9 +2,9 @@
 'use server'
 
 import Link from 'next/link';
-import { getArticles, type Article } from '@/lib/articles';
-import { getPrograms, type Program } from '@/lib/programs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { getArticles } from '@/lib/articles';
+import { getPrograms } from '@/lib/programs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
 import { PortalNavbar } from '@/components/portals/navbar';
@@ -51,11 +51,10 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <PortalNavbar />
-      <main className="flex-1 container mx-auto space-y-12 md:space-y-16 mt-8 md:mt-12">
+      <main className="flex-1 container mx-auto">
         
-        {/* Headline and Popular Section */}
-        {articles.length > 0 && headlineArticle && (
-            <section aria-labelledby="headline-heading">
+        <section id="headline-section" className="py-8 md:py-12" aria-labelledby="headline-heading">
+          {articles.length > 0 && headlineArticle ? (
               <div className="flex flex-col lg:flex-row gap-8">
                   {/* Headline Article */}
                   <div className="lg:w-2/3 flex">
@@ -111,11 +110,18 @@ export default async function HomePage() {
                       </div>
                   )}
               </div>
-            </section>
-        )}
+            ) : (
+              <Card>
+                <CardContent className="py-16 text-center text-muted-foreground">
+                    <p className="font-semibold text-lg">Belum ada berita</p>
+                    <p>Saat ini belum ada artikel yang dipublikasikan. Silakan kembali lagi nanti.</p>
+                </CardContent>
+              </Card>
+            )}
+        </section>
 
         {/* AI Doctor Section */}
-        <section id="ai-doctor" aria-label="Konsultasi dengan AI Dokter">
+        <section id="ai-doctor" className="py-8 md:py-12" aria-label="Konsultasi dengan AI Dokter">
            <div className="mx-auto max-w-4xl">
               <AiDoctor />
            </div>
@@ -123,7 +129,7 @@ export default async function HomePage() {
 
         {/* More Articles Section */}
         {otherArticles.length > 0 && (
-            <section id="articles" className="space-y-8" aria-labelledby="articles-heading">
+            <section id="articles" className="py-8 md:py-12 space-y-8" aria-labelledby="articles-heading">
               <div className="text-center max-w-4xl mx-auto">
                   <h2 id="articles-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Berita Terbaru</h2>
                   <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi lebih banyak informasi dan berita kesehatan dari kami.</p>
@@ -158,20 +164,9 @@ export default async function HomePage() {
               </div>
           </section>
         )}
-        
-        {articles.length === 0 && (
-          <section>
-                <Card>
-                  <CardContent className="py-16 text-center text-muted-foreground">
-                      <p className="font-semibold text-lg">Belum ada berita</p>
-                      <p>Saat ini belum ada artikel yang dipublikasikan. Silakan kembali lagi nanti.</p>
-                  </CardContent>
-              </Card>
-          </section>
-        )}
 
         {/* Programs & Reports Section */}
-        <section id="programs-reports" aria-labelledby="programs-reports-title">
+        <section id="programs-reports" className="py-8 md:py-12" aria-labelledby="programs-reports-title">
             <div className="text-center max-w-4xl mx-auto">
                 <h2 id="programs-reports-title" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Program & Laporan</h2>
                 <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Jelajahi inisiatif dan akses laporan publik dari kegiatan kami.</p>

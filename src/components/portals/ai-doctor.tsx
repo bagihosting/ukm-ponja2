@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { askDoctor, type AskDoctorInput } from '@/ai/flows/ask-doctor-flow';
 import { HeartPulse, Loader2, Sparkles } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function AiDoctor() {
@@ -40,10 +40,14 @@ export function AiDoctor() {
         throw new Error('AI tidak memberikan jawaban.');
       }
     } catch (error: any) {
+      let errorMessage = `Terjadi kesalahan: ${error.message}`;
+      if (error.message.includes("AI features are disabled")) {
+        errorMessage = "Fitur AI dinonaktifkan. Pastikan Anda telah mengatur GEMINI_API_KEY di file .env Anda.";
+      }
       toast({
         variant: 'destructive',
         title: 'Gagal Mendapatkan Jawaban',
-        description: `Terjadi kesalahan: ${error.message}`,
+        description: errorMessage,
       });
     } finally {
       setIsAsking(false);

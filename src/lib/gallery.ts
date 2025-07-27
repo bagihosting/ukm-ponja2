@@ -5,6 +5,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
 import { uploadImageToFreeImage } from './image-hosting';
 import { categorizeImage } from '@/ai/flows/categorize-image-flow';
+import { revalidatePath } from 'next/cache';
 
 
 export interface GalleryImage {
@@ -52,6 +53,10 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
         createdAt: FieldValue.serverTimestamp(),
     };
     const docRef = await db.collection('galleryImages').add(docData);
+    
+    // Revalidate the public gallery page to show the new image
+    revalidatePath('/galeri');
+
     return docRef.id;
   } catch (error: any) {
     if (error.message.includes('Firebase Admin credentials')) {
@@ -77,7 +82,7 @@ export const uploadGalleryImage = async (file: File): Promise<string> => {
     // 2. Categorize the image using its public URL
     const category = await categorizeImage({ imageUrl: url });
 
-    // 3. Save metadata to Firestore
+    // 3. Save metadata to Firestore (this will also revalidate the path)
     return await addGalleryImageRecord({
         name: file.name,
         url: url,
@@ -118,7 +123,12 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
     const db = getFirestore(getAdminApp());
     const docRef = db.collection('galleryImages').doc(id);
     await docRef.delete();
-  } catch (error: any) {
+    
+    // Revalidate the public gallery page after deleting an image
+    revalidatePath('/galeri');
+
+  } catch (error: any)
+{
     if (error.message.includes('Firebase Admin credentials')) {
       console.warn(`[Firebase Warning] ${error.message}`);
       throw new Error('Konfigurasi server Firebase tidak ditemukan.');
@@ -126,4 +136,3 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
     throw error;
   }
 };
-

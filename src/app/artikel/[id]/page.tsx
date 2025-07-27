@@ -42,7 +42,7 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
       <main className="flex-1 py-8 md:py-12">
         <div className="container max-w-4xl">
             <Button asChild variant="ghost" className="mb-6 md:mb-8">
-                <Link href="/">
+                <Link href="/#articles">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Kembali ke Semua Artikel
                 </Link>
@@ -70,7 +70,11 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
                 </div>
                 
                 <div className="prose prose-lg max-w-none dark:prose-invert">
-                    <p className="whitespace-pre-wrap">{article.content}</p>
+                    {article.content ? (
+                        <p className="whitespace-pre-wrap">{article.content}</p>
+                    ) : (
+                        <p className="text-muted-foreground">Konten untuk artikel ini belum tersedia.</p>
+                    )}
                 </div>
             </article>
         </div>
