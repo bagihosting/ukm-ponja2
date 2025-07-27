@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { getArticles } from '@/lib/articles';
 import { getPrograms } from '@/lib/programs';
-import { getChartData } from '@/lib/chart-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AiDoctor } from '@/components/portals/ai-doctor';
-import { DynamicChart } from '@/components/portals/dynamic-chart';
+import { reportLinks } from '@/lib/reports-data';
 
 
 function truncate(text: string, length: number) {
@@ -26,23 +25,23 @@ function truncate(text: string, length: number) {
 
 async function fetchData() {
   try {
-    const [fetchedArticles, fetchedPrograms, chartData] = await Promise.all([
+    const [fetchedArticles, fetchedPrograms] = await Promise.all([
       getArticles(),
       getPrograms(),
-      getChartData()
     ]);
     
     const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    return { articles: sortedArticles, programs: fetchedPrograms, chartData };
+    return { articles: sortedArticles, programs: fetchedPrograms };
   } catch (error) {
     console.error("Gagal memuat data portal:", error);
-    return { articles: [], programs: [], chartData: null };
+    return { articles: [], programs: [] };
   }
 }
 
 export default async function HomePage() {
-  const { articles, programs, chartData } = await fetchData();
+  const { articles, programs } = await fetchData();
+  const graphicReport = reportLinks.find(r => r.slug === 'laporan-grafik');
 
   const headlineArticle = articles.length > 0 ? articles[0] : null;
   const popularArticles = articles.length > 1 ? articles.slice(1, 6) : [];
@@ -50,11 +49,6 @@ export default async function HomePage() {
   
   const essentialPrograms = programs.filter(p => p.category === 'UKM Esensial').slice(0, 5);
   const developmentPrograms = programs.filter(p => p.category === 'UKM Pengembangan').slice(0, 5);
-
-  const chartDescription = chartData?.programService && chartData?.period
-    ? `${chartData.programService} - Periode ${chartData.period}`
-    : "Visualisasi data untuk memantau performa program UKM.";
-
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -234,10 +228,21 @@ export default async function HomePage() {
                 <Card className="shadow-lg w-full flex flex-col">
                     <CardHeader>
                         <CardTitle>Grafik Target Tahunan</CardTitle>
-                        <CardDescription>{chartDescription}</CardDescription>
+                        <CardDescription>Visualisasi data untuk memantau performa program UKM.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow flex items-center justify-center p-2">
-                        <DynamicChart />
+                        {graphicReport ? (
+                            <iframe
+                                src={graphicReport.embedUrl}
+                                className="h-full w-full border-0 min-h-[400px]"
+                                allow="fullscreen"
+                                title={graphicReport.title}
+                            ></iframe>
+                        ) : (
+                            <div className="text-center text-muted-foreground p-8">
+                                Laporan grafik tidak dikonfigurasi.
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter className="justify-center p-4">
                     <Button asChild variant="secondary">
