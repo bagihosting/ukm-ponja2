@@ -42,7 +42,7 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const renderedPrompt = await imagePrompt.render({ input });
+    const renderedPrompt = await imagePrompt.render(input);
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
