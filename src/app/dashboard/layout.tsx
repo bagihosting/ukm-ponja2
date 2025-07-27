@@ -12,7 +12,7 @@ import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -118,33 +118,32 @@ function MobileSheet() {
                 <span className="sr-only">Toggle navigation menu</span>
             </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0">
-                <SheetHeader className="p-4 border-b">
-                     <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
+            <SheetContent side="left" className="flex flex-col">
+                <SheetHeader>
+                    <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
+                    <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
                         <HeartPulse className="h-6 w-6" />
                         <span className="text-lg">UKM PONJA</span>
                     </Link>
                 </SheetHeader>
-                <div className="flex-1 py-4">
-                    <nav className="grid items-start px-4 text-base font-medium">
-                        {navLinks.map(({ href, icon: Icon, label, disabled }) => (
-                        <Link 
-                            key={label} 
-                            href={disabled ? "#" : href}
-                            className={cn(
-                                "flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
-                                pathname === href && "bg-muted text-foreground",
-                                disabled && "cursor-not-allowed opacity-50"
-                            )}
-                            aria-disabled={disabled}
-                            onClick={(e) => disabled && e.preventDefault()}
-                        >
-                            <Icon className="h-5 w-5" />
-                            {label}
-                        </Link>
-                        ))}
-                    </nav>
-                </div>
+                <nav className="grid items-start px-4 text-base font-medium">
+                    {navLinks.map(({ href, icon: Icon, label, disabled }) => (
+                    <Link 
+                        key={label} 
+                        href={disabled ? "#" : href}
+                        className={cn(
+                            "flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
+                            pathname === href && "bg-muted text-foreground",
+                            disabled && "cursor-not-allowed opacity-50"
+                        )}
+                        aria-disabled={disabled}
+                        onClick={(e) => disabled && e.preventDefault()}
+                    >
+                        <Icon className="h-5 w-5" />
+                        {label}
+                    </Link>
+                    ))}
+                </nav>
             </SheetContent>
         </Sheet>
     )
