@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
+import { generateArticle } from '@/ai/flows/generate-article-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -33,6 +34,12 @@ export default function AppsPage() {
   const [makalahTopic, setMakalahTopic] = useState('');
   const [isGeneratingMakalah, setIsGeneratingMakalah] = useState(false);
   const [generatedMakalah, setGeneratedMakalah] = useState<string | null>(null);
+
+  // State for AI Artikel Smart
+  const [articleTopic, setArticleTopic] = useState('');
+  const [isGeneratingArticle, setIsGeneratingArticle] = useState(false);
+  const [generatedArticleTitle, setGeneratedArticleTitle] = useState<string | null>(null);
+  const [generatedArticleContent, setGeneratedArticleContent] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -141,6 +148,37 @@ export default function AppsPage() {
       setIsGeneratingMakalah(false);
     }
   };
+  
+    const handleGenerateArticle = async () => {
+    if (!articleTopic.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Tidak Lengkap',
+        description: 'Topik artikel harus diisi.',
+      });
+      return;
+    }
+    setIsGeneratingArticle(true);
+    setGeneratedArticleTitle(null);
+    setGeneratedArticleContent(null);
+    try {
+      const result = await generateArticle({ topic: articleTopic });
+      setGeneratedArticleTitle(result.title);
+      setGeneratedArticleContent(result.content);
+      toast({
+        title: 'Artikel Berhasil Dibuat!',
+        description: 'Draf artikel telah berhasil dibuat.',
+      });
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Artikel',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsGeneratingArticle(false);
+    }
+  };
 
   const handleCopyText = (text: string | null) => {
     if (!text) return;
@@ -158,37 +196,92 @@ export default function AppsPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Aplikasi & Integrasi</h1>
       </div>
 
-       {/* AI Makalah Smart */}
-        <Card className="col-span-1 lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* AI Artikel Smart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Newspaper className="text-primary" />
+              AI Artikel Smart
+            </CardTitle>
+            <CardDescription>Buat draf artikel yang menarik dan siap publikasi hanya dengan memberikan topik.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="article-topic">Topik Artikel</Label>
+              <Textarea
+                id="article-topic"
+                placeholder="Contoh: Cara menjaga kesehatan jantung untuk usia muda"
+                value={articleTopic}
+                onChange={(e) => setArticleTopic(e.target.value)}
+                disabled={isGeneratingArticle}
+              />
+            </div>
+            <Button onClick={handleGenerateArticle} disabled={isGeneratingArticle}>
+              {isGeneratingArticle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {isGeneratingArticle ? 'Membuat Artikel...' : 'Buat Artikel dengan AI'}
+            </Button>
+            {(generatedArticleTitle || generatedArticleContent) && (
+              <div className="space-y-4">
+                <Label>Hasil Artikel</Label>
+                <div className="space-y-2">
+                  <Input 
+                    readOnly
+                    value={generatedArticleTitle || ''}
+                    placeholder="Judul Artikel"
+                    className="bg-muted font-bold"
+                  />
+                  <Textarea 
+                    readOnly
+                    value={generatedArticleContent || ''}
+                    placeholder="Konten Artikel"
+                    className="h-48 bg-muted"
+                  />
+                </div>
+                <div className="flex gap-2">
+                    <Button onClick={() => handleCopyText(generatedArticleTitle)} variant="outline" size="sm">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Salin Judul
+                    </Button>
+                     <Button onClick={() => handleCopyText(generatedArticleContent)} variant="outline" size="sm">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Salin Konten
+                    </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* AI Makalah Smart */}
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <FileText className="text-primary" />
                     AI Makalah Smart
                 </CardTitle>
-                <CardDescription>Buat draf makalah atau artikel secara otomatis berdasarkan judul dan topik yang Anda berikan.</CardDescription>
+                <CardDescription>Buat draf makalah atau artikel akademis secara otomatis berdasarkan judul dan topik.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="makalah-title">Judul Makalah</Label>
-                        <Input
-                            id="makalah-title"
-                            placeholder="Contoh: Pentingnya Imunisasi"
-                            value={makalahTitle}
-                            onChange={(e) => setMakalahTitle(e.target.value)}
-                            disabled={isGeneratingMakalah}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="makalah-topic">Topik / Deskripsi Singkat</Label>
-                        <Input
-                            id="makalah-topic"
-                            placeholder="Contoh: Jelaskan manfaat imunisasi untuk anak"
-                            value={makalahTopic}
-                            onChange={(e) => setMakalahTopic(e.target.value)}
-                            disabled={isGeneratingMakalah}
-                        />
-                    </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="makalah-title">Judul Makalah</Label>
+                    <Input
+                        id="makalah-title"
+                        placeholder="Contoh: Pentingnya Imunisasi"
+                        value={makalahTitle}
+                        onChange={(e) => setMakalahTitle(e.target.value)}
+                        disabled={isGeneratingMakalah}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="makalah-topic">Topik / Deskripsi Singkat</Label>
+                    <Input
+                        id="makalah-topic"
+                        placeholder="Contoh: Jelaskan manfaat imunisasi untuk anak"
+                        value={makalahTopic}
+                        onChange={(e) => setMakalahTopic(e.target.value)}
+                        disabled={isGeneratingMakalah}
+                    />
                 </div>
                 <Button onClick={handleGenerateMakalah} disabled={isGeneratingMakalah}>
                     {isGeneratingMakalah ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
@@ -210,6 +303,7 @@ export default function AppsPage() {
                 )}
             </CardContent>
         </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
