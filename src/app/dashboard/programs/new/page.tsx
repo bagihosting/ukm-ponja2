@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addProgram, getProgram, updateProgram } from '@/lib/programs';
-import { uploadImageToCloudinary } from '@/lib/image-hosting';
+import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
@@ -112,8 +112,10 @@ export default function NewProgramPage() {
     }
   };
 
-  const handleImageReady = (url: string) => {
-    setValue('imageUrl', url, { shouldValidate: true });
+  const handleAiImageReady = (url?: string) => {
+    if (url) {
+        setValue('imageUrl', url, { shouldValidate: true });
+    }
     setIsAiModalOpen(false);
   };
   
@@ -124,7 +126,7 @@ export default function NewProgramPage() {
     }
     setIsUploadingPicPhoto(true);
     try {
-      const url = await uploadImageToCloudinary(picPhotoFile);
+      const url = await uploadImageAndCreateGalleryRecord(picPhotoFile, picPhotoFile.name);
       setValue('personInChargePhotoUrl', url, { shouldValidate: true });
       toast({ title: 'Berhasil!', description: 'Foto penanggung jawab berhasil diunggah.' });
       setPicPhotoFile(null);
@@ -343,11 +345,9 @@ export default function NewProgramPage() {
       <AiImageDialog 
         open={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
-        onImageReady={handleImageReady}
+        onImageReady={handleAiImageReady}
         promptSuggestion='Contoh: "Kegiatan penyuluhan kesehatan di desa"'
       />
     </>
   );
 }
-
-    

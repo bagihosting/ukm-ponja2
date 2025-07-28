@@ -5,23 +5,16 @@ import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 
 // Check if all necessary Cloudinary env vars are present.
 if (
-    !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-    !process.env.CLOUDINARY_API_KEY ||
-    !process.env.CLOUDINARY_API_SECRET
+    !process.env.CLOUDINARY_URL
 ) {
     // This warning will appear in the server console during build or runtime.
     console.warn(
-      '[Cloudinary Warning] Cloudinary configuration is missing or incomplete. Image uploads will fail. ' +
-      'Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
+      '[Cloudinary Warning] Cloudinary configuration is missing. Image uploads will fail. ' +
+      'Please set CLOUDINARY_URL in your .env file.'
     );
 } else {
-    // Explicitly configure Cloudinary using the separate environment variables.
-    cloudinary.config({
-        cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
-    });
+    // Configure Cloudinary using the single CLOUDINARY_URL variable.
+    cloudinary.config();
 }
 
 /**
@@ -33,7 +26,7 @@ if (
  */
 export async function uploadImageToCloudinary(source: string | File): Promise<string> {
   // Ensure Cloudinary is configured before attempting to upload
-  if (!cloudinary.config().api_key) {
+  if (!process.env.CLOUDINARY_URL) {
       throw new Error('Cloudinary is not configured. Please check your environment variables. Cannot upload image.');
   }
 
@@ -70,5 +63,3 @@ export async function uploadImageToCloudinary(source: string | File): Promise<st
     throw new Error(`Failed to upload image to Cloudinary: ${errorMessage}`);
   }
 }
-
-    
