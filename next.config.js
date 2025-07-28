@@ -19,6 +19,7 @@ const nextConfig = {
       },
     ],
   },
+  serverComponentsExternalPackages: ['handlebars'],
 };
 
 module.exports = nextConfig;
