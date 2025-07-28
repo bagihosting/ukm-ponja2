@@ -7,15 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Copy } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function AppsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadedUrl(null); // Reset URL on new file selection
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       // Limit file size (e.g., 10MB)
@@ -43,9 +46,12 @@ export default function AppsPage() {
     }
 
     setIsUploading(true);
+    setUploadedUrl(null);
     try {
-      // Reuse the existing robust upload function
-      const uploadedUrl = await uploadImageAndCreateGalleryRecord(selectedFile, selectedFile.name);
+      // This function already uploads to Cloudinary and saves the URL to Firestore.
+      const url = await uploadImageAndCreateGalleryRecord(selectedFile, selectedFile.name);
+      
+      setUploadedUrl(url); // Save URL to state to display it
       
       toast({
         title: 'Berhasil!',
@@ -61,11 +67,21 @@ export default function AppsPage() {
       toast({
         variant: 'destructive',
         title: 'Gagal Mengunggah',
-        description: `Terjadi kesalahan saat mengunggah ke Cloudinary: ${error.message}`,
+        description: `Terjadi kesalahan saat mengunggah: ${error.message}`,
       });
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleCopyUrl = () => {
+    if (!uploadedUrl) return;
+    navigator.clipboard.writeText(uploadedUrl).then(() => {
+      toast({
+        title: 'Berhasil!',
+        description: 'URL gambar telah disalin ke clipboard.',
+      });
+    });
   };
 
   return (
@@ -77,7 +93,7 @@ export default function AppsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Unggah ke Cloudinary</CardTitle>
-          <CardDescription>Unggah file gambar langsung ke Cloudinary melalui aplikasi ini. Unggahan juga akan tercatat di Galeri.</CardDescription>
+          <CardDescription>Unggah file gambar langsung ke Cloudinary. Hasilnya akan disimpan ke riwayat Galeri dan URL-nya bisa disalin.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -97,6 +113,19 @@ export default function AppsPage() {
                 </div>
               )}
           </div>
+          {uploadedUrl && (
+             <Alert>
+                <AlertTitle className="mb-2">Unggah Berhasil!</AlertTitle>
+                <AlertDescription className="space-y-4">
+                    <p>URL gambar Anda:</p>
+                    <Input readOnly value={uploadedUrl} className="bg-muted"/>
+                    <Button onClick={handleCopyUrl} variant="outline" size="sm">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Salin URL
+                    </Button>
+                </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>
