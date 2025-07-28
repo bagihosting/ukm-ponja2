@@ -53,10 +53,11 @@ function toProgram(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore
 
 // Create
 export async function addProgram(program: ProgramInput): Promise<string> {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const dataToAdd: { [key: string]: any } = {
       ...program,
@@ -82,11 +83,12 @@ export async function addProgram(program: ProgramInput): Promise<string> {
 
 // Read all
 export async function getPrograms(): Promise<Program[]> {
-  const db = getFirestore(getAdminApp());
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     console.warn("getPrograms: Firebase Admin not configured. Returning empty array.");
     return [];
   }
+  const db = getFirestore(app);
   try {
     const q = db.collection('programs').orderBy("name", "asc");
     const querySnapshot = await q.get();
@@ -99,11 +101,12 @@ export async function getPrograms(): Promise<Program[]> {
 
 // Read one
 export async function getProgram(id: string): Promise<Program | null> {
-  const db = getFirestore(getAdminApp());
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     console.warn(`getProgram(${id}): Firebase Admin not configured. Returning null.`);
     return null;
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('programs').doc(id);
     const docSnap = await docRef.get();
@@ -121,10 +124,11 @@ export async function getProgram(id: string): Promise<Program | null> {
 
 // Update
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('programs').doc(id);
       
@@ -157,10 +161,11 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
 
 // Delete
 export async function deleteProgram(id: string): Promise<void> {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('programs').doc(id);
     await docRef.delete();

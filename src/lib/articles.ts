@@ -43,10 +43,11 @@ function toArticle(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore
 
 // Create
 export const addArticle = async (article: ArticleInput): Promise<string> => {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const dataToAdd: { [key: string]: any } = {
       ...article,
@@ -73,11 +74,12 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 
 // Read all
 export const getArticles = async (): Promise<Article[]> => {
-  const db = getFirestore(getAdminApp());
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     console.warn("getArticles: Firebase Admin not configured. Returning empty array.");
     return [];
   }
+  const db = getFirestore(app);
   try {
     const q = db.collection('articles').orderBy("createdAt", "desc");
     const querySnapshot = await q.get();
@@ -90,11 +92,12 @@ export const getArticles = async (): Promise<Article[]> => {
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
-  const db = getFirestore(getAdminApp());
-   if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     console.warn(`getArticle(${id}): Firebase Admin not configured. Returning null.`);
     return null;
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('articles').doc(id);
     const docSnap = await docRef.get();
@@ -112,10 +115,11 @@ export const getArticle = async (id: string): Promise<Article | null> => {
 
 // Update
 export const updateArticle = async (id: string, article: ArticleUpdateInput): Promise<void> => {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('articles').doc(id);
     
@@ -142,10 +146,11 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
 
 // Delete
 export const deleteArticle = async (id: string): Promise<void> => {
-  const db = getFirestore(getAdminApp()!);
-   if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('articles').doc(id);
     await docRef.delete();

@@ -43,10 +43,11 @@ function toGalleryImage(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFire
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docData = {
         name: imageData.name,
@@ -106,11 +107,12 @@ export const uploadImageAndCreateGalleryRecord = async (source: string | File, f
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
-  const db = getFirestore(getAdminApp());
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     console.warn("getGalleryImages: Firebase Admin not configured. Returning empty array.");
     return [];
   }
+  const db = getFirestore(app);
   try {
     const q = db.collection('galleryImages').orderBy("createdAt", "desc");
     const querySnapshot = await q.get();
@@ -127,10 +129,11 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
-  const db = getFirestore(getAdminApp()!);
-  if (!db) {
+  const app = getAdminApp();
+  if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
   }
+  const db = getFirestore(app);
   try {
     const docRef = db.collection('galleryImages').doc(id);
     await docRef.delete();
