@@ -123,7 +123,7 @@ export default async function HomePage() {
         {/* AI Doctor Section */}
         <section id="ai-doctor" className="py-8 md:py-12" aria-labelledby="ai-doctor-heading">
           <div className="text-center max-w-4xl mx-auto">
-              <h2 id="ai-doctor-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Tanya Dokter AI</h2>
+              <h2 id="ai-doctor-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl">Tanya Dokter Puskesmas</h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">Punya keluhan kesehatan? Dapatkan analisis awal dan saran dari asisten AI kami. Fitur ini tidak menggantikan konsultasi medis profesional.</p>
           </div>
           <div className="mt-8">
@@ -232,3 +232,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
+    
