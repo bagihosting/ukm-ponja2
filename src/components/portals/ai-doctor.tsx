@@ -62,7 +62,7 @@ export function AiDoctor() {
         </div>
         <CardTitle className="text-3xl font-bold">Tanya Dokter Puskesmas</CardTitle>
         <CardDescription className="text-lg">
-          Punya pertanyaan seputar kesehatan? Tanyakan pada Dokter AI kami.
+          Punya pertanyaan seputar kesehatan? Tanyakan pada Dokter kami.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -92,7 +92,7 @@ export function AiDoctor() {
       {(isAsking || answer) && (
         <CardFooter>
           <div className="w-full space-y-4">
-             <h3 className="font-semibold text-xl">Jawaban Dokter AI:</h3>
+             <h3 className="font-semibold text-xl">Jawaban Dokter:</h3>
               {isAsking ? (
                   <div className="space-y-2">
                       <Skeleton className="h-4 w-full" />
