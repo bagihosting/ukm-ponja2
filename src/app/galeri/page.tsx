@@ -9,14 +9,15 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Video } from 'lucide-react';
 
-const ALL_CATEGORIES = 'Semua';
+const CATEGORIES = ['Semua', 'Gambar', 'Video'] as const;
+type Category = typeof CATEGORIES[number];
 
 export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [filteredImages, setFilteredImages] = useState<GalleryImage[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
+  const [activeCategory, setActiveCategory] = useState<Category>('Semua');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,13 +28,8 @@ export default function GalleryPage() {
         const sortedImages = fetchedImages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setImages(sortedImages);
         setFilteredImages(sortedImages);
-
-        // Extract unique categories
-        const uniqueCategories = [ALL_CATEGORIES, ...Array.from(new Set(sortedImages.map(img => img.category || 'Lain-lain')))];
-        setCategories(uniqueCategories);
-
       } catch (error) {
-        console.error("Gagal memuat gambar galeri:", error);
+        console.error("Gagal memuat media galeri:", error);
       } finally {
         setLoading(false);
       }
@@ -41,14 +37,18 @@ export default function GalleryPage() {
     fetchGalleryImages();
   }, []);
 
-  const handleFilter = (category: string) => {
+  const handleFilter = (category: Category) => {
     setActiveCategory(category);
-    if (category === ALL_CATEGORIES) {
+    if (category === 'Semua') {
       setFilteredImages(images);
     } else {
       setFilteredImages(images.filter(image => image.category === category));
     }
   };
+
+  const getCloudinaryVideoThumbnail = (url: string) => {
+    return url.replace(/\.(mp4|mov|webm)$/, '.jpg');
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -63,9 +63,9 @@ export default function GalleryPage() {
           </div>
 
           {/* Category Filters */}
-          {!loading && categories.length > 1 && (
+          {!loading && images.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2 my-8">
-              {categories.map(category => (
+              {CATEGORIES.map(category => (
                 <Button
                   key={category}
                   variant={activeCategory === category ? 'default' : 'outline'}
@@ -86,23 +86,27 @@ export default function GalleryPage() {
                 ))}
              </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-12">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-12">
               {filteredImages.length > 0 ? (
                 filteredImages.map(image => (
                   <Card key={image.id} className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 group">
                     <AspectRatio ratio={1} className="bg-muted relative">
                       <img
-                        src={image.url}
+                        src={image.category === 'Video' ? getCloudinaryVideoThumbnail(image.url) : image.url}
                         alt={image.name}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          {image.category === 'Video' && (
+                              <Video className="h-12 w-12 text-white" />
+                          )}
+                       </div>
                     </AspectRatio>
                   </Card>
                 ))
               ) : (
                 <div className="col-span-full text-center text-muted-foreground py-16">
-                  <p>Tidak ada gambar dalam kategori ini.</p>
+                  <p>Tidak ada media dalam kategori ini.</p>
                 </div>
               )}
             </div>

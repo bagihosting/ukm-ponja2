@@ -12,13 +12,15 @@ export interface GalleryImage {
   name: string;
   url: string;
   createdAt: string; // Changed to string for serialization
-  category: string;
+  category: 'Gambar' | 'Video' | 'Lain-lain';
+  fileType: string;
 }
 
 export interface GalleryImageInput {
   name: string;
   url: string;
-  category: string;
+  category: 'Gambar' | 'Video' | 'Lain-lain';
+  fileType: string;
 }
 
 // Helper to convert Firestore doc to a client-safe GalleryImage object
@@ -30,6 +32,7 @@ function toGalleryImage(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFire
     name: data.name,
     url: data.url,
     category: data.category || 'Lain-lain',
+    fileType: data.fileType || 'unknown',
     // Convert Timestamp to ISO string for safe serialization, with a fallback
     createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
   };
@@ -51,7 +54,8 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
     const docData = {
         name: imageData.name,
         url: imageData.url,
-        category: imageData.category || 'Lain-lain', // Fallback just in case
+        category: imageData.category,
+        fileType: imageData.fileType,
         createdAt: FieldValue.serverTimestamp(),
     };
     const docRef = await db.collection('galleryImages').add(docData);
@@ -62,20 +66,19 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
     return docRef.id;
   } catch (error: any) {
     console.error("Error adding gallery image record:", error);
-    throw new Error(`Gagal menyimpan riwayat gambar: ${error.message}`);
+    throw new Error(`Gagal menyimpan riwayat media: ${error.message}`);
   }
 };
 
 
 /**
- * Orchestrates the entire process of uploading an image, categorizing it,
+ * Orchestrates the entire process of uploading an image or video, categorizing it,
  * and saving a record to the gallery in Firestore.
- * This centralized function ensures consistency for all image uploads.
- * @param source The image source, which can be a data URI string or a File object.
- * @param fileName The name to be used for the image file record.
- * @returns A promise that resolves with the public URL of the uploaded image.
+ * @param source The media source, which must be a File object.
+ * @param fileName The name to be used for the media file record.
+ * @returns A promise that resolves with the public URL of the uploaded media.
  */
-export const uploadImageAndCreateGalleryRecord = async (source: string | File, fileName: string): Promise<string> => {
+export const uploadImageAndCreateGalleryRecord = async (source: File, fileName: string): Promise<string> => {
   const app = getAdminApp();
   if (!app) {
     throw new Error('Konfigurasi server Firebase tidak ditemukan.');
@@ -84,14 +87,23 @@ export const uploadImageAndCreateGalleryRecord = async (source: string | File, f
     // 1. Upload to external host (Cloudinary)
     const publicUrl = await uploadImageToCloudinary(source);
     
-    // 2. Set a default category since AI categorization is removed
-    const category = 'Lain-lain';
+    // 2. Determine category based on file type
+    const fileType = source.type;
+    let category: 'Gambar' | 'Video' | 'Lain-lain';
+    if (fileType.startsWith('image/')) {
+        category = 'Gambar';
+    } else if (fileType.startsWith('video/')) {
+        category = 'Video';
+    } else {
+        category = 'Lain-lain';
+    }
 
     // 3. Save metadata record to Firestore (this also revalidates paths)
     await addGalleryImageRecord({
         name: fileName,
         url: publicUrl,
         category: category,
+        fileType: fileType
     });
     
     // 4. Return the public URL for the client to use
@@ -100,7 +112,7 @@ export const uploadImageAndCreateGalleryRecord = async (source: string | File, f
   } catch (e: any) {
     console.error(`Error in uploadImageAndCreateGalleryRecord: ${e.message}`);
     // Re-throw a more user-friendly error
-    throw new Error(`Gagal mengunggah gambar dan menyimpan riwayat: ${e.message}`);
+    throw new Error(`Gagal mengunggah media dan menyimpan riwayat: ${e.message}`);
   }
 };
 

@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Trash2, MoreHorizontal } from 'lucide-react';
+import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Video, Image as ImageIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getGalleryImages, deleteGalleryImage, uploadImageAndCreateGalleryRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { CldImage } from 'next-cloudinary';
+import { CldImage, CldVideoPlayer } from 'next-cloudinary';
 
 
 export default function GalleryPage() {
@@ -41,7 +41,7 @@ export default function GalleryPage() {
       setError(error.message);
       toast({
         variant: 'destructive',
-        title: 'Gagal Memuat Riwayat Gambar',
+        title: 'Gagal Memuat Riwayat Media',
         description: error.message,
       });
     } finally {
@@ -56,11 +56,11 @@ export default function GalleryPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 100 * 1024 * 1024) { // 100MB limit
         toast({
           variant: 'destructive',
           title: 'File Terlalu Besar',
-          description: 'Ukuran gambar tidak boleh melebihi 10MB.',
+          description: 'Ukuran file tidak boleh melebihi 100MB.',
         });
         event.target.value = '';
         return;
@@ -74,7 +74,7 @@ export default function GalleryPage() {
       toast({
         variant: 'destructive',
         title: 'Tidak Ada File',
-        description: 'Silakan pilih file gambar terlebih dahulu.',
+        description: 'Silakan pilih file gambar atau video terlebih dahulu.',
       });
       return;
     }
@@ -86,7 +86,7 @@ export default function GalleryPage() {
       
       toast({
         title: 'Berhasil!',
-        description: `Gambar "${selectedFile.name}" berhasil diunggah dan disimpan.`,
+        description: `Media "${selectedFile.name}" berhasil diunggah dan disimpan.`,
       });
       
       await fetchImages(); // Refresh the list
@@ -111,7 +111,7 @@ export default function GalleryPage() {
     navigator.clipboard.writeText(url).then(() => {
       toast({
         title: 'Berhasil!',
-        description: 'URL gambar telah disalin ke clipboard.',
+        description: 'URL media telah disalin ke clipboard.',
       });
     });
   };
@@ -128,13 +128,13 @@ export default function GalleryPage() {
       setImages(images.filter((image) => image.id !== imageToDelete.id));
       toast({
         title: 'Berhasil!',
-        description: 'Riwayat gambar telah berhasil dihapus.',
+        description: 'Riwayat media telah berhasil dihapus.',
       });
     } catch (err: any) {
       toast({
         variant: 'destructive',
         title: 'Gagal Menghapus',
-        description: 'Terjadi kesalahan saat menghapus riwayat gambar: ' + err.message,
+        description: 'Terjadi kesalahan saat menghapus riwayat media: ' + err.message,
       });
     } finally {
       setIsDeleteDialogOpen(false);
@@ -152,19 +152,19 @@ export default function GalleryPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         <Card className="lg:w-1/2 flex-shrink-0">
           <CardHeader>
-            <CardTitle>Unggah Gambar</CardTitle>
-            <CardDescription>Unggah gambar secara manual. Setiap gambar akan disimpan ke riwayat galeri secara otomatis.</CardDescription>
+            <CardTitle>Unggah Media</CardTitle>
+            <CardDescription>Unggah gambar atau video secara manual. Media akan dikategorikan secara otomatis dan disimpan ke riwayat galeri.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
                 <Label htmlFor="picture">Unggah Manual</Label>
                 <div className="grid w-full max-w-sm items-center gap-2">
-                <Input id="picture" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
+                <Input id="picture" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFileChange} disabled={isUploading}/>
                 </div>
                 {selectedFile && (
                 <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                    File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
+                    File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
                     </p>
                     <Button onClick={handleUpload} disabled={isUploading}>
                     {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
@@ -178,8 +178,8 @@ export default function GalleryPage() {
         
         <Card className="lg:w-1/2 flex-grow">
           <CardHeader>
-            <CardTitle>Riwayat Gambar</CardTitle>
-            <CardDescription>Daftar gambar yang riwayatnya tersimpan, beserta kategorinya.</CardDescription>
+            <CardTitle>Riwayat Media</CardTitle>
+            <CardDescription>Daftar gambar dan video yang riwayatnya tersimpan, beserta kategorinya.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -190,7 +190,7 @@ export default function GalleryPage() {
                 </div>
             ) : error ? (
                 <div className="text-center text-red-500 py-8">
-                    <p className="font-semibold">Gagal memuat riwayat gambar.</p>
+                    <p className="font-semibold">Gagal memuat riwayat media.</p>
                     <p className="text-sm mt-1">{error}</p>
                 </div>
             ) : images.length > 0 ? (
@@ -198,7 +198,7 @@ export default function GalleryPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px]">Gambar</TableHead>
+                                <TableHead className="w-[80px]">Media</TableHead>
                                 <TableHead>Nama File & Kategori</TableHead>
                                 <TableHead className="text-right">Tindakan</TableHead>
                             </TableRow>
@@ -207,13 +207,13 @@ export default function GalleryPage() {
                             {images.map((image) => (
                                 <TableRow key={image.id}>
                                     <TableCell>
-                                        <CldImage 
-                                            src={image.url} 
-                                            alt={image.name} 
-                                            width="48"
-                                            height="48"
-                                            className="h-12 w-12 object-cover rounded-md" 
-                                        />
+                                      <div className="h-12 w-12 object-cover rounded-md bg-muted flex items-center justify-center">
+                                        {image.category === 'Gambar' ? (
+                                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                        ) : (
+                                          <Video className="h-6 w-6 text-muted-foreground" />
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="font-medium truncate max-w-[150px]">{image.name}</div>
@@ -246,7 +246,7 @@ export default function GalleryPage() {
                 </div>
              ) : (
                 <div className="text-center text-muted-foreground py-8">
-                    Belum ada gambar yang diunggah.
+                    Belum ada media yang diunggah.
                 </div>
              )}
           </CardContent>
@@ -258,7 +258,7 @@ export default function GalleryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Ini hanya akan menghapus riwayat gambar dari database, bukan gambar dari Cloudinary.
+              Tindakan ini tidak dapat dibatalkan. Ini hanya akan menghapus riwayat dari database, bukan file asli dari Cloudinary.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
