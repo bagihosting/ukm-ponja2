@@ -1,33 +1,49 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Default-deny all access
+    // Secara default, tolak semua akses baca dan tulis.
+    // Aturan yang lebih spesifik di bawah akan menimpa ini.
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // Allow public read access to collections needed for the public portal
+    
+    // Koleksi Artikel:
+    // - Siapa pun dapat membaca (untuk portal publik).
+    // - Hanya admin yang terautentikasi yang dapat menulis (membuat, edit, hapus).
     match /articles/{articleId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
+    // Koleksi Program UKM:
+    // - Siapa pun dapat membaca (untuk portal publik).
+    // - Hanya admin yang terautentikasi yang dapat menulis.
     match /programs/{programId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
-    
+
+    // Koleksi Galeri Gambar:
+    // - Siapa pun dapat membaca (untuk portal publik).
+    // - Hanya admin yang terautentikasi yang dapat menulis.
     match /galleryImages/{imageId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
-
-    // Allow public read on SEO settings
-    match /settings/seo {
-      allow read: if true;
-      allow write: if request.auth != null;
+    
+    // Pengaturan (SEO, dll.):
+    // - Tidak ada yang boleh membaca atau menulis kecuali admin yang terautentikasi.
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
     }
+    
+    // Jika Anda memiliki koleksi lain, tambahkan aturannya di sini.
+    // Contoh untuk data grafik jika ada:
+    // match /chart/{chartId} {
+    //   allow read, write: if request.auth != null;
+    // }
   }
 }
