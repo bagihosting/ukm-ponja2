@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { CldImage } from 'next-cloudinary';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,7 +118,13 @@ export default function ArticlesPage() {
                   <TableRow key={article.id}>
                     <TableCell className="hidden sm:table-cell">
                       {article.imageUrl ? (
-                        <img alt={article.title} className="aspect-square rounded-md object-cover" height="64" src={article.imageUrl} width="64" />
+                         <CldImage
+                            src={article.imageUrl}
+                            alt={article.title}
+                            width="64"
+                            height="64"
+                            className="aspect-square rounded-md object-cover"
+                         />
                       ) : (
                         <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">No Image</div>
                       )}

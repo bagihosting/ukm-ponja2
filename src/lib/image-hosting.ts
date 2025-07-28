@@ -3,18 +3,18 @@
 
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 
+let isCloudinaryConfigured = false;
+
 // Check if all necessary Cloudinary env vars are present.
-if (
-    !process.env.CLOUDINARY_URL
-) {
+if (process.env.CLOUDINARY_URL) {
+    cloudinary.config();
+    isCloudinaryConfigured = true;
+} else {
     // This warning will appear in the server console during build or runtime.
     console.warn(
       '[Cloudinary Warning] Cloudinary configuration is missing. Image uploads will fail. ' +
       'Please set CLOUDINARY_URL in your .env file.'
     );
-} else {
-    // Configure Cloudinary using the single CLOUDINARY_URL variable.
-    cloudinary.config();
 }
 
 /**
@@ -26,7 +26,7 @@ if (
  */
 export async function uploadImageToCloudinary(source: string | File): Promise<string> {
   // Ensure Cloudinary is configured before attempting to upload
-  if (!process.env.CLOUDINARY_URL) {
+  if (!isCloudinaryConfigured) {
       throw new Error('Cloudinary is not configured. Please check your environment variables. Cannot upload image.');
   }
 

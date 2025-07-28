@@ -43,9 +43,11 @@ function toGalleryImage(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFire
  * @returns The ID of the newly created document.
  */
 export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promise<string> => {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
-
     const docData = {
         name: imageData.name,
         url: imageData.url,
@@ -59,11 +61,8 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
 
     return docRef.id;
   } catch (error: any) {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error adding gallery image record:", error);
+    throw new Error(`Gagal menyimpan riwayat gambar: ${error.message}`);
   }
 };
 
@@ -107,17 +106,17 @@ export const uploadImageAndCreateGalleryRecord = async (source: string | File, f
  * @returns A promise that resolves with an array of gallery images.
  */
 export const getGalleryImages = async (): Promise<GalleryImage[]> => {
+  const db = getFirestore(getAdminApp());
+  if (!db) {
+    console.warn("getGalleryImages: Firebase Admin not configured. Returning empty array.");
+    return [];
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const q = db.collection('galleryImages').orderBy("createdAt", "desc");
     const querySnapshot = await q.get();
     return querySnapshot.docs.map(toGalleryImage);
   } catch (e: any) {
-    if (e.message.includes('Firebase Admin credentials')) {
-        console.warn("Firebase Admin credentials not set, returning empty array for getGalleryImages. This is expected during local development or build if server env vars are not set.");
-    } else {
-        console.error("Error fetching gallery images:", e);
-    }
+    console.error("Error fetching gallery images:", e);
     return [];
   }
 };
@@ -128,8 +127,11 @@ export const getGalleryImages = async (): Promise<GalleryImage[]> => {
  * @param id The Firestore document ID of the image metadata.
  */
 export const deleteGalleryImage = async (id: string): Promise<void> => {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const docRef = db.collection('galleryImages').doc(id);
     await docRef.delete();
     
@@ -138,10 +140,7 @@ export const deleteGalleryImage = async (id: string): Promise<void> => {
 
   } catch (error: any)
 {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error deleting gallery image:", error);
+    throw new Error(`Gagal menghapus riwayat gambar: ${error.message}`);
   }
 };

@@ -34,12 +34,11 @@ function getServiceAccount(): ServiceAccount | null {
 
 /**
  * Initializes and/or returns the Firebase Admin App instance.
- * This function ensures that the app is initialized only once (singleton pattern),
- * which is crucial for serverless environments.
- * It will throw an error if initialization fails, which should be caught by the calling function.
- * @returns The initialized Firebase Admin App.
+ * This function ensures that the app is initialized only once (singleton pattern).
+ * It will NOT throw an error if initialization fails, but will return null.
+ * @returns The initialized Firebase Admin App, or null if credentials are not set.
  */
-export function getAdminApp(): admin.app.App {
+export function getAdminApp(): admin.app.App | null {
   // Check if an app with our custom name already exists.
   const existingApp = admin.apps.find((app) => app?.name === APP_NAME);
   if (existingApp) {
@@ -49,8 +48,8 @@ export function getAdminApp(): admin.app.App {
   const serviceAccount = getServiceAccount();
 
   if (!serviceAccount) {
-    const errorMsg = 'Firebase Admin credentials are not set in environment variables. Server-side Firebase features will be disabled. Please set FIREBASE_ADMIN_PRIVATE_KEY_BASE64, FIREBASE_ADMIN_CLIENT_EMAIL, and NEXT_PUBLIC_FIREBASE_PROJECT_ID.';
-    throw new Error(errorMsg);
+    console.warn('[Firebase Warning] Firebase Admin credentials are not set in environment variables. Server-side Firebase features will be disabled during build or if variables are missing.');
+    return null;
   }
 
   // If it doesn't exist, initialize a new app with our credentials and name.
@@ -60,9 +59,7 @@ export function getAdminApp(): admin.app.App {
     }, APP_NAME);
   } catch (error: any) {
     console.error('Failed to initialize Firebase Admin SDK:', error.message);
-    // Re-throw the error to be handled by the calling function's try-catch block.
-    throw error;
+    // Return null on failure to prevent build crashes.
+    return null;
   }
 }
-
-    

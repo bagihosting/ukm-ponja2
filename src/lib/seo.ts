@@ -1,7 +1,7 @@
 
 'use server';
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
 
 export interface SEOData {
@@ -17,8 +17,12 @@ const SEO_DOC_PATH = 'settings/seo';
  * @returns A promise that resolves with the SEO data, or null if it doesn't exist or on error.
  */
 export async function getSEOSettings(): Promise<SEOData | null> {
+  const db = getFirestore(getAdminApp());
+  if (!db) {
+    console.warn("getSEOSettings: Firebase Admin not configured. Returning null.");
+    return null;
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const seoSettingsRef = db.doc(SEO_DOC_PATH);
     const docSnap = await seoSettingsRef.get();
     
@@ -27,12 +31,7 @@ export async function getSEOSettings(): Promise<SEOData | null> {
     }
     return null;
   } catch (error: any) {
-    // This will now catch the error from getAdminApp() if credentials are not set.
-    if (error.message.includes('Firebase Admin credentials')) {
-        console.warn("Firebase Admin credentials not set, returning null for getSEOSettings. This is expected during local development or build if server env vars are not set.");
-    } else {
-        console.error("Error fetching SEO settings:", error);
-    }
+    console.error("Error fetching SEO settings:", error);
     return null;
   }
 }
@@ -42,16 +41,16 @@ export async function getSEOSettings(): Promise<SEOData | null> {
  * @param data - The SEO data to save.
  */
 export async function updateSEOSettings(data: SEOData): Promise<void> {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const seoSettingsRef = db.doc(SEO_DOC_PATH);
     // Use setDoc with merge:true to create or update the document.
     await seoSettingsRef.set(data, { merge: true });
   } catch (error: any) {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error updating SEO settings:", error);
+    throw new Error(`Gagal memperbarui pengaturan SEO: ${error.message}`);
   }
 }

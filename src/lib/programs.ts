@@ -53,57 +53,58 @@ function toProgram(docSnap: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore
 
 // Create
 export async function addProgram(program: ProgramInput): Promise<string> {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
-    
     const dataToAdd: { [key: string]: any } = {
       ...program,
       createdAt: FieldValue.serverTimestamp(),
     };
       
-    // Clean up any undefined or empty optional fields before adding
     if (!dataToAdd.imageUrl) delete dataToAdd.imageUrl;
     if (!dataToAdd.personInChargeName) delete dataToAdd.personInChargeName;
     if (!dataToAdd.personInChargePhotoUrl) delete dataToAdd.personInChargePhotoUrl;
     
     const docRef = await db.collection('programs').add(dataToAdd);
 
-    // Revalidate paths
     revalidatePath('/');
     revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
 
     return docRef.id;
   } catch (error: any) {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error adding program:", error);
+    throw new Error(`Gagal menambahkan program: ${error.message}`);
   }
 };
 
 // Read all
 export async function getPrograms(): Promise<Program[]> {
+  const db = getFirestore(getAdminApp());
+  if (!db) {
+    console.warn("getPrograms: Firebase Admin not configured. Returning empty array.");
+    return [];
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const q = db.collection('programs').orderBy("name", "asc");
     const querySnapshot = await q.get();
     return querySnapshot.docs.map(toProgram);
   } catch (e: any) {
-    if (e.message.includes('Firebase Admin credentials')) {
-        console.warn("Firebase Admin credentials not set, returning empty array for getPrograms. This is expected during local development or build if server env vars are not set.");
-    } else {
-        console.error("Error fetching programs:", e);
-    }
+    console.error("Error fetching programs:", e);
     return [];
   }
 };
 
 // Read one
 export async function getProgram(id: string): Promise<Program | null> {
+  const db = getFirestore(getAdminApp());
+  if (!db) {
+    console.warn(`getProgram(${id}): Firebase Admin not configured. Returning null.`);
+    return null;
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const docRef = db.collection('programs').doc(id);
     const docSnap = await docRef.get();
     
@@ -113,24 +114,22 @@ export async function getProgram(id: string): Promise<Program | null> {
       return null;
     }
   } catch (e: any) {
-     if (e.message.includes('Firebase Admin credentials')) {
-        console.warn(`Firebase Admin credentials not set, returning null for getProgram(${id}).`);
-    } else {
-        console.error(`Error fetching program ${id}:`, e);
-    }
+    console.error(`Error fetching program ${id}:`, e);
     return null;
   }
 };
 
 // Update
 export async function updateProgram(id: string, program: ProgramUpdateInput): Promise<void> {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const docRef = db.collection('programs').doc(id);
       
     const dataToUpdate: { [key: string]: any } = { ...program };
 
-    // Use FieldValue.delete() for robust removal of optional fields
     if (program.imageUrl === null || program.imageUrl === '') {
         dataToUpdate.imageUrl = FieldValue.delete();
     }
@@ -145,38 +144,33 @@ export async function updateProgram(id: string, program: ProgramUpdateInput): Pr
       await docRef.update(dataToUpdate);
     }
 
-    // Revalidate paths
     revalidatePath('/');
     revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
 
   } catch (error: any) {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error updating program:", error);
+    throw new Error(`Gagal memperbarui program: ${error.message}`);
   }
 };
 
 
 // Delete
 export async function deleteProgram(id: string): Promise<void> {
+  const db = getFirestore(getAdminApp()!);
+  if (!db) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
-    const db = getFirestore(getAdminApp());
     const docRef = db.collection('programs').doc(id);
     await docRef.delete();
 
-    // Revalidate paths
     revalidatePath('/');
     revalidatePath('/dashboard/programs');
     revalidatePath('/program-ukm');
     
   } catch (error: any) {
-    if (error.message.includes('Firebase Admin credentials')) {
-      console.warn(`[Firebase Warning] ${error.message}`);
-      throw new Error('Konfigurasi server Firebase tidak ditemukan.');
-    }
-    throw error;
+    console.error("Error deleting program:", error);
+    throw new Error(`Gagal menghapus program: ${error.message}`);
   }
 }

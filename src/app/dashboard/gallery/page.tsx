@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { AiImageDialog } from '@/components/portals/ai-image-dialog';
+import { CldImage } from 'next-cloudinary';
 
 
 export default function GalleryPage() {
@@ -223,7 +224,13 @@ export default function GalleryPage() {
                             {images.map((image) => (
                                 <TableRow key={image.id}>
                                     <TableCell>
-                                        <img src={image.url} alt={image.name} className="h-12 w-12 object-cover rounded-md" />
+                                        <CldImage 
+                                            src={image.url} 
+                                            alt={image.name} 
+                                            width="48"
+                                            height="48"
+                                            className="h-12 w-12 object-cover rounded-md" 
+                                        />
                                     </TableCell>
                                     <TableCell>
                                         <div className="font-medium truncate max-w-[150px]">{image.name}</div>
