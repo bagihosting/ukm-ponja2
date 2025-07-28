@@ -13,7 +13,9 @@ import { reportLinks } from '@/lib/reports-data';
 import { z } from 'zod';
 import { googleAI } from '@genkit-ai/googleai';
 
-const AskDoctorInputSchema = z.string().describe("A user's detailed description of their health symptoms, complaints, or questions about the Puskesmas.");
+const AskDoctorInputSchema = z.object({
+  complaint: z.string().describe("A user's detailed description of their health symptoms, complaints, or questions about the Puskesmas."),
+});
 const AskDoctorOutputSchema = z.string().describe("The AI's comprehensive response, including diagnosis, medication advice, service info, program/report details, complaint handling, and a recommendation to visit the puskesmas.");
 
 // Tool to get UKM Programs
@@ -85,7 +87,7 @@ const doctorPrompt = ai.definePrompt({
     Contoh Respons Keluhan: "Bapak/Ibu, kami mohon maaf yang sebesar-besarnya atas pengalaman kurang menyenangkan yang Anda hadapi di puskesmas kami. Kami sangat menyesal hal ini terjadi. Masukan Anda sangat berharga dan akan segera kami jadikan bahan evaluasi untuk perbaikan layanan kami ke depannya. Terima kasih sudah bersedia memberikan masukan."
 
     Sekarang, analisis permintaan pengguna berikut ini dengan saksama:
-    {{{input}}}
+    {{{complaint}}}
     `,
 });
 
@@ -96,8 +98,8 @@ const askDoctorFlow = ai.defineFlow(
         inputSchema: AskDoctorInputSchema,
         outputSchema: AskDoctorOutputSchema,
     },
-    async (complaint) => {
-        const { output } = await doctorPrompt(complaint);
+    async (input) => {
+        const { output } = await doctorPrompt(input);
         return output ?? 'Maaf, saya tidak dapat memproses permintaan Anda saat ini. Silakan coba lagi nanti.';
     }
 );
@@ -109,5 +111,5 @@ const askDoctorFlow = ai.defineFlow(
  * @returns A promise that resolves to the AI's string response.
  */
 export async function askDoctor(complaint: string): Promise<string> {
-    return askDoctorFlow(complaint);
+    return askDoctorFlow({ complaint });
 }

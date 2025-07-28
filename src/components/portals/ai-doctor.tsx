@@ -46,11 +46,13 @@ export function AIDoctor() {
 
     const userMessage: Message = { role: 'user', text: input };
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await askDoctor(input);
+      // The askDoctor function now expects an object
+      const response = await askDoctor(currentInput);
       const botMessage: Message = { role: 'bot', text: response };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
