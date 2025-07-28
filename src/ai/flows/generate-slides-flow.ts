@@ -63,9 +63,9 @@ const slidesPrompt = ai.definePrompt({
       - **Slide 3-6: Isi Utama**: Kembangkan setiap poin utama menjadi slide terpisah. Gunakan poin-poin (bullet points) yang jelas dan ringkas.
       - **Slide Terakhir: Kesimpulan & Q&A**: Rangkuman singkat dan ajakan untuk bertanya.
   2.  **Konten Slide**: Untuk setiap slide, berikan:
-      - `title`: Judul yang jelas untuk slide tersebut.
-      - `content`: Array berisi poin-poin utama. Setiap poin harus singkat dan padat.
-      - `speakerNotes`: Catatan untuk pembicara, memberikan detail atau konteks tambahan untuk setiap slide.
+      - 'title': Judul yang jelas untuk slide tersebut.
+      - 'content': Array berisi poin-poin utama. Setiap poin harus singkat dan padat.
+      - 'speakerNotes': Catatan untuk pembicara, memberikan detail atau konteks tambahan untuk setiap slide.
   3.  **Gaya Bahasa**: Gunakan bahasa Indonesia yang profesional namun mudah dipahami.
 
   **Topik Presentasi**: {{{topic}}}
