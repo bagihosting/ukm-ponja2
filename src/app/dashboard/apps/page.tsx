@@ -7,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
 import { generateArticle } from '@/ai/flows/generate-article-flow';
+import { generateSlides, type Slide } from '@/ai/flows/generate-slides-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { SlidesPreview } from '@/components/portals/slides-preview';
 
 
 export default function AppsPage() {
@@ -40,6 +42,11 @@ export default function AppsPage() {
   const [isGeneratingArticle, setIsGeneratingArticle] = useState(false);
   const [generatedArticleTitle, setGeneratedArticleTitle] = useState<string | null>(null);
   const [generatedArticleContent, setGeneratedArticleContent] = useState<string | null>(null);
+
+  // State for AI Text to PPT
+  const [slidesTopic, setSlidesTopic] = useState('');
+  const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
+  const [generatedSlides, setGeneratedSlides] = useState<Slide[] | null>(null);
 
   const { toast } = useToast();
 
@@ -179,6 +186,36 @@ export default function AppsPage() {
       setIsGeneratingArticle(false);
     }
   };
+  
+  const handleGenerateSlides = async () => {
+    if (!slidesTopic.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Tidak Lengkap',
+        description: 'Topik presentasi harus diisi.',
+      });
+      return;
+    }
+    setIsGeneratingSlides(true);
+    setGeneratedSlides(null);
+    try {
+      const result = await generateSlides({ topic: slidesTopic });
+      setGeneratedSlides(result.slides);
+      toast({
+        title: 'Presentasi Berhasil Dibuat!',
+        description: `Konten untuk ${result.slides.length} slide telah berhasil dibuat.`,
+      });
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Presentasi',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsGeneratingSlides(false);
+    }
+  };
+
 
   const handleCopyText = (text: string | null) => {
     if (!text) return;
@@ -196,7 +233,7 @@ export default function AppsPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Aplikasi & Integrasi</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* AI Artikel Smart */}
         <Card>
           <CardHeader>
@@ -303,15 +340,12 @@ export default function AppsPage() {
                 )}
             </CardContent>
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
         {/* AI Text-to-Image Generator */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-                <Sparkles className="text-primary" />
+                <ImageIcon className="text-primary" />
                 AI Text-to-Image
             </CardTitle>
             <CardDescription>Buat gambar unik bertema kesehatan hanya dengan deskripsi teks. Gambar yang dihasilkan akan otomatis disimpan ke galeri.</CardDescription>
@@ -355,49 +389,80 @@ export default function AppsPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Manual Uploader */}
-        <Card>
-          <CardHeader>
-             <CardTitle className="flex items-center gap-2">
-                <Upload className="text-primary" />
-                Unggah Manual
-            </CardTitle>
-            <CardDescription>Unggah file gambar atau video langsung. Hasilnya akan disimpan ke galeri dan URL-nya bisa disalin.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-                <Label htmlFor="cloudinary-upload">Pilih Gambar atau Video</Label>
-                <Input id="cloudinary-upload" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFileChange} disabled={isUploading}/>
-                {selectedFile && (
-                  <div className="mt-4 space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                      </p>
-                      <Button onClick={handleUpload} disabled={isUploading}>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {isUploading ? 'Mengunggah...' : 'Unggah ke Cloudinary'}
-                      </Button>
-                  </div>
-                )}
-            </div>
-            {uploadedUrl && (
-               <Alert>
-                  <AlertTitle className="mb-2">Unggah Manual Berhasil!</AlertTitle>
-                  <AlertDescription className="space-y-4">
-                      <p>URL file Anda:</p>
-                      <Input readOnly value={uploadedUrl} className="bg-muted"/>
-                      <Button onClick={() => handleCopyText(uploadedUrl)} variant="outline" size="sm">
-                          <Copy className="mr-2 h-4 w-4" />
-                          Salin URL
-                      </Button>
-                  </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-
       </div>
+      
+      {/* AI Text to PPT */}
+      <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Presentation className="text-primary" />
+                AI Text to PPT/PowerPoint
+            </CardTitle>
+            <CardDescription>
+              Buat konten presentasi yang terstruktur dari sebuah topik. Hasilnya bisa disalin ke PowerPoint, Google Slides, atau Canva.
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="slides-topic">Topik Presentasi</Label>
+              <Textarea
+                id="slides-topic"
+                placeholder="Contoh: Dampak Pola Tidur Terhadap Kesehatan Mental Remaja"
+                value={slidesTopic}
+                onChange={(e) => setSlidesTopic(e.target.value)}
+                disabled={isGeneratingSlides}
+              />
+            </div>
+            <Button onClick={handleGenerateSlides} disabled={isGeneratingSlides}>
+              {isGeneratingSlides ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {isGeneratingSlides ? 'Membuat Konten Presentasi...' : 'Buat Presentasi dengan AI'}
+            </Button>
+            {generatedSlides && (
+              <SlidesPreview slides={generatedSlides} />
+            )}
+        </CardContent>
+      </Card>
+
+      {/* Manual Uploader */}
+      <Card>
+        <CardHeader>
+           <CardTitle className="flex items-center gap-2">
+              <Upload className="text-primary" />
+              Unggah Manual
+          </CardTitle>
+          <CardDescription>Unggah file gambar atau video langsung. Hasilnya akan disimpan ke galeri dan URL-nya bisa disalin.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+              <Label htmlFor="cloudinary-upload">Pilih Gambar atau Video</Label>
+              <Input id="cloudinary-upload" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFileChange} disabled={isUploading}/>
+              {selectedFile && (
+                <div className="mt-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </p>
+                    <Button onClick={handleUpload} disabled={isUploading}>
+                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                      {isUploading ? 'Mengunggah...' : 'Unggah ke Cloudinary'}
+                    </Button>
+                </div>
+              )}
+          </div>
+          {uploadedUrl && (
+             <Alert>
+                <AlertTitle className="mb-2">Unggah Manual Berhasil!</AlertTitle>
+                <AlertDescription className="space-y-4">
+                    <p>URL file Anda:</p>
+                    <Input readOnly value={uploadedUrl} className="bg-muted"/>
+                    <Button onClick={() => handleCopyText(uploadedUrl)} variant="outline" size="sm">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Salin URL
+                    </Button>
+                </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
