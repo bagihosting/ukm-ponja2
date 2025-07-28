@@ -1,5 +1,3 @@
-
-'use server';
 /**
  * @fileoverview This file initializes the Genkit AI instance with necessary plugins.
  * It ensures that Genkit is configured centrally for the entire application.
