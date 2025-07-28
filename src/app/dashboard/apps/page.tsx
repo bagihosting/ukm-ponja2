@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
@@ -17,6 +17,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { SlidesPreview } from '@/components/portals/slides-preview';
+import { updateChartData } from '@/lib/chart-data';
+import { DynamicChart } from '@/components/portals/dynamic-chart';
 
 
 export default function AppsPage() {
@@ -47,6 +49,11 @@ export default function AppsPage() {
   const [slidesTopic, setSlidesTopic] = useState('');
   const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
   const [generatedSlides, setGeneratedSlides] = useState<Slide[] | null>(null);
+
+  // State for Chart Data
+  const [chartDataInput, setChartDataInput] = useState('');
+  const [isSavingChartData, setIsSavingChartData] = useState(false);
+  const [chartVersion, setChartVersion] = useState(0); // Used to force chart rerender
 
   const { toast } = useToast();
 
@@ -216,6 +223,22 @@ export default function AppsPage() {
     }
   };
 
+  const handleSaveChartData = async () => {
+    if (!chartDataInput.trim()) {
+        toast({ variant: 'destructive', title: 'Data Kosong', description: 'Silakan masukkan data untuk grafik.' });
+        return;
+    }
+    setIsSavingChartData(true);
+    try {
+        await updateChartData({ targetData: chartDataInput });
+        toast({ title: 'Berhasil!', description: 'Data grafik telah disimpan.' });
+        setChartVersion(prev => prev + 1); // Trigger chart refresh
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: `Terjadi kesalahan: ${error.message}` });
+    } finally {
+        setIsSavingChartData(false);
+    }
+  };
 
   const handleCopyText = (text: string | null) => {
     if (!text) return;
@@ -420,6 +443,44 @@ export default function AppsPage() {
             {generatedSlides && (
               <SlidesPreview slides={generatedSlides} />
             )}
+        </CardContent>
+      </Card>
+
+      {/* Excel to Chart */}
+      <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <BarChart className="text-primary" />
+                Data Excel to Grafik
+            </CardTitle>
+            <CardDescription>
+              Ubah data mentah dari Excel menjadi grafik interaktif. Salin data dari Excel (dua kolom: nama dan angka), tempel di bawah, lalu simpan.
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="chart-data">Data Grafik</Label>
+                    <Textarea
+                        id="chart-data"
+                        placeholder="Contoh:&#10;Hipertensi = 150&#10;Diabetes = 95&#10;ISPA = 320"
+                        value={chartDataInput}
+                        onChange={(e) => setChartDataInput(e.target.value)}
+                        disabled={isSavingChartData}
+                        className="h-48 font-mono text-sm"
+                    />
+                     <Button onClick={handleSaveChartData} disabled={isSavingChartData}>
+                        {isSavingChartData ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {isSavingChartData ? 'Menyimpan...' : 'Simpan & Perbarui Grafik'}
+                    </Button>
+                </div>
+                 <div className="space-y-2">
+                    <Label>Pratinjau Grafik</Label>
+                    <div className="p-4 border rounded-lg bg-muted min-h-[250px]">
+                      <DynamicChart key={chartVersion} />
+                    </div>
+                </div>
+            </div>
         </CardContent>
       </Card>
 
