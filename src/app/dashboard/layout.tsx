@@ -79,7 +79,7 @@ const navLinks = [
   { href: "/dashboard", icon: HeartPulse, label: "Dashboard", disabled: false },
   { href: "/dashboard/articles", icon: Newspaper, label: "Artikel", disabled: false },
   { href: "/dashboard/gallery", icon: ImageIcon, label: "Galeri", disabled: false },
-  { href: "/dashboard/apps", icon: AppWindow, label: "Aplikasi", disabled: true },
+  { href: "/dashboard/apps", icon: AppWindow, label: "Aplikasi", disabled: false },
   { href: "/dashboard/programs", icon: Briefcase, label: "Program UKM", disabled: false },
   { href: "/dashboard/reports", icon: BarChart, label: "Laporan", disabled: false },
   { href: "/dashboard/seo", icon: TrendingUp, label: "SEO", disabled: true },
