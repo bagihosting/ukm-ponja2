@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart, Megaphone } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart, Megaphone, GraduationCap } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
 import { generateArticle } from '@/ai/flows/generate-article-flow';
 import { generateSlides, type Slide } from '@/ai/flows/generate-slides-flow';
+import { generateLecture } from '@/ai/flows/generate-lecture-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -56,6 +57,11 @@ export default function AppsPage() {
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
   const [generatedBannerUrl, setGeneratedBannerUrl] = useState<string | null>(null);
   const [generatedBannerCloudinaryUrl, setGeneratedBannerCloudinaryUrl] = useState<string | null>(null);
+
+  // State for AI Dosen Pintar
+  const [lectureTopic, setLectureTopic] = useState('');
+  const [isGeneratingLecture, setIsGeneratingLecture] = useState(false);
+  const [generatedLecture, setGeneratedLecture] = useState<string | null>(null);
 
 
   const { toast } = useToast();
@@ -213,6 +219,35 @@ export default function AppsPage() {
       });
     } finally {
       setIsGeneratingBanner(false);
+    }
+  };
+  
+    const handleGenerateLecture = async () => {
+    if (!lectureTopic.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Tidak Lengkap',
+        description: 'Topik penjelasan harus diisi.',
+      });
+      return;
+    }
+    setIsGeneratingLecture(true);
+    setGeneratedLecture(null);
+    try {
+      const result = await generateLecture({ topic: lectureTopic });
+      setGeneratedLecture(result.explanation);
+      toast({
+        title: 'Penjelasan Berhasil Dibuat!',
+        description: 'Penjelasan dari AI Dosen Pintar telah berhasil dibuat.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Penjelasan',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsGeneratingLecture(false);
     }
   };
 
@@ -406,10 +441,48 @@ export default function AppsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-      
-      {/* Second Row of Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+         {/* AI Dosen Pintar */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="text-primary" />
+              AI Dosen Pintar
+            </CardTitle>
+            <CardDescription>Dapatkan penjelasan mendalam dan terstruktur tentang topik apa pun dari dosen virtual Anda.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="lecture-topic">Topik Penjelasan</Label>
+              <Textarea
+                id="lecture-topic"
+                placeholder="Contoh: Teori relativitas umum Einstein"
+                value={lectureTopic}
+                onChange={(e) => setLectureTopic(e.target.value)}
+                disabled={isGeneratingLecture}
+              />
+            </div>
+            <Button onClick={handleGenerateLecture} disabled={isGeneratingLecture}>
+              {isGeneratingLecture ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {isGeneratingLecture ? 'Membuat Penjelasan...' : 'Minta Penjelasan dari AI'}
+            </Button>
+            {generatedLecture && (
+              <div className="space-y-4">
+                <Label>Hasil Penjelasan</Label>
+                <Textarea
+                  readOnly
+                  value={generatedLecture}
+                  className="h-64 bg-muted"
+                />
+                <Button onClick={() => handleCopyText(generatedLecture)} variant="outline" size="sm">
+                  <Copy className="mr-2 h-4 w-4" />
+                  Salin Penjelasan
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* AI Banner Promosi */}
         <Card>
           <CardHeader>
