@@ -30,12 +30,14 @@ export function AiImageDialog({
   const { toast } = useToast();
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(''); // To provide better feedback
   const [generatedDataUri, setGeneratedDataUri] = useState<string | null>(null);
 
   const resetState = () => {
     setPrompt('');
     setIsLoading(false);
     setGeneratedDataUri(null);
+    setLoadingStep('');
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -55,6 +57,7 @@ export function AiImageDialog({
 
     try {
       // 1. Generate image from AI and get back the data URI
+      setLoadingStep('Membuat gambar dengan AI...');
       const { dataUri } = await generateImage({ prompt });
       
       if (!dataUri) {
@@ -68,11 +71,12 @@ export function AiImageDialog({
       const imageName = `${prompt.substring(0, 30).replace(/\s/g, '_')}_${Date.now()}.png`;
 
       // 2. Use the centralized function to handle upload, categorization, and db record creation
+      setLoadingStep('Mengunggah & menyimpan ke galeri...');
       const publicUrl = await uploadImageAndCreateGalleryRecord(dataUri, imageName);
       
       toast({ title: 'Berhasil!', description: 'Gambar dibuat dan disimpan ke galeri.' });
 
-      // 3. Pass the final public URL to the parent component
+      // 3. Pass the final public URL to the parent component and close
       onImageReady(publicUrl);
 
     } catch (error: any) {
@@ -85,8 +89,8 @@ export function AiImageDialog({
         title: 'Gagal Membuat Gambar',
         description: errorMessage,
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading on error
+      setLoadingStep('');
     }
   };
 
@@ -117,7 +121,7 @@ export function AiImageDialog({
                   <Label>Proses</Label>
                   <AspectRatio ratio={16/9} className="bg-muted rounded-md border flex flex-col items-center justify-center space-y-2">
                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                       <p className="text-sm text-muted-foreground">Membuat gambar...</p>
+                       <p className="text-sm text-muted-foreground">{loadingStep || 'Memulai proses...'}</p>
                   </AspectRatio>
               </div>
           )}
@@ -131,7 +135,7 @@ export function AiImageDialog({
                   {isLoading && (
                     <p className="text-sm text-muted-foreground flex items-center justify-center">
                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                       Mengunggah dan menyimpan ke galeri...
+                       {loadingStep}
                     </p>
                   )}
               </div>

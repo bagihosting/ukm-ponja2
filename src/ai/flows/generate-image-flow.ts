@@ -28,12 +28,6 @@ export async function generateImage(
   return generateImageFlow(input);
 }
 
-const imagePrompt = ai.definePrompt({
-  name: 'generateImagePrompt',
-  input: { schema: GenerateImageInputSchema },
-  prompt: `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: {{{prompt}}}. Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`
-});
-
 const generateImageFlow = ai.defineFlow(
   {
     name: 'generateImageFlow',
@@ -42,16 +36,17 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const renderedPrompt = await imagePrompt.render({ input });
+    // Construct the full prompt string here for simplicity and reliability
+    const fullPrompt = `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: "${input.prompt}". Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`;
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
-      prompt: renderedPrompt.prompt,
+      prompt: fullPrompt,
     });
 
     const dataUri = media?.url;
     if (!dataUri) {
-      throw new Error('Gagal membuat gambar. Tidak ada data yang diterima.');
+      throw new Error('Gagal membuat gambar. Tidak ada data yang diterima dari AI.');
     }
     
     return { dataUri };
