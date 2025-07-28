@@ -9,7 +9,7 @@ import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Video } from 'lucide-react';
+import { Video, Image as ImageIcon } from 'lucide-react';
 
 const CATEGORIES = ['Semua', 'Gambar', 'Video'] as const;
 type Category = typeof CATEGORIES[number];
@@ -71,6 +71,8 @@ export default function GalleryPage() {
                   variant={activeCategory === category ? 'default' : 'outline'}
                   onClick={() => handleFilter(category)}
                 >
+                  {category === 'Gambar' && <ImageIcon className="mr-2 h-4 w-4" />}
+                  {category === 'Video' && <Video className="mr-2 h-4 w-4" />}
                   {category}
                 </Button>
               ))}
