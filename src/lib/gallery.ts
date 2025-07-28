@@ -4,7 +4,6 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAdminApp } from './firebase-admin';
 import { uploadImageToCloudinary } from './image-hosting';
-import { categorizeImage } from '@/ai/flows/categorize-image-flow';
 import { revalidatePath } from 'next/cache';
 
 
@@ -85,8 +84,8 @@ export const uploadImageAndCreateGalleryRecord = async (source: string | File, f
     // 1. Upload to external host (Cloudinary)
     const publicUrl = await uploadImageToCloudinary(source);
     
-    // 2. Categorize the image using its new public URL
-    const category = await categorizeImage({ imageUrl: publicUrl });
+    // 2. Set a default category since AI categorization is removed
+    const category = 'Lain-lain';
 
     // 3. Save metadata record to Firestore (this also revalidates paths)
     await addGalleryImageRecord({

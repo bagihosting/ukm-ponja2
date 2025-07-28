@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { PortalNavbar } from '@/components/portals/navbar';
 import { PortalFooter } from '@/components/portals/footer';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { AiDoctor } from '@/components/portals/ai-doctor';
 
 
 function truncate(text: string, length: number) {
@@ -118,13 +117,6 @@ export default async function HomePage() {
                 </CardContent>
               </Card>
             )}
-        </section>
-
-        {/* AI Doctor Section */}
-        <section id="ai-doctor" className="py-8 md:py-12" aria-label="Konsultasi dengan AI Dokter">
-           <div className="mx-auto max-w-4xl">
-              <AiDoctor />
-           </div>
         </section>
 
         {/* More Articles Section */}
