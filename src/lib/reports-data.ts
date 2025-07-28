@@ -25,7 +25,8 @@ export const reportLinks = [
     slug: "gdrive-ukm",
     title: "Google Drive Data UKM",
     url: "https://drive.google.com/drive/folders/12B0BJUMSfYS1pPRYunz5xI4xPC0KGUxa",
-    embedUrl: "https://drive.google.com/drive/folders/12B0BJUMSfYS1pPRYunz5xI4xPC0KGUxa",
+    embedUrl: "", // Google Drive folders are not embeddable, this prevents iframe errors.
     description: "Folder pusat untuk menyimpan semua file, dokumen, dan data terkait UKM."
   }
 ];
+
