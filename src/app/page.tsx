@@ -24,14 +24,13 @@ function truncate(text: string, length: number) {
 
 async function fetchData() {
   try {
-    const [fetchedArticles, fetchedPrograms] = await Promise.all([
-      getArticles(),
+    // Fetch articles for homepage sections and all programs
+    const [{ articles: fetchedArticles }, fetchedPrograms] = await Promise.all([
+      getArticles({ page: 1, limit: 12 }), // Fetch first 12 for the homepage
       getPrograms(),
     ]);
     
-    const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
-    return { articles: sortedArticles, programs: fetchedPrograms };
+    return { articles: fetchedArticles, programs: fetchedPrograms };
   } catch (error) {
     console.error("Gagal memuat data portal:", error);
     return { articles: [], programs: [] };
@@ -101,7 +100,7 @@ export default async function HomePage() {
                               ))}
                               <div className="mt-auto pt-4">
                                     <Button asChild variant="outline" className="w-full">
-                                      <Link href="/#articles">
+                                      <Link href="/artikel">
                                           Lihat Semua Artikel <ArrowRight className="ml-2 h-4 w-4" />
                                       </Link>
                                   </Button>
@@ -232,5 +231,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
-    

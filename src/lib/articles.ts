@@ -61,6 +61,7 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
     const docRef = await db.collection('articles').add(dataToAdd);
     
     revalidatePath('/');
+    revalidatePath('/artikel');
     revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${docRef.id}`);
 
@@ -72,23 +73,37 @@ export const addArticle = async (article: ArticleInput): Promise<string> => {
 };
 
 
-// Read all
-export const getArticles = async (): Promise<Article[]> => {
+// Read all with pagination
+export const getArticles = async ({ page = 1, limit = 1000 }: { page?: number, limit?: number } = {}): Promise<{ articles: Article[], total: number }> => {
   const app = getAdminApp();
   if (!app) {
-    console.warn("getArticles: Firebase Admin not configured. Returning empty array.");
-    return [];
+    console.warn("getArticles: Firebase Admin not configured. Returning empty.");
+    return { articles: [], total: 0 };
   }
   const db = getFirestore(app);
   try {
-    const q = db.collection('articles').orderBy("createdAt", "desc");
+    const articlesRef = db.collection('articles');
+    
+    // Get total count for pagination
+    const countSnapshot = await articlesRef.count().get();
+    const total = countSnapshot.data().count;
+
+    // Fetch paginated data
+    const q = articlesRef
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+      
     const querySnapshot = await q.get();
-    return querySnapshot.docs.map(toArticle);
+    const articles = querySnapshot.docs.map(toArticle);
+    
+    return { articles, total };
   } catch (e: any) {
     console.error("Error fetching articles:", e);
-    return [];
+    return { articles: [], total: 0 };
   }
 };
+
 
 // Read one
 export const getArticle = async (id: string): Promise<Article | null> => {
@@ -134,6 +149,7 @@ export const updateArticle = async (id: string, article: ArticleUpdateInput): Pr
     }
 
     revalidatePath('/');
+    revalidatePath('/artikel');
     revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${id}`);
 
@@ -156,6 +172,7 @@ export const deleteArticle = async (id: string): Promise<void> => {
     await docRef.delete();
     
     revalidatePath('/');
+    revalidatePath('/artikel');
     revalidatePath('/dashboard/articles');
     revalidatePath(`/artikel/${id}`);
 
