@@ -51,10 +51,12 @@ export function AIDoctor() {
     setIsLoading(true);
 
     try {
-      // The askDoctor function now expects an object
-      const response = await askDoctor(currentInput);
-      const botMessage: Message = { role: 'bot', text: response };
+      const result = await askDoctor(currentInput);
+      const responseText = result.response;
+      
+      const botMessage: Message = { role: 'bot', text: responseText };
       setMessages((prev) => [...prev, botMessage]);
+
     } catch (error) {
       console.error('Error contacting AI Doctor:', error);
       const errorMessage: Message = {

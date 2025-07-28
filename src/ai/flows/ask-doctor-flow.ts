@@ -16,7 +16,12 @@ import { googleAI } from '@genkit-ai/googleai';
 const AskDoctorInputSchema = z.object({
   complaint: z.string().describe("A user's detailed description of their health symptoms, complaints, or questions about the Puskesmas."),
 });
-const AskDoctorOutputSchema = z.string().describe("The AI's comprehensive response, including diagnosis, medication advice, service info, program/report details, complaint handling, and a recommendation to visit the puskesmas.");
+
+const AskDoctorOutputSchema = z.object({
+    response: z.string().describe("The AI's comprehensive response, including diagnosis, medication advice, service info, program/report details, complaint handling, and a recommendation to visit the puskesmas."),
+});
+export type AskDoctorOutput = z.infer<typeof AskDoctorOutputSchema>;
+
 
 // Tool to get UKM Programs
 const getProgramsTool = ai.defineTool(
@@ -100,16 +105,19 @@ const askDoctorFlow = ai.defineFlow(
     },
     async (input) => {
         const { output } = await doctorPrompt(input);
-        return output ?? 'Maaf, saya tidak dapat memproses permintaan Anda saat ini. Silakan coba lagi nanti.';
+        if (!output) {
+            return { response: 'Maaf, saya tidak dapat memproses permintaan Anda saat ini. Silakan coba lagi nanti.' };
+        }
+        return output;
     }
 );
 
 /**
  * Public function to be called from the UI.
- * It takes the user's complaint and returns the AI's response as a string.
+ * It takes the user's complaint and returns the AI's response as an object.
  * @param complaint The user's health complaint or question.
- * @returns A promise that resolves to the AI's string response.
+ * @returns A promise that resolves to the AI's response object.
  */
-export async function askDoctor(complaint: string): Promise<string> {
+export async function askDoctor(complaint: string): Promise<AskDoctorOutput> {
     return askDoctorFlow({ complaint });
 }
