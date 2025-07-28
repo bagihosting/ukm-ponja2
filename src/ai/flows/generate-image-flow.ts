@@ -42,6 +42,9 @@ const generateImageFlow = ai.defineFlow(
     const { media } = await ai.generate({
       model: 'googleai/gemini-1.5-flash-latest',
       prompt: fullPrompt,
+      config: {
+        responseModalities: ['IMAGE'],
+      },
     });
 
     const dataUri = media?.url;

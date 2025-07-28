@@ -35,7 +35,14 @@ export async function categorizeImage(input: CategorizeImageInput): Promise<type
   return result.category;
 }
 
-const prompt = `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
+const categorizeImageFlow = ai.defineFlow(
+  {
+    name: 'categorizeImageFlow',
+    inputSchema: CategorizeImageInputSchema,
+    outputSchema: CategorizeImageOutputSchema,
+  },
+  async (input) => {
+    const prompt = `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
 
 Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari daftar berikut:
 - Penyuluhan Kesehatan (Contoh: seminar, pembagian brosur, edukasi ke masyarakat)
@@ -49,20 +56,14 @@ Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari
 
 Pilih HANYA SATU kategori yang paling mewakili aktivitas utama dalam gambar.
 
-Gambar untuk dianalisis: {{media url=imageUrl}}`;
+Gambar untuk dianalisis: {{media url="${input.imageUrl}"}}`;
 
-const categorizeImageFlow = ai.defineFlow(
-  {
-    name: 'categorizeImageFlow',
-    inputSchema: CategorizeImageInputSchema,
-    outputSchema: CategorizeImageOutputSchema,
-  },
-  async (input) => {
     const { output } = await ai.generate({
         prompt,
-        input,
         output: { schema: CategorizeImageOutputSchema },
+        model: 'googleai/gemini-1.5-flash-latest',
     });
+    
     if (!output) {
         throw new Error("Gagal mendapatkan kategori dari AI.");
     }
