@@ -29,7 +29,9 @@ export default function ArticlesPage() {
     async function fetchArticles() {
       try {
         setLoading(true);
-        const fetchedArticles = await getArticles();
+        // Correctly destructure the 'articles' array from the returned object
+        const { articles: fetchedArticles } = await getArticles();
+        // Now 'fetchedArticles' is guaranteed to be an array
         const sortedArticles = fetchedArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setArticles(sortedArticles);
       } catch (err: any) {
