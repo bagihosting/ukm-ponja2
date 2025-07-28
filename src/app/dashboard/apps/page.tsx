@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart, Megaphone, GraduationCap } from 'lucide-react';
-import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
+import { Loader2, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart, Megaphone, GraduationCap } from 'lucide-react';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
 import { generateArticle } from '@/ai/flows/generate-article-flow';
 import { generateSlides, type Slide } from '@/ai/flows/generate-slides-flow';
 import { generateLecture } from '@/ai/flows/generate-lecture-flow';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { SlidesPreview } from '@/components/portals/slides-preview';
@@ -84,11 +83,16 @@ export default function AppsPage() {
       setGeneratedImageUrl(result.imageUrl);
       if(result.cloudinaryUrl) {
           setGeneratedCloudinaryUrl(result.cloudinaryUrl);
+          toast({
+            title: 'Gambar Berhasil Dibuat!',
+            description: 'Gambar telah dibuat dan disimpan di galeri.',
+          });
+      } else {
+         toast({
+            title: 'Gambar Berhasil Dibuat (Sementara)',
+            description: 'Gagal menyimpan ke galeri, URL bersifat sementara.',
+        });
       }
-      toast({
-        title: 'Gambar Berhasil Dibuat!',
-        description: 'Gambar telah dibuat dan disimpan di galeri.',
-      });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -206,11 +210,16 @@ export default function AppsPage() {
       setGeneratedBannerUrl(result.imageUrl);
       if (result.cloudinaryUrl) {
         setGeneratedBannerCloudinaryUrl(result.cloudinaryUrl);
+         toast({
+          title: 'Banner Berhasil Dibuat!',
+          description: 'Banner promosi telah dibuat dan disimpan di galeri.',
+        });
+      } else {
+         toast({
+            title: 'Banner Berhasil Dibuat (Sementara)',
+            description: 'Gagal menyimpan ke galeri, URL bersifat sementara.',
+        });
       }
-      toast({
-        title: 'Banner Berhasil Dibuat!',
-        description: 'Banner promosi telah dibuat dan disimpan di galeri.',
-      });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -273,7 +282,7 @@ export default function AppsPage() {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       toast({
-        title: 'Berhasil!',
+        title: 'Berhasil Disalin!',
         description: 'Teks telah disalin ke clipboard.',
       });
     });
@@ -287,7 +296,7 @@ export default function AppsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* AI Artikel Smart */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Newspaper className="text-primary" />
@@ -306,26 +315,22 @@ export default function AppsPage() {
                 disabled={isGeneratingArticle}
               />
             </div>
-            <Button onClick={handleGenerateArticle} disabled={isGeneratingArticle}>
+            <Button onClick={handleGenerateArticle} disabled={isGeneratingArticle} className="w-full">
               {isGeneratingArticle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               {isGeneratingArticle ? 'Membuat Artikel...' : 'Buat Artikel dengan AI'}
             </Button>
-            {(generatedArticleTitle || generatedArticleContent) && (
+            {generatedArticleTitle && (
               <div className="space-y-4">
                 <Label>Hasil Artikel</Label>
                 <div className="space-y-2">
                   <Input 
                     readOnly
                     value={generatedArticleTitle || ''}
-                    placeholder="Judul Artikel"
-                    className="bg-muted font-bold"
+                    className="bg-muted font-bold text-lg"
                   />
-                  <Textarea 
-                    readOnly
-                    value={generatedArticleContent || ''}
-                    placeholder="Konten Artikel"
-                    className="h-48 bg-muted"
-                  />
+                  <div className="p-3 rounded-md bg-muted min-h-[150px] text-sm whitespace-pre-wrap">
+                      {generatedArticleContent}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => handleCopyText(generatedArticleTitle)} variant="outline" size="sm">
@@ -343,7 +348,7 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Makalah Smart */}
-        <Card className="xl:col-span-1">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <FileText className="text-primary" />
@@ -356,7 +361,7 @@ export default function AppsPage() {
                     <Label htmlFor="makalah-title">Judul Makalah</Label>
                     <Input
                         id="makalah-title"
-                        placeholder="Contoh: Pentingnya Imunisasi"
+                        placeholder="Contoh: Pentingnya Imunisasi Usia Dini"
                         value={makalahTitle}
                         onChange={(e) => setMakalahTitle(e.target.value)}
                         disabled={isGeneratingMakalah}
@@ -364,26 +369,24 @@ export default function AppsPage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="makalah-topic">Topik / Deskripsi Singkat</Label>
-                    <Input
+                    <Textarea
                         id="makalah-topic"
-                        placeholder="Contoh: Jelaskan manfaat imunisasi untuk anak"
+                        placeholder="Contoh: Jelaskan manfaat imunisasi untuk anak, jenis-jenis imunisasi wajib, dan dampak jika tidak melakukan imunisasi."
                         value={makalahTopic}
                         onChange={(e) => setMakalahTopic(e.target.value)}
                         disabled={isGeneratingMakalah}
                     />
                 </div>
-                <Button onClick={handleGenerateMakalah} disabled={isGeneratingMakalah}>
+                <Button onClick={handleGenerateMakalah} disabled={isGeneratingMakalah} className="w-full">
                     {isGeneratingMakalah ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     {isGeneratingMakalah ? 'Membuat Makalah...' : 'Buat Makalah dengan AI'}
                 </Button>
                 {generatedMakalah && (
                     <div className="space-y-4">
                         <Label>Hasil Makalah</Label>
-                        <Textarea 
-                            readOnly
-                            value={generatedMakalah}
-                            className="h-64 bg-muted"
-                        />
+                         <div className="p-3 rounded-md bg-muted min-h-[200px] text-sm whitespace-pre-wrap">
+                            {generatedMakalah}
+                        </div>
                         <Button onClick={() => handleCopyText(generatedMakalah)} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
                             Salin Hasil
@@ -394,13 +397,13 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Text-to-Image Generator */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 <ImageIcon className="text-primary" />
                 AI Text-to-Image
             </CardTitle>
-            <CardDescription>Buat gambar unik bertema kesehatan hanya dengan deskripsi teks. Gambar yang dihasilkan akan otomatis disimpan ke galeri.</CardDescription>
+            <CardDescription>Buat gambar unik bertema kesehatan hanya dengan deskripsi teks. Gambar otomatis disimpan ke galeri.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -411,10 +414,9 @@ export default function AppsPage() {
                     value={imgPrompt}
                     onChange={(e) => setImgPrompt(e.target.value)}
                     disabled={isGeneratingImg}
-                    className="min-h-[100px]"
                 />
             </div>
-            <Button onClick={handleGenerateImage} disabled={isGeneratingImg}>
+            <Button onClick={handleGenerateImage} disabled={isGeneratingImg} className="w-full">
                 {isGeneratingImg ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 {isGeneratingImg ? 'Membuat Gambar...' : 'Buat Gambar dengan AI'}
             </Button>
@@ -427,13 +429,13 @@ export default function AppsPage() {
                     <div className="flex gap-2">
                         <Button onClick={() => handleCopyText(generatedCloudinaryUrl || generatedImageUrl)} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
-                            Salin URL {generatedCloudinaryUrl ? 'Cloudinary' : 'Sementara'}
+                            Salin URL {generatedCloudinaryUrl ? 'Galeri' : 'Sementara'}
                         </Button>
                     </div>
                      {!generatedCloudinaryUrl && (
                         <Alert variant="destructive">
                             <AlertDescription>
-                            Gambar ini hanya sementara. Gagal menyimpannya ke galeri. Coba lagi atau salin URL sementara.
+                            Gagal menyimpan ke galeri. URL ini bersifat sementara.
                             </AlertDescription>
                         </Alert>
                     )}
@@ -443,7 +445,7 @@ export default function AppsPage() {
         </Card>
 
          {/* AI Dosen Pintar */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap className="text-primary" />
@@ -462,18 +464,16 @@ export default function AppsPage() {
                 disabled={isGeneratingLecture}
               />
             </div>
-            <Button onClick={handleGenerateLecture} disabled={isGeneratingLecture}>
+            <Button onClick={handleGenerateLecture} disabled={isGeneratingLecture} className="w-full">
               {isGeneratingLecture ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              {isGeneratingLecture ? 'Membuat Penjelasan...' : 'Minta Penjelasan dari AI'}
+              {isGeneratingLecture ? 'Membuat Penjelasan...' : 'Minta Penjelasan'}
             </Button>
             {generatedLecture && (
               <div className="space-y-4">
                 <Label>Hasil Penjelasan</Label>
-                <Textarea
-                  readOnly
-                  value={generatedLecture}
-                  className="h-64 bg-muted"
-                />
+                 <div className="p-3 rounded-md bg-muted min-h-[200px] text-sm whitespace-pre-wrap">
+                    {generatedLecture}
+                </div>
                 <Button onClick={() => handleCopyText(generatedLecture)} variant="outline" size="sm">
                   <Copy className="mr-2 h-4 w-4" />
                   Salin Penjelasan
@@ -484,13 +484,13 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Banner Promosi */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Megaphone className="text-primary" />
               AI Banner Promosi Kesehatan
             </CardTitle>
-            <CardDescription>Buat banner promosi 16:9 yang menarik untuk kampanye kesehatan Anda. Hasilnya akan disimpan ke galeri.</CardDescription>
+            <CardDescription>Buat banner promosi 16:9 yang menarik. Hasilnya akan disimpan ke galeri secara otomatis.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -503,7 +503,7 @@ export default function AppsPage() {
                 disabled={isGeneratingBanner}
               />
             </div>
-            <Button onClick={handleGenerateBanner} disabled={isGeneratingBanner}>
+            <Button onClick={handleGenerateBanner} disabled={isGeneratingBanner} className="w-full">
               {isGeneratingBanner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               {isGeneratingBanner ? 'Membuat Banner...' : 'Buat Banner dengan AI'}
             </Button>
@@ -516,13 +516,13 @@ export default function AppsPage() {
                 <div className="flex gap-2">
                   <Button onClick={() => handleCopyText(generatedBannerCloudinaryUrl || generatedBannerUrl)} variant="outline" size="sm">
                     <Copy className="mr-2 h-4 w-4" />
-                    Salin URL {generatedBannerCloudinaryUrl ? 'Cloudinary' : 'Sementara'}
+                    Salin URL {generatedBannerCloudinaryUrl ? 'Galeri' : 'Sementara'}
                   </Button>
                 </div>
                 {!generatedBannerCloudinaryUrl && (
                   <Alert variant="destructive">
                     <AlertDescription>
-                      Banner ini hanya sementara. Gagal menyimpannya ke galeri. Coba lagi atau salin URL sementara.
+                      Gagal menyimpan ke galeri. URL ini bersifat sementara.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -532,14 +532,14 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Text to PPT */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                   <Presentation className="text-primary" />
-                  AI Text to PPT/PowerPoint
+                  AI Text to PPT
               </CardTitle>
               <CardDescription>
-                Buat konten presentasi yang terstruktur dari sebuah topik. Hasilnya bisa disalin ke PowerPoint, Google Slides, atau Canva.
+                Buat konten presentasi terstruktur dari sebuah topik. Hasilnya bisa disalin ke PowerPoint atau Google Slides.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -553,9 +553,9 @@ export default function AppsPage() {
                   disabled={isGeneratingSlides}
                 />
               </div>
-              <Button onClick={handleGenerateSlides} disabled={isGeneratingSlides}>
+              <Button onClick={handleGenerateSlides} disabled={isGeneratingSlides} className="w-full">
                 {isGeneratingSlides ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                {isGeneratingSlides ? 'Membuat Konten Presentasi...' : 'Buat Presentasi dengan AI'}
+                {isGeneratingSlides ? 'Membuat Konten...' : 'Buat Presentasi'}
               </Button>
               {generatedSlides && (
                 <SlidesPreview slides={generatedSlides} />
@@ -571,7 +571,7 @@ export default function AppsPage() {
                     Data Excel to Grafik
                 </CardTitle>
                 <CardDescription>
-                Ubah data mentah dari Excel menjadi grafik interaktif. Salin data dari Excel (dua kolom: nama dan angka), tempel di bawah, lalu simpan.
+                Ubah data mentah dari Excel menjadi grafik interaktif. Salin data dari Excel (dua kolom: nama dan angka, dipisahkan tanda '='), tempel di bawah, lalu simpan.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

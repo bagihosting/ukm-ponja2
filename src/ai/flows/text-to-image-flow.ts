@@ -54,7 +54,7 @@ const generateHealthImageFlow = ai.defineFlow(
       throw new Error('Image generation failed to return a valid image.');
     }
     
-    // 2. Upload to Cloudinary and save to gallery
+    // 2. Upload to Cloudinary and save to gallery, but don't fail if upload doesn't work
     try {
         const cloudinaryUrl = await uploadImageToCloudinary(imageUrl);
         await addGalleryImageRecord({

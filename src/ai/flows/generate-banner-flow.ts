@@ -45,8 +45,6 @@ const generateBannerFlow = ai.defineFlow(
       prompt: `A vibrant, professional, and engaging promotional banner for a health campaign about: "${prompt}". The banner should feature positive imagery, be visually appealing, and have some clear space suitable for text overlays. The style should be modern and clean. Aspect ratio 16:9.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
-        // Explicitly set aspect ratio if model supports it
-        // Note: As of now, this might be controlled more by the prompt text.
       },
     });
 
