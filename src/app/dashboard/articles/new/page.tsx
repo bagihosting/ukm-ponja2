@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Wand2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { addArticle, getArticle, updateArticle } from '@/lib/articles';
-import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImagePreview } from '@/components/portals/image-preview';
 
@@ -34,7 +33,6 @@ export default function NewArticlePage() {
   const isEditMode = Boolean(articleId);
 
   const { toast } = useToast();
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [notFound, setNotFound] = useState(false);
 
@@ -42,7 +40,6 @@ export default function NewArticlePage() {
     register,
     handleSubmit,
     watch,
-    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ArticleFormValues>({
@@ -100,13 +97,6 @@ export default function NewArticlePage() {
     }
   };
 
-  const handleAiImageReady = (url?: string) => {
-    if (url) {
-      setValue('imageUrl', url, { shouldValidate: true });
-    }
-    setIsAiModalOpen(false);
-  };
-  
   if (isLoading) {
      return (
         <div className="p-4 sm:p-6 space-y-4">
@@ -209,7 +199,7 @@ export default function NewArticlePage() {
               <CardHeader>
                 <CardTitle>Gambar Artikel</CardTitle>
                  <CardDescription>
-                  Tempelkan URL atau buat gambar baru dengan AI.
+                  Tempelkan URL untuk gambar artikel.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -230,10 +220,6 @@ export default function NewArticlePage() {
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
                   <ImagePreview imageUrl={imageUrl} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)} disabled={isSubmitting}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Buat dengan AI
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -249,13 +235,6 @@ export default function NewArticlePage() {
           </Button>
         </div>
       </form>
-
-      <AiImageDialog 
-        open={isAiModalOpen}
-        onOpenChange={setIsAiModalOpen}
-        onImageReady={handleAiImageReady}
-        promptSuggestion='Contoh: "Stetoskop di atas meja dokter dengan latar belakang kabur"'
-      />
     </>
   );
 }

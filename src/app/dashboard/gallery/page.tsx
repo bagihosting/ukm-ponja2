@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Trash2, MoreHorizontal, Wand2 } from 'lucide-react';
+import { Loader2, Upload, Copy, Trash2, MoreHorizontal } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getGalleryImages, deleteGalleryImage, uploadImageAndCreateGalleryRecord, type GalleryImage } from '@/lib/gallery';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 import { CldImage } from 'next-cloudinary';
 
 
@@ -27,8 +26,6 @@ export default function GalleryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
   const { toast } = useToast();
-
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const fetchImages = async () => {
     setIsLoading(true);
@@ -145,12 +142,6 @@ export default function GalleryPage() {
     }
   };
 
-  // Called from AiImageDialog when an AI image is successfully generated and stored.
-  const handleAiImageReady = async () => {
-    setIsAiModalOpen(false); 
-    await fetchImages(); // Refresh the gallery list
-  };
-
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
@@ -161,8 +152,8 @@ export default function GalleryPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         <Card className="lg:w-1/2 flex-shrink-0">
           <CardHeader>
-            <CardTitle>Unggah atau Buat Gambar</CardTitle>
-            <CardDescription>Unggah gambar manual atau buat menggunakan AI. Setiap gambar akan disimpan ke riwayat galeri secara otomatis.</CardDescription>
+            <CardTitle>Unggah Gambar</CardTitle>
+            <CardDescription>Unggah gambar secara manual. Setiap gambar akan disimpan ke riwayat galeri secara otomatis.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -181,14 +172,6 @@ export default function GalleryPage() {
                     </Button>
                 </div>
                 )}
-            </div>
-            
-            <div className="space-y-2">
-                <Label>Buat dengan AI</Label>
-                <Button variant="outline" onClick={() => setIsAiModalOpen(true)}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Buat Gambar Baru dengan AI
-                </Button>
             </div>
           </CardContent>
         </Card>
@@ -287,11 +270,6 @@ export default function GalleryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AiImageDialog 
-        open={isAiModalOpen}
-        onOpenChange={setIsAiModalOpen}
-        onImageReady={handleAiImageReady}
-      />
     </div>
   );
 }

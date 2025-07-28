@@ -77,6 +77,10 @@ export const addGalleryImageRecord = async (imageData: GalleryImageInput): Promi
  * @returns A promise that resolves with the public URL of the uploaded image.
  */
 export const uploadImageAndCreateGalleryRecord = async (source: string | File, fileName: string): Promise<string> => {
+  const app = getAdminApp();
+  if (!app) {
+    throw new Error('Konfigurasi server Firebase tidak ditemukan.');
+  }
   try {
     // 1. Upload to external host (Cloudinary)
     const publicUrl = await uploadImageToCloudinary(source);

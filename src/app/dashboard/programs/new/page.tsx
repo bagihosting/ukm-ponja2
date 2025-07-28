@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Loader2, Link as LinkIcon, Wand2, Upload } from 'lucide-react';
+import { ChevronLeft, Loader2, Link as LinkIcon, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,6 @@ import { addProgram, getProgram, updateProgram } from '@/lib/programs';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { PROGRAM_CATEGORIES } from '@/lib/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AiImageDialog } from '@/components/portals/ai-image-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImagePreview } from '@/components/portals/image-preview';
 
@@ -40,7 +39,6 @@ export default function NewProgramPage() {
   const isEditMode = Boolean(programId);
 
   const { toast } = useToast();
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [picPhotoFile, setPicPhotoFile] = useState<File | null>(null);
   const [isUploadingPicPhoto, setIsUploadingPicPhoto] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
@@ -110,13 +108,6 @@ export default function NewProgramPage() {
         description: `Terjadi kesalahan: ${error.message}`,
       });
     }
-  };
-
-  const handleAiImageReady = (url?: string) => {
-    if (url) {
-        setValue('imageUrl', url, { shouldValidate: true });
-    }
-    setIsAiModalOpen(false);
   };
   
   const handlePicPhotoUpload = async () => {
@@ -301,7 +292,7 @@ export default function NewProgramPage() {
               <CardHeader>
                 <CardTitle>Gambar Program</CardTitle>
                 <CardDescription>
-                  Opsional. Tempelkan URL atau buat gambar.
+                  Opsional. Tempelkan URL untuk gambar.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -322,10 +313,6 @@ export default function NewProgramPage() {
                     {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
                   </div>
                   <ImagePreview imageUrl={imageUrl} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsAiModalOpen(true)} disabled={isSubmitting}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Buat dengan AI
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -341,13 +328,6 @@ export default function NewProgramPage() {
           </Button>
         </div>
       </form>
-
-      <AiImageDialog 
-        open={isAiModalOpen}
-        onOpenChange={setIsAiModalOpen}
-        onImageReady={handleAiImageReady}
-        promptSuggestion='Contoh: "Kegiatan penyuluhan kesehatan di desa"'
-      />
     </>
   );
 }
