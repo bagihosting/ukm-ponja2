@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
+import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -22,11 +23,17 @@ export default function AppsPage() {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   // State for AI image generation
-  const [prompt, setPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [imgPrompt, setImgPrompt] = useState('');
+  const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [generatedCloudinaryUrl, setGeneratedCloudinaryUrl] = useState<string | null>(null);
   
+  // State for AI Makalah Smart
+  const [makalahTitle, setMakalahTitle] = useState('');
+  const [makalahTopic, setMakalahTopic] = useState('');
+  const [isGeneratingMakalah, setIsGeneratingMakalah] = useState(false);
+  const [generatedMakalah, setGeneratedMakalah] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   // --- Manual Upload Handlers ---
@@ -74,7 +81,7 @@ export default function AppsPage() {
 
   // --- AI Generation Handlers ---
   const handleGenerateImage = async () => {
-    if (!prompt.trim()) {
+    if (!imgPrompt.trim()) {
        toast({
         variant: 'destructive',
         title: 'Prompt Kosong',
@@ -82,11 +89,11 @@ export default function AppsPage() {
       });
       return;
     }
-    setIsGenerating(true);
+    setIsGeneratingImg(true);
     setGeneratedImageUrl(null);
     setGeneratedCloudinaryUrl(null);
     try {
-      const result = await generateHealthImage(prompt);
+      const result = await generateHealthImage(imgPrompt);
       setGeneratedImageUrl(result.imageUrl);
       if(result.cloudinaryUrl) {
           setGeneratedCloudinaryUrl(result.cloudinaryUrl);
@@ -102,16 +109,45 @@ export default function AppsPage() {
         description: `Terjadi kesalahan: ${error.message}`,
       });
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingImg(false);
     }
   };
 
-  const handleCopyUrl = (url: string | null) => {
-    if (!url) return;
-    navigator.clipboard.writeText(url).then(() => {
+  const handleGenerateMakalah = async () => {
+    if (!makalahTitle.trim() || !makalahTopic.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Tidak Lengkap',
+        description: 'Judul dan topik makalah harus diisi.',
+      });
+      return;
+    }
+    setIsGeneratingMakalah(true);
+    setGeneratedMakalah(null);
+    try {
+      const result = await generateMakalah({ title: makalahTitle, topic: makalahTopic });
+      setGeneratedMakalah(result.makalahContent);
+      toast({
+        title: 'Makalah Berhasil Dibuat!',
+        description: 'Draf makalah telah berhasil dibuat.',
+      });
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Makalah',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsGeneratingMakalah(false);
+    }
+  };
+
+  const handleCopyText = (text: string | null) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
       toast({
         title: 'Berhasil!',
-        description: 'URL file telah disalin ke clipboard.',
+        description: 'Teks telah disalin ke clipboard.',
       });
     });
   };
@@ -121,6 +157,59 @@ export default function AppsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Aplikasi & Integrasi</h1>
       </div>
+
+       {/* AI Makalah Smart */}
+        <Card className="col-span-1 lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <FileText className="text-primary" />
+                    AI Makalah Smart
+                </CardTitle>
+                <CardDescription>Buat draf makalah atau artikel secara otomatis berdasarkan judul dan topik yang Anda berikan.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="makalah-title">Judul Makalah</Label>
+                        <Input
+                            id="makalah-title"
+                            placeholder="Contoh: Pentingnya Imunisasi"
+                            value={makalahTitle}
+                            onChange={(e) => setMakalahTitle(e.target.value)}
+                            disabled={isGeneratingMakalah}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="makalah-topic">Topik / Deskripsi Singkat</Label>
+                        <Input
+                            id="makalah-topic"
+                            placeholder="Contoh: Jelaskan manfaat imunisasi untuk anak"
+                            value={makalahTopic}
+                            onChange={(e) => setMakalahTopic(e.target.value)}
+                            disabled={isGeneratingMakalah}
+                        />
+                    </div>
+                </div>
+                <Button onClick={handleGenerateMakalah} disabled={isGeneratingMakalah}>
+                    {isGeneratingMakalah ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    {isGeneratingMakalah ? 'Membuat Makalah...' : 'Buat Makalah dengan AI'}
+                </Button>
+                {generatedMakalah && (
+                    <div className="space-y-4">
+                        <Label>Hasil Makalah</Label>
+                        <Textarea 
+                            readOnly
+                            value={generatedMakalah}
+                            className="h-64 bg-muted"
+                        />
+                        <Button onClick={() => handleCopyText(generatedMakalah)} variant="outline" size="sm">
+                            <Copy className="mr-2 h-4 w-4" />
+                            Salin Hasil
+                        </Button>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
@@ -139,15 +228,15 @@ export default function AppsPage() {
                 <Textarea 
                     id="ai-prompt"
                     placeholder="Contoh: seorang dokter sedang memeriksa pasien anak-anak dengan stetoskop di ruangan yang terang"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    disabled={isGenerating}
+                    value={imgPrompt}
+                    onChange={(e) => setImgPrompt(e.target.value)}
+                    disabled={isGeneratingImg}
                     className="min-h-[100px]"
                 />
             </div>
-            <Button onClick={handleGenerateImage} disabled={isGenerating}>
-                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                {isGenerating ? 'Membuat Gambar...' : 'Buat Gambar dengan AI'}
+            <Button onClick={handleGenerateImage} disabled={isGeneratingImg}>
+                {isGeneratingImg ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                {isGeneratingImg ? 'Membuat Gambar...' : 'Buat Gambar dengan AI'}
             </Button>
             {generatedImageUrl && (
                 <div className="space-y-4">
@@ -156,7 +245,7 @@ export default function AppsPage() {
                         <img src={generatedImageUrl} alt="AI generated image" className="w-full h-full object-cover" />
                     </AspectRatio>
                     <div className="flex gap-2">
-                        <Button onClick={() => handleCopyUrl(generatedCloudinaryUrl || generatedImageUrl)} variant="outline" size="sm">
+                        <Button onClick={() => handleCopyText(generatedCloudinaryUrl || generatedImageUrl)} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
                             Salin URL {generatedCloudinaryUrl ? 'Cloudinary' : 'Sementara'}
                         </Button>
@@ -204,7 +293,7 @@ export default function AppsPage() {
                   <AlertDescription className="space-y-4">
                       <p>URL file Anda:</p>
                       <Input readOnly value={uploadedUrl} className="bg-muted"/>
-                      <Button onClick={() => handleCopyUrl(uploadedUrl)} variant="outline" size="sm">
+                      <Button onClick={() => handleCopyText(uploadedUrl)} variant="outline" size="sm">
                           <Copy className="mr-2 h-4 w-4" />
                           Salin URL
                       </Button>
