@@ -36,7 +36,6 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     
-    // Construct the full prompt string here for simplicity and reliability
     const fullPrompt = `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: "${input.prompt}". Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`;
     
     const { media } = await ai.generate({

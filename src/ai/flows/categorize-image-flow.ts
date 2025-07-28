@@ -42,9 +42,12 @@ const categorizeImageFlow = ai.defineFlow(
     outputSchema: CategorizeImageOutputSchema,
   },
   async (input) => {
-    const prompt = `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
+    
+    const promptText = `Anda adalah seorang ahli arsiparis untuk sebuah Puskesmas (Pusat Kesehatan Masyarakat) di Indonesia. Tugas Anda adalah mengkategorikan sebuah gambar berdasarkan konten visualnya.
 
-Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari daftar berikut:
+Analisis gambar yang diberikan dari URL berikut: ${input.imageUrl}
+
+Tentukan kategori mana yang paling tepat dari daftar berikut:
 - Penyuluhan Kesehatan (Contoh: seminar, pembagian brosur, edukasi ke masyarakat)
 - Pemeriksaan Kesehatan (Contoh: tensi darah, pemeriksaan gigi, cek gula darah)
 - Vaksinasi / Imunisasi (Contoh: penyuntikan vaksin pada anak-anak atau dewasa)
@@ -54,12 +57,10 @@ Analisis gambar yang diberikan dan tentukan kategori mana yang paling tepat dari
 - Stok Obat / Fasilitas (Contoh: foto rak obat, ruangan, atau peralatan medis tanpa ada kegiatan spesifik)
 - Lain-lain (Gunakan ini jika tidak ada kategori lain yang cocok)
 
-Pilih HANYA SATU kategori yang paling mewakili aktivitas utama dalam gambar.
-
-Gambar untuk dianalisis: {{media url="${input.imageUrl}"}}`;
+Pilih HANYA SATU kategori yang paling mewakili aktivitas utama dalam gambar.`;
 
     const { output } = await ai.generate({
-        prompt,
+        prompt: promptText,
         output: { schema: CategorizeImageOutputSchema },
         model: 'googleai/gemini-1.5-flash-latest',
     });
