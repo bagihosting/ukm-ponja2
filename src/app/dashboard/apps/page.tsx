@@ -21,12 +21,12 @@ export default function AppsPage() {
     setUploadedUrl(null); // Reset URL on new file selection
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      // Limit file size (e.g., 10MB)
-      if (file.size > 10 * 1024 * 1024) {
+      // Limit file size (e.g., 100MB for videos)
+      if (file.size > 100 * 1024 * 1024) {
         toast({
           variant: 'destructive',
           title: 'File Terlalu Besar',
-          description: 'Ukuran gambar tidak boleh melebihi 10MB.',
+          description: 'Ukuran file tidak boleh melebihi 100MB.',
         });
         event.target.value = ''; // Clear the input
         return;
@@ -40,7 +40,7 @@ export default function AppsPage() {
       toast({
         variant: 'destructive',
         title: 'Tidak Ada File',
-        description: 'Silakan pilih file gambar untuk diunggah.',
+        description: 'Silakan pilih file untuk diunggah.',
       });
       return;
     }
@@ -55,7 +55,7 @@ export default function AppsPage() {
       
       toast({
         title: 'Berhasil!',
-        description: `Gambar "${selectedFile.name}" berhasil diunggah.`,
+        description: `File "${selectedFile.name}" berhasil diunggah.`,
       });
       
       // Reset state after successful upload
@@ -79,7 +79,7 @@ export default function AppsPage() {
     navigator.clipboard.writeText(uploadedUrl).then(() => {
       toast({
         title: 'Berhasil!',
-        description: 'URL gambar telah disalin ke clipboard.',
+        description: 'URL file telah disalin ke clipboard.',
       });
     });
   };
@@ -93,18 +93,18 @@ export default function AppsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Unggah ke Cloudinary</CardTitle>
-          <CardDescription>Unggah file gambar langsung ke Cloudinary. Hasilnya akan disimpan ke riwayat Galeri dan URL-nya bisa disalin.</CardDescription>
+          <CardDescription>Unggah file gambar atau video langsung ke Cloudinary. Hasilnya akan disimpan ke riwayat Galeri dan URL-nya bisa disalin.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-              <Label htmlFor="cloudinary-upload">Pilih Gambar</Label>
+              <Label htmlFor="cloudinary-upload">Pilih Gambar atau Video</Label>
               <div className="grid w-full max-w-sm items-center gap-2">
-                <Input id="cloudinary-upload" type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={isUploading}/>
+                <Input id="cloudinary-upload" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFileChange} disabled={isUploading}/>
               </div>
               {selectedFile && (
                 <div className="mt-4 space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
+                      File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
                     </p>
                     <Button onClick={handleUpload} disabled={isUploading}>
                       {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
@@ -117,7 +117,7 @@ export default function AppsPage() {
              <Alert>
                 <AlertTitle className="mb-2">Unggah Berhasil!</AlertTitle>
                 <AlertDescription className="space-y-4">
-                    <p>URL gambar Anda:</p>
+                    <p>URL file Anda:</p>
                     <Input readOnly value={uploadedUrl} className="bg-muted"/>
                     <Button onClick={handleCopyUrl} variant="outline" size="sm">
                         <Copy className="mr-2 h-4 w-4" />
