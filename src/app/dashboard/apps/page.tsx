@@ -280,14 +280,14 @@ export default function AppsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Aplikasi & Integrasi</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* AI Artikel Smart */}
-        <Card>
+        <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Newspaper className="text-primary" />
@@ -343,7 +343,7 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Makalah Smart */}
-        <Card>
+        <Card className="xl:col-span-1">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <FileText className="text-primary" />
@@ -394,7 +394,7 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Text-to-Image Generator */}
-        <Card>
+        <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 <ImageIcon className="text-primary" />
@@ -443,7 +443,7 @@ export default function AppsPage() {
         </Card>
 
          {/* AI Dosen Pintar */}
-        <Card>
+        <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap className="text-primary" />
@@ -484,7 +484,7 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Banner Promosi */}
-        <Card>
+        <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Megaphone className="text-primary" />
@@ -532,7 +532,7 @@ export default function AppsPage() {
         </Card>
 
         {/* AI Text to PPT */}
-        <Card>
+        <Card className="xl:col-span-1">
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                   <Presentation className="text-primary" />
@@ -562,45 +562,45 @@ export default function AppsPage() {
               )}
           </CardContent>
         </Card>
-      </div>
-
-      {/* Excel to Chart */}
-      <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <BarChart className="text-primary" />
-                Data Excel to Grafik
-            </CardTitle>
-            <CardDescription>
-              Ubah data mentah dari Excel menjadi grafik interaktif. Salin data dari Excel (dua kolom: nama dan angka), tempel di bawah, lalu simpan.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="chart-data">Data Grafik</Label>
-                    <Textarea
-                        id="chart-data"
-                        placeholder="Contoh:&#10;Hipertensi = 150&#10;Diabetes = 95&#10;ISPA = 320"
-                        value={chartDataInput}
-                        onChange={(e) => setChartDataInput(e.target.value)}
-                        disabled={isSavingChartData}
-                        className="h-48 font-mono text-sm"
-                    />
-                     <Button onClick={handleSaveChartData} disabled={isSavingChartData}>
-                        {isSavingChartData ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        {isSavingChartData ? 'Menyimpan...' : 'Simpan & Perbarui Grafik'}
-                    </Button>
-                </div>
-                 <div className="space-y-2">
-                    <Label>Pratinjau Grafik</Label>
-                    <div className="p-4 border rounded-lg bg-muted min-h-[250px]">
-                      <DynamicChart key={chartVersion} />
+      
+        {/* Excel to Chart */}
+        <Card className="md:col-span-2 xl:col-span-3">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <BarChart className="text-primary" />
+                    Data Excel to Grafik
+                </CardTitle>
+                <CardDescription>
+                Ubah data mentah dari Excel menjadi grafik interaktif. Salin data dari Excel (dua kolom: nama dan angka), tempel di bawah, lalu simpan.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="chart-data">Data Grafik</Label>
+                        <Textarea
+                            id="chart-data"
+                            placeholder="Contoh:&#10;Hipertensi = 150&#10;Diabetes = 95&#10;ISPA = 320"
+                            value={chartDataInput}
+                            onChange={(e) => setChartDataInput(e.target.value)}
+                            disabled={isSavingChartData}
+                            className="h-48 font-mono text-sm"
+                        />
+                        <Button onClick={handleSaveChartData} disabled={isSavingChartData}>
+                            {isSavingChartData ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            {isSavingChartData ? 'Menyimpan...' : 'Simpan & Perbarui Grafik'}
+                        </Button>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Pratinjau Grafik</Label>
+                        <div className="p-4 border rounded-lg bg-muted min-h-[250px] flex items-center justify-center">
+                          <DynamicChart key={chartVersion} />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
