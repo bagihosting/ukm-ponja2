@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "next dev -p 3002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",
@@ -41,7 +40,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.1.7",
-    "firebase": "^11.5.0",
+    "firebase": "^12.0.0",
     "firebase-admin": "^12.2.0",
     "genkit": "^1.15.5",
     "lucide-react": "^0.417.0",
