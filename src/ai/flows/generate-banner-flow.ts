@@ -74,5 +74,3 @@ const generateBannerFlow = ai.defineFlow(
     }
   }
 );
-
-    

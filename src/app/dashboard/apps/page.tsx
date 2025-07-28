@@ -23,11 +23,6 @@ import { generateBanner } from '@/ai/flows/generate-banner-flow';
 
 
 export default function AppsPage() {
-  // State for manual upload
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-
   // State for AI image generation
   const [imgPrompt, setImgPrompt] = useState('');
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
@@ -64,49 +59,6 @@ export default function AppsPage() {
 
 
   const { toast } = useToast();
-
-  // --- Manual Upload Handlers ---
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUploadedUrl(null);
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
-        toast({
-          variant: 'destructive',
-          title: 'File Terlalu Besar',
-          description: 'Ukuran file tidak boleh melebihi 100MB.',
-        });
-        event.target.value = '';
-        return;
-      }
-      setSelectedFile(file);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-    setIsUploading(true);
-    setUploadedUrl(null);
-    try {
-      const url = await uploadImageAndCreateGalleryRecord(selectedFile, selectedFile.name);
-      setUploadedUrl(url);
-      toast({
-        title: 'Berhasil!',
-        description: `File "${selectedFile.name}" berhasil diunggah.`,
-      });
-      setSelectedFile(null);
-      const fileInput = document.getElementById('cloudinary-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Gagal Mengunggah',
-        description: `Terjadi kesalahan: ${error.message}`,
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   // --- AI Generation Handlers ---
   const handleGenerateImage = async () => {
@@ -576,49 +528,6 @@ export default function AppsPage() {
             </div>
         </CardContent>
       </Card>
-
-      {/* Manual Uploader */}
-      <Card>
-        <CardHeader>
-           <CardTitle className="flex items-center gap-2">
-              <Upload className="text-primary" />
-              Unggah Manual
-          </CardTitle>
-          <CardDescription>Unggah file gambar atau video langsung. Hasilnya akan disimpan ke galeri dan URL-nya bisa disalin.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-              <Label htmlFor="cloudinary-upload">Pilih Gambar atau Video</Label>
-              <Input id="cloudinary-upload" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFileChange} disabled={isUploading}/>
-              {selectedFile && (
-                <div className="mt-4 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      File terpilih: <span className="font-medium text-foreground">{selectedFile.name}</span> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </p>
-                    <Button onClick={handleUpload} disabled={isUploading}>
-                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                      {isUploading ? 'Mengunggah...' : 'Unggah ke Cloudinary'}
-                    </Button>
-                </div>
-              )}
-          </div>
-          {uploadedUrl && (
-             <Alert>
-                <AlertTitle className="mb-2">Unggah Manual Berhasil!</AlertTitle>
-                <AlertDescription className="space-y-4">
-                    <p>URL file Anda:</p>
-                    <Input readOnly value={uploadedUrl} className="bg-muted"/>
-                    <Button onClick={() => handleCopyText(uploadedUrl)} variant="outline" size="sm">
-                        <Copy className="mr-2 h-4 w-4" />
-                        Salin URL
-                    </Button>
-                </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
-
-    

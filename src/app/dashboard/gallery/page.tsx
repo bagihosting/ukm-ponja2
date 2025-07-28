@@ -14,8 +14,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { CldImage, CldVideoPlayer } from 'next-cloudinary';
-
 
 export default function GalleryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
