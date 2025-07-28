@@ -20,7 +20,7 @@ export function AIDoctor() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'bot',
-      text: 'Halo! Saya adalah asisten kesehatan AI Puskesmas Pondok Jagung. Silakan jelaskan keluhan Anda, dan saya akan mencoba memberikan analisis awal. Ingat, saya bukan pengganti dokter sungguhan.',
+      text: 'Halo! Saya adalah asisten kesehatan Puskesmas Pondok Jagung. Silakan jelaskan keluhan Anda, dan saya akan mencoba memberikan analisis awal. Ingat, saya bukan pengganti dokter sungguhan.',
     },
   ]);
   const [input, setInput] = useState('');
