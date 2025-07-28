@@ -11,6 +11,7 @@ import { ai } from '@/ai/genkit';
 import { getPrograms } from '@/lib/programs';
 import { reportLinks } from '@/lib/reports-data';
 import { z } from 'zod';
+import { googleAI } from '@genkit-ai/googleai';
 
 const AskDoctorInputSchema = z.string().describe("A user's detailed description of their health symptoms, complaints, or questions about the Puskesmas.");
 const AskDoctorOutputSchema = z.string().describe("The AI's comprehensive response, including diagnosis, medication advice, service info, program/report details, complaint handling, and a recommendation to visit the puskesmas.");
@@ -39,6 +40,7 @@ const getReportsTool = ai.defineTool(
 // Define the highly specific and intelligent prompt for the AI Doctor Puskesmas
 const doctorPrompt = ai.definePrompt({
     name: 'doctorPuskesmasPrompt',
+    model: googleAI.model('gemini-1.5-flash-latest'),
     input: { schema: AskDoctorInputSchema },
     output: { schema: AskDoctorOutputSchema },
     tools: [getProgramsTool, getReportsTool],
