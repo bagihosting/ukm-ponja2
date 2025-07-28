@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart } from 'lucide-react';
+import { Loader2, Upload, Copy, Sparkles, Image as ImageIcon, FileText, Newspaper, Presentation, BarChart, Megaphone } from 'lucide-react';
 import { uploadImageAndCreateGalleryRecord } from '@/lib/gallery';
 import { generateHealthImage } from '@/ai/flows/text-to-image-flow';
 import { generateMakalah } from '@/ai/flows/generate-makalah-flow';
@@ -19,6 +19,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { SlidesPreview } from '@/components/portals/slides-preview';
 import { updateChartData } from '@/lib/chart-data';
 import { DynamicChart } from '@/components/portals/dynamic-chart';
+import { generateBanner } from '@/ai/flows/generate-banner-flow';
 
 
 export default function AppsPage() {
@@ -54,6 +55,13 @@ export default function AppsPage() {
   const [chartDataInput, setChartDataInput] = useState('');
   const [isSavingChartData, setIsSavingChartData] = useState(false);
   const [chartVersion, setChartVersion] = useState(0); // Used to force chart rerender
+
+  // State for AI Banner
+  const [bannerPrompt, setBannerPrompt] = useState('');
+  const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
+  const [generatedBannerUrl, setGeneratedBannerUrl] = useState<string | null>(null);
+  const [generatedBannerCloudinaryUrl, setGeneratedBannerCloudinaryUrl] = useState<string | null>(null);
+
 
   const { toast } = useToast();
 
@@ -222,6 +230,40 @@ export default function AppsPage() {
       setIsGeneratingSlides(false);
     }
   };
+
+  const handleGenerateBanner = async () => {
+    if (!bannerPrompt.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Prompt Kosong',
+        description: 'Silakan masukkan topik banner yang ingin dibuat.',
+      });
+      return;
+    }
+    setIsGeneratingBanner(true);
+    setGeneratedBannerUrl(null);
+    setGeneratedBannerCloudinaryUrl(null);
+    try {
+      const result = await generateBanner(bannerPrompt);
+      setGeneratedBannerUrl(result.imageUrl);
+      if (result.cloudinaryUrl) {
+        setGeneratedBannerCloudinaryUrl(result.cloudinaryUrl);
+      }
+      toast({
+        title: 'Banner Berhasil Dibuat!',
+        description: 'Banner promosi telah dibuat dan disimpan di galeri.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal Membuat Banner',
+        description: `Terjadi kesalahan: ${error.message}`,
+      });
+    } finally {
+      setIsGeneratingBanner(false);
+    }
+  };
+
 
   const handleSaveChartData = async () => {
     if (!chartDataInput.trim()) {
@@ -414,37 +456,88 @@ export default function AppsPage() {
         </Card>
       </div>
       
-      {/* AI Text to PPT */}
-      <Card>
-        <CardHeader>
+      {/* Second Row of Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* AI Banner Promosi */}
+        <Card>
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
-                <Presentation className="text-primary" />
-                AI Text to PPT/PowerPoint
+              <Megaphone className="text-primary" />
+              AI Banner Promosi Kesehatan
             </CardTitle>
-            <CardDescription>
-              Buat konten presentasi yang terstruktur dari sebuah topik. Hasilnya bisa disalin ke PowerPoint, Google Slides, atau Canva.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+            <CardDescription>Buat banner promosi 16:9 yang menarik untuk kampanye kesehatan Anda. Hasilnya akan disimpan ke galeri.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="slides-topic">Topik Presentasi</Label>
+              <Label htmlFor="banner-prompt">Topik Banner</Label>
               <Textarea
-                id="slides-topic"
-                placeholder="Contoh: Dampak Pola Tidur Terhadap Kesehatan Mental Remaja"
-                value={slidesTopic}
-                onChange={(e) => setSlidesTopic(e.target.value)}
-                disabled={isGeneratingSlides}
+                id="banner-prompt"
+                placeholder="Contoh: Gerakan cuci tangan pakai sabun"
+                value={bannerPrompt}
+                onChange={(e) => setBannerPrompt(e.target.value)}
+                disabled={isGeneratingBanner}
               />
             </div>
-            <Button onClick={handleGenerateSlides} disabled={isGeneratingSlides}>
-              {isGeneratingSlides ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              {isGeneratingSlides ? 'Membuat Konten Presentasi...' : 'Buat Presentasi dengan AI'}
+            <Button onClick={handleGenerateBanner} disabled={isGeneratingBanner}>
+              {isGeneratingBanner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {isGeneratingBanner ? 'Membuat Banner...' : 'Buat Banner dengan AI'}
             </Button>
-            {generatedSlides && (
-              <SlidesPreview slides={generatedSlides} />
+            {generatedBannerUrl && (
+              <div className="space-y-4">
+                <Label>Hasil Banner</Label>
+                <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
+                  <img src={generatedBannerUrl} alt="AI generated banner" className="w-full h-full object-cover" />
+                </AspectRatio>
+                <div className="flex gap-2">
+                  <Button onClick={() => handleCopyText(generatedBannerCloudinaryUrl || generatedBannerUrl)} variant="outline" size="sm">
+                    <Copy className="mr-2 h-4 w-4" />
+                    Salin URL {generatedBannerCloudinaryUrl ? 'Cloudinary' : 'Sementara'}
+                  </Button>
+                </div>
+                {!generatedBannerCloudinaryUrl && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      Banner ini hanya sementara. Gagal menyimpannya ke galeri. Coba lagi atau salin URL sementara.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* AI Text to PPT */}
+        <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <Presentation className="text-primary" />
+                  AI Text to PPT/PowerPoint
+              </CardTitle>
+              <CardDescription>
+                Buat konten presentasi yang terstruktur dari sebuah topik. Hasilnya bisa disalin ke PowerPoint, Google Slides, atau Canva.
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="slides-topic">Topik Presentasi</Label>
+                <Textarea
+                  id="slides-topic"
+                  placeholder="Contoh: Dampak Pola Tidur Terhadap Kesehatan Mental Remaja"
+                  value={slidesTopic}
+                  onChange={(e) => setSlidesTopic(e.target.value)}
+                  disabled={isGeneratingSlides}
+                />
+              </div>
+              <Button onClick={handleGenerateSlides} disabled={isGeneratingSlides}>
+                {isGeneratingSlides ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                {isGeneratingSlides ? 'Membuat Konten Presentasi...' : 'Buat Presentasi dengan AI'}
+              </Button>
+              {generatedSlides && (
+                <SlidesPreview slides={generatedSlides} />
+              )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Excel to Chart */}
       <Card>
@@ -527,3 +620,5 @@ export default function AppsPage() {
     </div>
   );
 }
+
+    
