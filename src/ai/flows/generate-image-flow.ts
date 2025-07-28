@@ -39,7 +39,7 @@ const generateImageFlow = ai.defineFlow(
     const fullPrompt = `Buat gambar yang fotorealistik dan berkualitas tinggi berdasarkan deskripsi berikut: "${input.prompt}". Penting: Jika gambar menampilkan orang, pastikan mereka memiliki wajah dan penampilan khas orang Indonesia untuk konsistensi.`;
     
     const { media } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
+      model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: fullPrompt,
       config: {
         responseModalities: ['IMAGE'],
